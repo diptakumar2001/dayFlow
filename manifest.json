@@ -1,0 +1,10 @@
+{
+  "name": "DayFlow Planner",
+  "short_name": "DayFlow",
+  "description": "A task-first daily planner with a time-blocked timeline.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f3f6f5",
+  "theme_color": "#0e6b58",
+  "icons": [{ "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

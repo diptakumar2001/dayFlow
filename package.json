@@ -1,0 +1,24 @@
+{
+  "name": "dayflow",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DayFlow planner. The app itself is plain HTML/CSS/JS; this file only holds the Capacitor tools for the phone app.",
+  "scripts": {
+    "build": "python build_artifact.py",
+    "android": "python build_artifact.py && npx cap sync android && npx cap open android",
+    "ios": "python build_artifact.py && npx cap sync ios && npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/ios": "^8.5.3",
+    "@capacitor/local-notifications": "^8.3.1",
+    "@capacitor/preferences": "^8.0.1",
+    "@capacitor/share": "^8.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.3"
+  }
+}

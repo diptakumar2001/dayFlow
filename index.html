@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DayFlow Planner</title>
+<meta name="description" content="DayFlow: a task-first daily planner with a time-blocked timeline.">
+<meta name="theme-color" content="#0e6b58">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- ===== Top bar: brand, date, navigation, view switch ===== -->
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 28 28" aria-hidden="true" class="brand-mark">
+        <rect x="2" y="2" width="24" height="24" rx="6" class="bm-page"/>
+        <path d="M8 9h7M8 14h12M8 19h5" class="bm-lines"/>
+        <circle cx="20" cy="9" r="2.4" class="bm-dot"/>
+      </svg>
+      <span>DayFlow</span>
+    </div>
+
+    <div class="datehead" id="dateHead" aria-live="polite"></div>
+
+    <div class="controls">
+      <nav class="datenav" aria-label="Change date">
+        <button type="button" id="prevBtn" class="icon-btn" aria-label="Previous day">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 4.5 7 10l5.5 5.5"/></svg>
+        </button>
+        <button type="button" id="todayBtn" class="btn">Today</button>
+        <button type="button" id="nextBtn" class="icon-btn" aria-label="Next day">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7.5 4.5 13 10l-5.5 5.5"/></svg>
+        </button>
+      </nav>
+      <div class="seg" role="group" aria-label="View">
+        <button type="button" id="dayViewBtn" aria-pressed="true">Day</button>
+        <button type="button" id="weekViewBtn" aria-pressed="false">Week</button>
+      </div>
+      <button type="button" id="newBtn" class="btn primary">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg>
+        New task
+      </button>
+    </div>
+  </header>
+
+  <div id="exampleBanner" class="banner" hidden>
+    <span>These are <b>example tasks</b> so you can try dragging, completing and editing.</span>
+    <button type="button" id="clearExamples" class="btn sm">Clear examples</button>
+  </div>
+
+  <main class="layout">
+    <!-- ===== Day summary (above the timeline on phones) ===== -->
+    <section class="side-sec summary" aria-label="Day summary">
+      <h2 class="eyebrow" id="agendaLabel">Today</h2>
+      <p class="progress-row"><span id="progressNum" class="progress-num">0</span> <span id="progressWord">tasks done</span></p>
+      <div class="bar" id="progressBar" role="progressbar" aria-label="Tasks done" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div>
+      <p id="upNext" class="upnext"></p>
+      <p id="weekStats" class="fine" hidden></p>
+    </section>
+
+    <!-- ===== Quick add ===== -->
+    <section class="side-sec quick-sec">
+      <label for="quickAdd" class="eyebrow">Quick add</label>
+      <form id="quickForm" class="quick" autocomplete="off">
+        <input id="quickAdd" type="text" placeholder="Study HCI 3pm 2h !high" aria-describedby="quickPreview quickHelp" enterkeyhint="done">
+        <button type="submit" class="btn primary">Add</button>
+      </form>
+      <p id="quickPreview" class="quick-preview" aria-live="polite"></p>
+      <details class="quick-help">
+        <summary>What can I type?</summary>
+        <p>Times <code>3pm</code> <code>15:30</code> <code>9-11am</code> · lengths <code>45m</code> <code>1h30m</code> · days <code>tomorrow</code> <code>fri</code> <code>next mon</code> <code>in 3 days</code> · <code>!high</code> <code>!med</code> <code>!low</code> · <code>#course</code> · <code>daily</code> <code>weekdays</code> <code>weekly</code> · <code>due fri</code> makes a to-do with a deadline.</p>
+      </details>
+    </section>
+
+    <!-- ===== Planner page (timeline) ===== -->
+    <section class="tl-panel" aria-label="Timeline">
+      <div id="timeline" class="tl"></div>
+    </section>
+
+    <!-- ===== Sidebar ===== -->
+    <aside class="side" aria-label="Lists and settings">
+      <section class="side-sec">
+        <label for="searchBox" class="eyebrow">Search</label>
+        <input id="searchBox" class="search" type="search" placeholder="Find a task, note or course" autocomplete="off">
+        <ol id="searchResults" class="agenda results" hidden></ol>
+      </section>
+
+      <section class="side-sec" id="leftoverSec" hidden>
+        <h2 class="eyebrow">Left from earlier <span id="leftoverCount"></span></h2>
+        <ol id="leftovers" class="agenda"></ol>
+      </section>
+
+      <section class="side-sec">
+        <h2 class="eyebrow">Agenda</h2>
+        <ol id="agenda" class="agenda"></ol>
+      </section>
+
+      <section class="side-sec">
+        <h2 class="eyebrow">To-do <span class="opt">no set time</span></h2>
+        <ol id="todos" class="agenda"></ol>
+      </section>
+
+      <section class="side-sec">
+        <h2 class="eyebrow">Priority key</h2>
+        <ul class="legend">
+          <li class="p-high"><span class="prio-tag"><svg class="shape" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 .8 9.6 9.2H.4z"/></svg><span class="prio-text">High</span></span></li>
+          <li class="p-medium"><span class="prio-tag"><svg class="shape" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 .4 9.6 5 5 9.6.4 5z"/></svg><span class="prio-text">Medium</span></span></li>
+          <li class="p-low"><span class="prio-tag"><svg class="shape" viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="4.2"/></svg><span class="prio-text">Low</span></span></li>
+        </ul>
+        <p class="fine">Colors come from a color-blind-safe palette, and every priority also has its own shape and label.</p>
+      </section>
+
+      <details class="side-sec more">
+        <summary>Settings and backup</summary>
+        <div class="row2 set-row">
+          <div class="field"><label for="setDayStart">My day starts</label><input id="setDayStart" type="time" step="900"></div>
+          <div class="field"><label for="setDayEnd">My day ends</label><input id="setDayEnd" type="time" step="900"></div>
+        </div>
+        <label class="check-row"><input type="checkbox" id="setWarnOverlaps"> Ask before keeping overlapping tasks</label>
+        <p class="fine">New tasks are only suggested inside your day.</p>
+        <div class="btn-row">
+          <button type="button" id="exportBtn" class="btn sm">Save a backup</button>
+          <button type="button" id="importBtn" class="btn sm">Restore from backup</button>
+        </div>
+        <p id="backupStatus" class="fine"></p>
+      </details>
+
+      <details class="side-sec more">
+        <summary>Reminders and shortcuts</summary>
+        <p id="notifStatus" class="fine"></p>
+        <button type="button" id="notifBtn" class="btn sm" hidden>Allow notifications</button>
+        <dl class="keys">
+          <dt><kbd>N</kbd></dt><dd>New task</dd>
+          <dt><kbd>/</kbd></dt><dd>Quick add</dd>
+          <dt><kbd>F</kbd></dt><dd>Search</dd>
+          <dt><kbd>T</kbd></dt><dd>Go to today</dd>
+          <dt><kbd>D</kbd> <kbd>W</kbd></dt><dd>Day or week view</dd>
+          <dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Previous or next day</dd>
+          <dt><kbd>Ctrl</kbd> <kbd>Z</kbd></dt><dd>Undo</dd>
+        </dl>
+        <p class="fine"><b>On a selected task:</b> Enter edits, Space marks done, ↑ ↓ move 15 min, Shift + ↑ ↓ change length, ← → move a day (week view), Delete removes.</p>
+      </details>
+    </aside>
+  </main>
+</div>
+
+<!-- ===== Task form ===== -->
+<dialog id="taskDialog" aria-labelledby="dlgTitle">
+  <form id="taskForm" novalidate>
+    <div class="dlg-head">
+      <h2 id="dlgTitle">New task</h2>
+      <button type="button" class="icon-btn" id="dlgClose" aria-label="Close">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15"/></svg>
+      </button>
+    </div>
+
+    <div class="field">
+      <label for="fTitle">Task</label>
+      <input id="fTitle" type="text" maxlength="80" required placeholder="What do you need to do?" aria-describedby="titleErr">
+      <p class="err" id="titleErr" hidden>Give the task a name.</p>
+    </div>
+
+    <label class="check-row"><input type="checkbox" id="fNoTime"> No set time — put it on my to-do list</label>
+
+    <div class="row3">
+      <div class="field"><label for="fDate" id="fDateLabel">Date</label><input id="fDate" type="date" required></div>
+      <div class="field timed"><label for="fStart">Start</label><input id="fStart" type="time" step="300" required></div>
+      <div class="field timed">
+        <label for="fDuration">Length</label>
+        <select id="fDuration">
+          <option value="15">15 min</option>
+          <option value="30">30 min</option>
+          <option value="45">45 min</option>
+          <option value="50">50 min</option>
+          <option value="60">1 h</option>
+          <option value="90">1 h 30 min</option>
+          <option value="110">1 h 50 min</option>
+          <option value="120">2 h</option>
+          <option value="180">3 h</option>
+          <option value="240">4 h</option>
+          <option value="300">5 h</option>
+          <option value="360">6 h</option>
+        </select>
+      </div>
+    </div>
+    <p class="endline timed" id="fEnd"></p>
+    <p class="err" id="timeErr" hidden></p>
+
+    <fieldset class="field">
+      <legend>Priority</legend>
+      <div class="prio-pick">
+        <input type="radio" name="priority" id="pHigh" value="high">
+        <label for="pHigh" class="p-high"><svg class="shape" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 .8 9.6 9.2H.4z"/></svg>High</label>
+        <input type="radio" name="priority" id="pMed" value="medium" checked>
+        <label for="pMed" class="p-medium"><svg class="shape" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 .4 9.6 5 5 9.6.4 5z"/></svg>Medium</label>
+        <input type="radio" name="priority" id="pLow" value="low">
+        <label for="pLow" class="p-low"><svg class="shape" viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="4.2"/></svg>Low</label>
+      </div>
+    </fieldset>
+
+    <div class="row2">
+      <div class="field">
+        <label for="fCourse">Course <span class="opt">optional</span></label>
+        <input id="fCourse" type="text" maxlength="30" list="courseList" placeholder="e.g. HCI">
+        <datalist id="courseList"></datalist>
+      </div>
+      <div class="field timed">
+        <label for="fReminder">Reminder</label>
+        <select id="fReminder">
+          <option value="">None</option>
+          <option value="0">At start time</option>
+          <option value="5">5 min before</option>
+          <option value="15">15 min before</option>
+          <option value="30">30 min before</option>
+          <option value="60">1 hour before</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row2 timed">
+      <div class="field">
+        <label for="fRepeat">Repeat</label>
+        <select id="fRepeat">
+          <option value="none">Does not repeat</option>
+          <option value="daily">Every day</option>
+          <option value="weekdays">Weekdays (Mon–Fri)</option>
+          <option value="weekly">Every week</option>
+        </select>
+      </div>
+      <div class="field" id="fUntilField" hidden>
+        <label for="fUntil">Until <span class="opt">optional</span></label>
+        <input id="fUntil" type="date">
+      </div>
+    </div>
+
+    <fieldset class="field scope" id="fScope" hidden>
+      <legend>This task repeats. Apply changes to</legend>
+      <div class="scope-pick">
+        <label><input type="radio" name="scope" value="day" checked> <span id="fScopeDay">This day only</span></label>
+        <label><input type="radio" name="scope" value="all"> Every repeat</label>
+      </div>
+    </fieldset>
+
+    <div class="field">
+      <label for="fNotes">Notes <span class="opt">optional</span></label>
+      <textarea id="fNotes" rows="2"></textarea>
+    </div>
+
+    <div class="warn" id="overlapWarn" aria-live="polite" hidden></div>
+
+    <div class="dlg-foot">
+      <button type="button" class="btn danger" id="fDeleteDay" hidden>Delete this day</button>
+      <button type="button" class="btn danger" id="fDelete" hidden>Delete</button>
+      <span class="spacer"></span>
+      <button type="button" class="btn" id="fCancel">Cancel</button>
+      <button type="submit" class="btn primary" id="fSave">Add task</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toasts" class="toasts"></div>
+<p id="cardHint" hidden>Enter to edit. Space to mark done. Arrow keys move 15 minutes. Shift and arrow keys change length.</p>
+
+<script src="js/platform.js"></script>
+<script src="js/store.js"></script>
+<script src="js/timeline.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

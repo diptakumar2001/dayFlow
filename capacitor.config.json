@@ -1,0 +1,8 @@
+{
+  "appId": "com.dayflow.planner",
+  "appName": "DayFlow",
+  "webDir": "www",
+  "plugins": {
+    "LocalNotifications": { "iconColor": "#0e6b58" }
+  }
+}
