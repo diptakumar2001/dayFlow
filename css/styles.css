@@ -432,13 +432,13 @@ body.is-resizing, body.is-resizing * { cursor: ns-resize !important; }
 .upnext b { color: var(--ink); }
 
 .quick { display: flex; gap: 8px; }
-.quick input, .field input, .field select, .field textarea {
+.quick input, .field input, .field select, .field textarea, .danger-zone input {
   width: 100%; min-width: 0;
   padding: 9px 11px;
   border: 1px solid var(--rule-strong); border-radius: 8px;
   background: var(--surface); color: var(--ink);
 }
-.quick input:focus, .field input:focus, .field select:focus, .field textarea:focus {
+.quick input:focus, .field input:focus, .field select:focus, .field textarea:focus, .danger-zone input:focus {
   outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent);
 }
 .quick-preview { margin: 8px 0 0; min-height: 1.4em; font-size: 13px; color: var(--ink-2); display: flex; flex-direction: column; gap: 4px; }
@@ -554,6 +554,35 @@ dialog::backdrop { background: var(--backdrop); }
 @keyframes nudge { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
 .dlg-foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-top: 4px; }
 .spacer { flex: 1; }
+
+/* ---------- Account ---------- */
+.account-btn { gap: 8px; padding-inline: 10px; }
+.acct-avatar {
+  display: inline-grid; place-items: center; flex: none;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--accent); color: var(--accent-ink);
+  font-family: var(--font-display); font-weight: 800; font-size: 13px;
+}
+.acct-avatar.big { width: 36px; height: 36px; font-size: 18px; }
+/* Sync state is also in the button's label and tooltip, never shown by color alone. */
+.sync-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ink-3); flex: none; }
+.sync-dot.synced { background: var(--accent); }
+.sync-dot.syncing { background: var(--medium); }
+.sync-dot.error { background: var(--high); }
+
+#authDialog { width: min(440px, calc(100vw - 32px)); padding: 20px 22px 18px; }
+#authDialog .dlg-head { margin-bottom: 14px; }
+.auth-view { display: flex; flex-direction: column; gap: 14px; }
+.auth-view .fine { margin: 0; }
+.auth-mode { align-self: flex-start; }
+.pw-row { display: flex; gap: 8px; }
+.pw-row input { flex: 1; min-width: 0; }
+.ok { margin: 0; font-size: 13.5px; color: var(--accent); font-weight: 700; }
+.btn-link { border: 0; background: none; padding: 4px 0; color: var(--accent); font-weight: 700; font-size: 14px; cursor: pointer; text-decoration: underline; }
+.acct-email { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 15px; overflow-wrap: anywhere; }
+.danger-zone { border-top: 1px solid var(--rule-strong); padding-top: 12px; }
+.danger-zone summary { cursor: pointer; font-weight: 700; font-size: 14px; color: var(--high-ink); }
+.danger-zone .fine { margin: 8px 0; }
 
 /* ---------- Toasts ---------- */
 .toasts {

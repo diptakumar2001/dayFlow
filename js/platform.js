@@ -12,8 +12,9 @@ const Platform = (() => {
   const native = !!(Cap && Cap.isNativePlatform && Cap.isNativePlatform());
   const plugin = (name) => (native && Cap.Plugins ? Cap.Plugins[name] || null : null);
 
-  // Keys we keep a native copy of (the phone may clear WebView storage).
-  const BACKED_UP = ["dayflow.v1", "dayflow.settings", "dayflow.lastBackup"];
+  // Keys we keep a native copy of (the phone may clear WebView storage):
+  // every DayFlow key, including each account's offline copy and the sign-in session.
+  const backedUp = (key) => key.startsWith("dayflow.");
 
   // ---- Storage: synchronous reads, so the rest of the app stays simple ----
   const storage = {
@@ -31,7 +32,14 @@ const Platform = (() => {
         /* app keeps working in memory */
       }
       const prefs = plugin("Preferences");
-      if (prefs && BACKED_UP.includes(key)) prefs.set({ key, value }).catch(() => {});
+      if (prefs && backedUp(key)) prefs.set({ key, value }).catch(() => {});
+    },
+    remove(key) {
+      try {
+        localStorage.removeItem(key);
+      } catch (e) {}
+      const prefs = plugin("Preferences");
+      if (prefs && backedUp(key)) prefs.remove({ key }).catch(() => {});
     },
   };
 
@@ -39,13 +47,14 @@ const Platform = (() => {
   async function ready() {
     const prefs = plugin("Preferences");
     if (!prefs) return;
-    for (const key of BACKED_UP) {
-      if (storage.get(key) !== null) continue;
-      try {
+    try {
+      const { keys } = await prefs.keys();
+      for (const key of keys.filter(backedUp)) {
+        if (storage.get(key) !== null) continue;
         const { value } = await prefs.get({ key });
         if (value !== null && value !== undefined) localStorage.setItem(key, value);
-      } catch (e) {}
-    }
+      }
+    } catch (e) {}
   }
 
   // ---- Reminders ----

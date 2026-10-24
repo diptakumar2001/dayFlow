@@ -20,12 +20,7 @@
 
   function loadSettings() {
     try {
-      const s = JSON.parse(Platform.storage.get(SETTINGS_KEY) || "{}");
-      if (Number.isFinite(s.dayStart) && Number.isFinite(s.dayEnd) && s.dayEnd - s.dayStart >= 60) {
-        settings.dayStart = s.dayStart;
-        settings.dayEnd = s.dayEnd;
-      }
-      if (typeof s.warnOverlaps === "boolean") settings.warnOverlaps = s.warnOverlaps;
+      applySettings(JSON.parse(Platform.storage.get(SETTINGS_KEY) || "{}"));
     } catch (e) {}
     state.dayStart = settings.dayStart;
   }
@@ -1053,8 +1048,12 @@
     const n = last ? D.diffDays(last, D.todayKey()) : null;
     const status = $("#backupStatus");
     status.textContent =
-      n === null ? "No backup yet. Your tasks live only on this device." : n === 0 ? "Last backup: today." : `Last backup: ${n} day${n === 1 ? "" : "s"} ago.`;
-    status.classList.toggle("nudge-text", n === null || n > 14);
+      Sync.user() && n === null
+        ? "Your tasks are saved in your account. A backup file is optional."
+        : n === null
+        ? "No backup yet. Your tasks live only on this device."
+        : n === 0 ? "Last backup: today." : `Last backup: ${n} day${n === 1 ? "" : "s"} ago.`;
+    status.classList.toggle("nudge-text", !Sync.user() && (n === null || n > 14));
   }
 
   function onSettingsChange() {
@@ -1067,6 +1066,7 @@
     } else toast("Your day needs to be at least an hour long.", { kind: "warn", timeout: 3000, key: "settings" });
     settings.warnOverlaps = $("#setWarnOverlaps").checked;
     saveSettings();
+    if (Sync.user()) Sync.pushSettings({ ...settings });
     renderSettings();
     render();
     updateQuickPreview();
@@ -1135,7 +1135,7 @@
       renderSearch();
       return;
     }
-    if (dlg.open || typing || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (dlg.open || authDlg.open || typing || e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.key === "Escape" && state.pending) {
       cancelPending();
       return;
@@ -1157,8 +1157,315 @@
     }
   }
 
+  // ---------------------------------------------------------
+  // Accounts (optional): sign in to save tasks online and sync
+  // devices. Each account has its own store on the device.
+  // ---------------------------------------------------------
+  const authDlg = $("#authDialog");
+  let authMode = "signin"; // signin | signup
+  let signedInAs = null; // id of the account whose store is open
+  let viewStale = false; // tasks changed from another device while something was open
+  let signOutAnyway = false;
+
+  const validEmail = (s) => /^\S+@\S+\.\S+$/.test(s);
+
+  function showAuthView(view) {
+    $("#authForm").hidden = view !== "form";
+    $("#acctView").hidden = view !== "account";
+    $("#newPwForm").hidden = view !== "newpw";
+    $("#authTitle").textContent =
+      view === "account" ? "Your account" : view === "newpw" ? "New password" : authMode === "signup" ? "Create account" : "Sign in";
+  }
+
+  function authMessage(err = "", ok = "") {
+    $("#authErr").textContent = err;
+    $("#authErr").hidden = !err;
+    $("#authOk").textContent = ok;
+    $("#authOk").hidden = !ok;
+  }
+
+  function setAuthMode(mode) {
+    authMode = mode;
+    $("#modeSignIn").setAttribute("aria-pressed", String(mode === "signin"));
+    $("#modeSignUp").setAttribute("aria-pressed", String(mode === "signup"));
+    $("#authSubmit").textContent = mode === "signup" ? "Create account" : "Sign in";
+    $("#authPassword").autocomplete = mode === "signup" ? "new-password" : "current-password";
+    $("#pwHint").hidden = mode !== "signup";
+    $("#authForgot").hidden = mode === "signup";
+    authMessage();
+    showAuthView("form");
+  }
+
+  function openAccount() {
+    $("#acctErr").hidden = true;
+    signOutAnyway = false;
+    if (Sync.user()) {
+      $("#deleteConfirm").value = "";
+      $("#deleteAcctBtn").disabled = true;
+      renderAccount();
+      showAuthView("account");
+    } else setAuthMode(authMode);
+    authDlg.showModal();
+  }
+
+  function timeAgo(d) {
+    const m = Math.round((Date.now() - d) / 60000);
+    if (m < 1) return "just now";
+    if (m < 60) return `${m} min ago`;
+    return `at ${D.fmtTime(d.getHours() * 60 + d.getMinutes())}`;
+  }
+
+  function syncText(st) {
+    return {
+      idle: "Not synced yet.",
+      syncing: "Saving…",
+      synced: `Saved online ${st.at ? timeAgo(st.at) : ""}.`,
+      offline: "Offline. Changes are kept on this device and sent when you're back online.",
+      error: "Couldn't reach the server. DayFlow will try again.",
+    }[st.state];
+  }
+
+  function renderAccount() {
+    const btn = $("#accountBtn");
+    btn.hidden = !Sync.enabled;
+    if (!Sync.enabled) return;
+    const u = Sync.user();
+    const st = Sync.status();
+    const initial = u ? (u.email || "?")[0].toUpperCase() : "";
+    $("#acctAvatar").textContent = initial;
+    $("#acctAvatar").hidden = !u;
+    $("#acctLabel").textContent = u ? "" : "Sign in";
+    $("#acctLabel").hidden = !!u;
+    $("#syncDot").hidden = !u;
+    $("#syncDot").className = `sync-dot ${st.state}`;
+    btn.setAttribute("aria-label", u ? `Account: ${u.email}. ${syncText(st)}` : "Sign in");
+    btn.title = u ? `${u.email} · ${syncText(st)}` : "";
+    if (u) {
+      $("#acctEmail").textContent = u.email;
+      $("#acctAvatarBig").textContent = initial;
+      $("#acctSync").textContent = syncText(st);
+    }
+  }
+
+  async function onAuthSubmit(e) {
+    e.preventDefault();
+    const email = $("#authEmail").value.trim();
+    const pw = $("#authPassword").value;
+    if (!validEmail(email)) return authMessage("Enter your email address.");
+    if (pw.length < 8) return authMessage("Passwords are at least 8 characters.");
+    const btn = $("#authSubmit");
+    btn.disabled = true;
+    authMessage();
+    try {
+      if (authMode === "signup") {
+        const { needsConfirm } = await Sync.signUp(email, pw);
+        if (needsConfirm) {
+          setAuthMode("signin");
+          authMessage("", `Almost done: we sent a link to ${email}. Click it, then sign in here.`);
+          return;
+        }
+      } else await Sync.signIn(email, pw);
+      $("#authPassword").value = "";
+      authDlg.close();
+      toast(`Signed in as ${email}. Your tasks are saved online.`, { key: "auth" });
+    } catch (err) {
+      authMessage(err.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async function onForgot() {
+    const email = $("#authEmail").value.trim();
+    if (!validEmail(email)) return authMessage("Type your email above, then press “Forgot password?” again.");
+    try {
+      await Sync.sendPasswordReset(email);
+      authMessage("", `If there's an account for ${email}, a link to set a new password is on its way.`);
+    } catch (err) {
+      authMessage(err.message);
+    }
+  }
+
+  async function onNewPassword(e) {
+    e.preventDefault();
+    const pw = $("#newPw").value;
+    const err = $("#newPwErr");
+    if (pw.length < 8) {
+      err.textContent = "Use at least 8 characters.";
+      err.hidden = false;
+      return;
+    }
+    try {
+      await Sync.setNewPassword(pw);
+      $("#newPw").value = "";
+      authDlg.close();
+      toast("New password saved.", { key: "auth" });
+    } catch (ex) {
+      err.textContent = ex.message;
+      err.hidden = false;
+    }
+  }
+
+  function applySettings(s) {
+    if (!s) return;
+    if (Number.isFinite(s.dayStart) && Number.isFinite(s.dayEnd) && s.dayEnd - s.dayStart >= 60) {
+      settings.dayStart = s.dayStart;
+      settings.dayEnd = s.dayEnd;
+    }
+    if (typeof s.warnOverlaps === "boolean") settings.warnOverlaps = s.warnOverlaps;
+  }
+
+  // Re-render after another device's changes, unless the person is in the middle of something.
+  function showRemoteChanges() {
+    if (dlg.open || Timeline.isDragging() || state.pending) viewStale = true;
+    else render();
+  }
+
+  async function refreshFromCloud() {
+    const remote = await Sync.pullSettings();
+    if (remote) {
+      applySettings(remote);
+      saveSettings();
+      renderSettings();
+    }
+    if (await Sync.syncNow()) showRemoteChanges();
+  }
+
+  // The first time an account is used on a device that has tasks without an account.
+  function offerGuestTasks(u) {
+    const asked = `${Sync.userKey(u)}.offered`;
+    if (Platform.storage.get(asked)) return;
+    const guest = Store.peek(Store.GUEST_KEY).filter((t) => !t.sample);
+    if (!guest.length) return;
+    const n = guest.length;
+    toast(`Add the ${n} task${n === 1 ? "" : "s"} on this device to your account?`, {
+      timeout: 0,
+      key: "adopt",
+      actions: [
+        {
+          label: "Add them",
+          fn: () => {
+            Platform.storage.set(asked, "1");
+            Store.importTasks(guest, "merge"); // saving pushes them online
+            render();
+            toast(`Added ${n} task${n === 1 ? "" : "s"} to your account.`, { actions: [undoAction], key: "adopt" });
+          },
+        },
+        { label: "Not now", fn: () => Platform.storage.set(asked, "1") },
+      ],
+    });
+  }
+
+  // Opens this account's tasks on the device, then fetches what changed online.
+  async function enterAccount(u) {
+    if (signedInAs === u.id) return; // Supabase also reports token refreshes as sign-ins
+    signedInAs = u.id;
+    state.pending = null;
+    closeToastKey("pending");
+    Store.open(Sync.userKey(u));
+    render({ resetScroll: true });
+    renderAccount();
+    await refreshFromCloud();
+    offerGuestTasks(u);
+  }
+
+  // Back to the tasks without an account. The account's copy is removed from this device
+  // (it's saved online), so the next person using it can't see it.
+  function leaveAccount() {
+    if (!signedInAs) return;
+    const key = Store.key();
+    signedInAs = null;
+    Store.forget(key);
+    Platform.storage.remove(`${key}.pulled`);
+    if (!Store.open(Store.GUEST_KEY)) Store.seed([]);
+    closeToastKey("adopt");
+    render({ resetScroll: true });
+    renderAccount();
+  }
+
+  async function doSignOut() {
+    const btn = $("#signOutBtn");
+    btn.disabled = true;
+    await Sync.push();
+    const left = Store.changes();
+    if ((left.upserts.length || left.deletes.length) && !signOutAnyway) {
+      signOutAnyway = true;
+      $("#acctErr").textContent =
+        "Some changes aren't saved online yet (you seem to be offline). Signing out now loses them. Press Sign out again to sign out anyway.";
+      $("#acctErr").hidden = false;
+      btn.disabled = false;
+      return;
+    }
+    await Sync.signOut();
+    leaveAccount();
+    btn.disabled = false;
+    authDlg.close();
+    toast("Signed out. Your tasks are saved in your account.", { key: "auth" });
+  }
+
+  async function doDeleteAccount() {
+    const keep = Store.all().filter((t) => !t.sample);
+    const btn = $("#deleteAcctBtn");
+    btn.disabled = true;
+    try {
+      await Sync.deleteAccount();
+    } catch (err) {
+      $("#acctErr").textContent = err.message;
+      $("#acctErr").hidden = false;
+      btn.disabled = false;
+      return;
+    }
+    leaveAccount();
+    Store.importTasks(keep, "merge"); // a copy stays on this device, without an account
+    render();
+    authDlg.close();
+    toast("Your account and its online data were deleted. Your tasks are still on this device.", { key: "auth" });
+  }
+
+  function onAuthEvent(event, u) {
+    if (event === "PASSWORD_RECOVERY") {
+      if (!authDlg.open) authDlg.showModal();
+      $("#newPwErr").hidden = true;
+      showAuthView("newpw");
+    }
+    if (u) enterAccount(u);
+    else leaveAccount();
+    renderAccount();
+  }
+
+  function wireAccounts() {
+    if (!Sync.enabled) return;
+    $("#accountBtn").addEventListener("click", openAccount);
+    $("#authClose").addEventListener("click", () => authDlg.close());
+    authDlg.addEventListener("click", (e) => {
+      if (e.target === authDlg) authDlg.close();
+    });
+    $("#modeSignIn").addEventListener("click", () => setAuthMode("signin"));
+    $("#modeSignUp").addEventListener("click", () => setAuthMode("signup"));
+    $("#authForm").addEventListener("submit", onAuthSubmit);
+    $("#authForgot").addEventListener("click", onForgot);
+    $("#authShowPw").addEventListener("click", (e) => {
+      const show = $("#authPassword").type === "password";
+      $("#authPassword").type = show ? "text" : "password";
+      e.currentTarget.textContent = show ? "Hide" : "Show";
+      e.currentTarget.setAttribute("aria-pressed", String(show));
+    });
+    $("#newPwForm").addEventListener("submit", onNewPassword);
+    $("#syncNowBtn").addEventListener("click", refreshFromCloud);
+    $("#signOutBtn").addEventListener("click", doSignOut);
+    $("#deleteConfirm").addEventListener("input", (e) => ($("#deleteAcctBtn").disabled = e.target.value.trim() !== "DELETE"));
+    $("#deleteAcctBtn").addEventListener("click", doDeleteAccount);
+    Sync.onStatus(renderAccount);
+    Sync.onAuth(onAuthEvent);
+    window.addEventListener("online", refreshFromCloud);
+  }
+
   // Android back button: close what's open before leaving the app.
   function onBack() {
+    if (authDlg.open) {
+      authDlg.close();
+      return true;
+    }
     if (dlg.open) {
       dlg.close();
       return true;
@@ -1178,11 +1485,20 @@
   // ---------------------------------------------------------
   // Wire up
   // ---------------------------------------------------------
-  function init() {
+  async function init() {
     loadSettings();
-    if (!Store.load()) Store.seed(makeExamples());
+    // Signed in on this device: open that account's tasks (works offline too).
+    const u = await Sync.init();
+    if (u) {
+      signedInAs = u.id;
+      Store.open(Sync.userKey(u));
+    } else if (!Store.load()) Store.seed(makeExamples());
     if (Platform.storage.get("dayflow.view") === "week") state.view = "week";
-    Store.onSave(scheduleReminderSync);
+    Store.onSave(() => {
+      scheduleReminderSync();
+      Sync.schedulePush();
+    });
+    wireAccounts();
 
     Timeline.init($("#timeline"), {
       onOpen: (id, date) => openForm({ id, date }),
@@ -1278,18 +1594,28 @@
 
     render({ resetScroll: true });
     renderSettings();
+    renderAccount();
     updateQuickPreview();
     updateNotifUI();
     scheduleReminderSync();
+    if (u) refreshFromCloud();
 
     // Keep the "now" line, progress and reminders current.
     let lastMinute = D.nowMinutes();
     let lastDay = D.todayKey();
+    let lastPull = Date.now();
     const tick = () => {
       checkReminders();
+      // Signed in: look for changes from other devices about once a minute while visible.
+      if (Sync.user() && document.visibilityState === "visible" && Date.now() - lastPull > 60000) {
+        lastPull = Date.now();
+        Sync.pull().then((changed) => changed && showRemoteChanges());
+      }
+      if (Timeline.isDragging() || dlg.open) return;
       const m = D.nowMinutes();
-      if (m === lastMinute || Timeline.isDragging() || dlg.open) return;
+      if (m === lastMinute && !viewStale) return;
       lastMinute = m;
+      viewStale = false;
       const day = D.todayKey();
       if (day !== lastDay) {
         if (state.date === lastDay) state.date = day; // rolled past midnight
@@ -1301,6 +1627,10 @@
     setInterval(tick, 15000);
     Platform.onResume(() => {
       checkReminders({ missed: true });
+      if (Sync.user()) {
+        lastPull = Date.now();
+        refreshFromCloud();
+      }
       tick();
     });
     checkReminders({ missed: true });

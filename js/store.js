@@ -82,19 +82,32 @@ const DateUtil = (() => {
 })();
 
 const Store = (() => {
-  const KEY = "dayflow.v1";
+  const GUEST_KEY = "dayflow.v1"; // tasks of someone not signed in
   const VERSION = 2;
   const MAX_UNDO = 50;
   const LEFTOVER_DAYS = 14;
+  let key = GUEST_KEY;
   let tasks = [];
+  // id -> JSON of the task as last confirmed with the server (signed-in stores only).
+  // Comparing against it finds every change, so mutations don't need to know about sync.
+  let baseline = {};
   const undoStack = [];
   const listeners = [];
 
   const newId = () => "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
-  function load() {
+  // Switch to another store on this device (guest, or one per account). Returns false if it was empty.
+  function open(k) {
+    key = k;
+    tasks = [];
+    undoStack.length = 0;
     try {
-      const raw = Platform.storage.get(KEY);
+      baseline = JSON.parse(Platform.storage.get(`${k}.base`) || "{}");
+    } catch (e) {
+      baseline = {};
+    }
+    try {
+      const raw = Platform.storage.get(k);
       if (!raw) return false;
       const data = JSON.parse(raw);
       if (!Array.isArray(data.tasks)) return false;
@@ -104,12 +117,85 @@ const Store = (() => {
       return false; // corrupted: start fresh
     }
   }
+  const load = () => open(GUEST_KEY);
 
   function save() {
-    Platform.storage.set(KEY, JSON.stringify({ version: VERSION, tasks }));
+    Platform.storage.set(key, JSON.stringify({ version: VERSION, tasks }));
     listeners.forEach((fn) => fn());
   }
   const onSave = (fn) => listeners.push(fn);
+  const saveBaseline = () => Platform.storage.set(`${key}.base`, JSON.stringify(baseline));
+
+  // Removes a store from this device (an account's offline copy after signing out).
+  function forget(k) {
+    Platform.storage.remove(k);
+    Platform.storage.remove(`${k}.base`);
+  }
+
+  // Guest tasks on this device, read without switching to them.
+  function peek(k) {
+    try {
+      const data = JSON.parse(Platform.storage.get(k) || "{}");
+      return Array.isArray(data.tasks) ? data.tasks.map(normalize) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // ---- Sync helpers ----
+  const isLocalChange = (t) => baseline[t.id] !== JSON.stringify(t);
+
+  // What to send to the server: new or changed tasks, and ids removed here. Examples never leave the device.
+  function changes() {
+    const here = new Set();
+    const upserts = [];
+    tasks.forEach((t) => {
+      if (t.sample) return;
+      here.add(t.id);
+      if (isLocalChange(t)) upserts.push(t);
+    });
+    const deletes = Object.keys(baseline).filter((id) => !here.has(id));
+    return { upserts, deletes };
+  }
+
+  // After the server accepted them: sent = [{ id, json }] (json null for a delete).
+  function markSynced(sent) {
+    sent.forEach(({ id, json }) => {
+      if (json === null) delete baseline[id];
+      else baseline[id] = json;
+    });
+    saveBaseline();
+  }
+
+  // Server rows from another device. A task also changed here since the last sync keeps the local
+  // version; it is pushed next, so the latest change wins. Not undoable (it isn't the person's action).
+  function applyRemote(rows) {
+    let changed = false;
+    rows.forEach((row) => {
+      const local = get(row.id);
+      const editedHere = local ? isLocalChange(local) : false;
+      const deletedHere = !local && row.id in baseline;
+      if (editedHere || deletedHere) return;
+      if (row.deleted) {
+        if (local) {
+          tasks = tasks.filter((t) => t.id !== row.id);
+          changed = true;
+        }
+        delete baseline[row.id];
+        return;
+      }
+      const t = normalize({ ...row.data, id: row.id });
+      const json = JSON.stringify(t);
+      baseline[row.id] = json;
+      if (local && JSON.stringify(local) === json) return;
+      if (local) Object.assign(local, t);
+      else tasks.push(t);
+      changed = true;
+    });
+    saveBaseline();
+    if (changed) save();
+    return changed;
+  }
 
   const isKey = (k) => typeof k === "string" && /^\d{4}-\d{2}-\d{2}$/.test(k);
   const strList = (a) => (Array.isArray(a) ? a.filter(isKey) : []);
@@ -342,7 +428,8 @@ const Store = (() => {
   const all = () => tasks.slice();
 
   return {
-    load, seed, onSave, newId, get, all, occursOn, tasksOn, overlapsFor, layoutLanes,
+    GUEST_KEY, load, open, forget, peek, key: () => key, seed, onSave, newId, get, all,
+    changes, markSynced, applyRemote, occursOn, tasksOn, overlapsFor, layoutLanes,
     leftovers, todos, search, courses,
     add, update, remove, skipDay, detach, toggleDone, clearExamples, undo, canUndo,
     exportJSON, readBackup, importTasks,

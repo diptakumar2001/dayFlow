@@ -15,6 +15,34 @@ tasks stay after a refresh. On first launch the app loads a few example tasks (m
 **Clear examples** to start empty. Use **Settings and backup → Save a backup** to keep a copy or move your
 tasks to another device.
 
+### Accounts and cloud sync (Supabase)
+
+Signing in is optional. Without an account, tasks stay on the device as before. With one, they're saved online
+and synced between the website and the phone app. Each person can only read their own data: the database
+enforces this with row-level security, not just the app.
+
+One-time setup:
+
+1. Create a free project at [supabase.com](https://supabase.com).
+2. **SQL Editor → New query**, paste [`supabase/schema.sql`](supabase/schema.sql) and press **Run**.
+3. **Project Settings → API**: copy the **Project URL** and the **anon public** key into
+   [`js/config.js`](js/config.js). Set `siteUrl` to your live address, e.g. `https://dayflow.netlify.app/`.
+   The anon key is safe to publish. **Never** put the `service_role` key in the app.
+4. **Authentication → URL Configuration**: set **Site URL** to the same live address. Add
+   `http://localhost:5173` under **Redirect URLs** for testing.
+5. Keep **Confirm email** on (Authentication → Providers → Email). Supabase's built-in email only sends a few
+   messages per hour, so for real users add your own SMTP sender (Authentication → Emails → SMTP), e.g. Resend
+   or Brevo, which have free tiers.
+6. Rebuild and deploy (`python build_artifact.py`, then push; for the phone app, `npx cap sync`).
+
+Good to know:
+- Free Supabase projects pause after a week without any use; open the dashboard to wake one up, or upgrade
+  once you have regular users.
+- Tasks of signed-in users are stored on Supabase's servers. Update your privacy policy and the app store
+  privacy forms (data collected: email address, and the tasks people write).
+- People can delete their account in the app (Account → Delete account), which removes their online data.
+  Apple requires this.
+
 ### Phone app (Play Store / App Store)
 
 The same code runs as a native app through [Capacitor](https://capacitorjs.com). You need Node.js, plus
@@ -41,10 +69,14 @@ to explain why they need it.
 dayflow/
 ├── index.html          Page layout: top bar, timeline, sidebar, task dialog
 ├── css/styles.css      All styling, theme tokens (light + dark), responsive rules
+├── js/config.js        Supabase project URL and public key (empty = no accounts)
+├── js/vendor/          supabase-js, bundled so the app works offline
 ├── js/platform.js      Device features (storage, reminders, files): web APIs or native plugins
 ├── js/store.js         Data: dates, saving, undo history, repeats, overlaps, to-dos, search, backup
 ├── js/timeline.js      Day/week timeline rendering, drag to move/resize (touch: hold), keyboard moves
-├── js/app.js           Header, sidebar lists, task form, quick add, settings, backup, reminders, shortcuts
+├── js/sync.js          Accounts and cloud sync (the only file that talks to Supabase)
+├── js/app.js           Header, sidebar lists, task form, quick add, settings, backup, reminders, accounts
+├── supabase/schema.sql Database tables and privacy rules, run once in Supabase
 ├── fonts/, icons/      Bundled fonts (works offline) and the app icon
 ├── build_artifact.py   Builds dist/ (one-file version) and www/ (for the phone app)
 ├── capacitor.config.json, package.json, android/   Phone app (Capacitor)
@@ -75,6 +107,8 @@ first, which is how undo works. The timeline is re-drawn from the array after ev
 - **Search** across all tasks, notes and courses
 - **Settings**: when your day starts and ends (new tasks are only suggested inside it), overlap questions on/off
 - **Backup**: save to a file and restore (replace or add)
+- **Accounts (optional)**: sign up with email and password, and tasks and settings sync between devices. It
+  works offline and sends changes when you're back online. Includes forgot password, sign out and delete account
 - Day timeline and week view, with a live "now" line
 - **Drag to reschedule** (live time preview), **drag the bottom edge** to change length
 - In week view, drag a task to another day
@@ -122,6 +156,7 @@ first, which is how undo works. The timeline is re-drawn from the array after ev
 
 ## Known limits (good to mention in the report)
 
-- No accounts or sync: data stays on the device. Backups move it between devices by hand.
+- Sync checks for changes from other devices when you switch back to DayFlow and about once a minute,
+  not instantly. If the same task is changed on two devices before they sync, the last change saved wins.
 - In a browser, notifications only fire while the page is open (the phone app doesn't have this limit).
 - Tasks can't run past midnight.

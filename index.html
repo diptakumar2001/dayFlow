@@ -44,6 +44,11 @@
         <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg>
         New task
       </button>
+      <button type="button" id="accountBtn" class="btn account-btn" hidden aria-haspopup="dialog">
+        <span class="acct-avatar" id="acctAvatar" aria-hidden="true"></span>
+        <span id="acctLabel">Sign in</span>
+        <span class="sync-dot" id="syncDot" aria-hidden="true"></span>
+      </button>
     </div>
   </header>
 
@@ -262,11 +267,85 @@
   </form>
 </dialog>
 
+<!-- ===== Account (sign in, account panel, new password) ===== -->
+<dialog id="authDialog" aria-labelledby="authTitle">
+  <div class="dlg-head">
+    <h2 id="authTitle">Sign in</h2>
+    <button type="button" class="icon-btn" id="authClose" aria-label="Close">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15"/></svg>
+    </button>
+  </div>
+
+  <!-- Sign in / create account -->
+  <form id="authForm" class="auth-view" novalidate>
+    <div class="seg auth-mode" role="group" aria-label="Sign in or create an account">
+      <button type="button" id="modeSignIn" aria-pressed="true">Sign in</button>
+      <button type="button" id="modeSignUp" aria-pressed="false">Create account</button>
+    </div>
+    <p class="fine" id="authIntro">Sign in to save your tasks online and use them on your phone and computer.</p>
+    <div class="field">
+      <label for="authEmail">Email</label>
+      <input id="authEmail" type="email" autocomplete="email" inputmode="email" required>
+    </div>
+    <div class="field">
+      <label for="authPassword">Password</label>
+      <div class="pw-row">
+        <input id="authPassword" type="password" autocomplete="current-password" minlength="8" required>
+        <button type="button" class="btn sm" id="authShowPw" aria-pressed="false">Show</button>
+      </div>
+      <p class="fine" id="pwHint" hidden>At least 8 characters.</p>
+    </div>
+    <p class="err" id="authErr" role="alert" hidden></p>
+    <p class="ok" id="authOk" role="status" hidden></p>
+    <div class="dlg-foot">
+      <button type="button" class="btn-link" id="authForgot">Forgot password?</button>
+      <span class="spacer"></span>
+      <button type="submit" class="btn primary" id="authSubmit">Sign in</button>
+    </div>
+  </form>
+
+  <!-- Signed in -->
+  <div id="acctView" class="auth-view" hidden>
+    <p class="acct-email"><span class="acct-avatar big" id="acctAvatarBig" aria-hidden="true"></span><b id="acctEmail"></b></p>
+    <p id="acctSync" class="fine" aria-live="polite"></p>
+    <div class="btn-row">
+      <button type="button" class="btn sm" id="syncNowBtn">Sync now</button>
+      <button type="button" class="btn sm" id="signOutBtn">Sign out</button>
+    </div>
+    <details class="danger-zone">
+      <summary>Delete account</summary>
+      <p class="fine">This deletes your account and the tasks saved online. It can't be undone. A copy of your tasks stays on this device, without an account. Type <b>DELETE</b> to confirm.</p>
+      <div class="pw-row">
+        <input id="deleteConfirm" type="text" autocomplete="off" aria-label="Type DELETE to confirm">
+        <button type="button" class="btn danger sm" id="deleteAcctBtn" disabled>Delete my account</button>
+      </div>
+    </details>
+    <p class="err" id="acctErr" role="alert" hidden></p>
+  </div>
+
+  <!-- After the password-reset link -->
+  <form id="newPwForm" class="auth-view" novalidate hidden>
+    <p class="fine">Choose a new password for your account.</p>
+    <div class="field">
+      <label for="newPw">New password</label>
+      <input id="newPw" type="password" autocomplete="new-password" minlength="8" required>
+    </div>
+    <p class="err" id="newPwErr" role="alert" hidden></p>
+    <div class="dlg-foot">
+      <span class="spacer"></span>
+      <button type="submit" class="btn primary">Save password</button>
+    </div>
+  </form>
+</dialog>
+
 <div id="toasts" class="toasts"></div>
 <p id="cardHint" hidden>Enter to edit. Space to mark done. Arrow keys move 15 minutes. Shift and arrow keys change length.</p>
 
+<script src="js/vendor/supabase.js"></script>
+<script src="js/config.js"></script>
 <script src="js/platform.js"></script>
 <script src="js/store.js"></script>
+<script src="js/sync.js"></script>
 <script src="js/timeline.js"></script>
 <script src="js/app.js"></script>
 </body>
