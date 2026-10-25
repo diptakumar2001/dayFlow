@@ -162,6 +162,48 @@ const Platform = (() => {
     });
   }
 
+  // Resolves with the chosen image File, or null if cancelled.
+  function pickImage() {
+    return new Promise((resolve) => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      input.addEventListener("change", () => resolve((input.files && input.files[0]) || null));
+      input.click();
+    });
+  }
+
+  // ---- Images (background photos) ----
+  // Too big for localStorage (5 MB, shared with tasks), so they go in IndexedDB.
+  // Works in browsers and in the phone app's WebView. Photos stay on this device.
+  const images = (() => {
+    let dbp = null;
+    const db = () =>
+      (dbp =
+        dbp ||
+        new Promise((resolve, reject) => {
+          const req = indexedDB.open("dayflow-images", 1);
+          req.onupgradeneeded = () => req.result.createObjectStore("images");
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        }));
+    const run = (mode, fn) =>
+      db().then(
+        (d) =>
+          new Promise((resolve, reject) => {
+            const tx = d.transaction("images", mode);
+            const req = fn(tx.objectStore("images"));
+            tx.oncomplete = () => resolve(req.result);
+            tx.onerror = () => reject(tx.error);
+          })
+      );
+    return {
+      put: (key, blob) => run("readwrite", (s) => s.put(blob, key)),
+      get: (key) => run("readonly", (s) => s.get(key)).catch(() => null),
+      remove: (key) => run("readwrite", (s) => s.delete(key)).catch(() => {}),
+    };
+  })();
+
   // ---- App lifecycle ----
   // fn returns true when it closed something; otherwise the app exits as usual.
   function onBack(fn) {
@@ -175,5 +217,5 @@ const Platform = (() => {
     });
   }
 
-  return { native, storage, ready, reminders, saveFile, openFile, onBack, onResume };
+  return { native, storage, ready, reminders, saveFile, openFile, pickImage, images, onBack, onResume };
 })();

@@ -12,7 +12,7 @@ Team: Dipta Kumar Mondal (0302436m), Preeti Preeti (0304488p)
 
 Data is saved on the device (the browser's `localStorage`; in the phone app also in native storage), so
 tasks stay after a refresh. On first launch the app loads a few example tasks (marked with a banner); click
-**Clear examples** to start empty. Use **Settings and backup → Save a backup** to keep a copy or move your
+**Clear examples** to start empty. Use **Settings (gear icon) → Save a backup** to keep a copy or move your
 tasks to another device.
 
 ### Accounts and cloud sync (Supabase)
@@ -67,7 +67,7 @@ to explain why they need it.
 
 ```
 dayflow/
-├── index.html          Page layout: top bar, timeline, sidebar, task dialog
+├── index.html          Page layout: top bar, timeline, sidebar, dialogs (task, search, settings, account)
 ├── css/styles.css      All styling, theme tokens (light + dark), responsive rules
 ├── js/config.js        Supabase project URL and public key (empty = no accounts)
 ├── js/vendor/          supabase-js, bundled so the app works offline
@@ -97,6 +97,11 @@ first, which is how undo works. The timeline is re-drawn from the array after ev
 
 ## Features
 
+The screen is kept calm on purpose: the timeline, today's progress with "Up next", Quick add and the To-do
+list. Search (🔍, `F`), the light/dark switch (☾/☀) and Settings (your theme, day, backup, reminders, help)
+open from the top bar, and the task
+form folds the less-used fields (course, reminder, repeat, notes) under **More options**.
+
 - Create, edit and delete tasks (dialog form, or **click an empty time** on the timeline)
 - **Quick add** from one line of text, e.g. `Study 3pm 2h !high #hci`, `Gym tomorrow 7am 45m daily`,
   `Lecture 9-11am weekly`, `Meet supervisor next monday 10am`, `Lab report due fri`. The preview says when
@@ -121,6 +126,17 @@ first, which is how undo works. The timeline is re-drawn from the array after ev
   reminders you missed while the page was closed; in the phone app they arrive even when the app is closed
 - Works on phones: summary and quick add sit above the timeline; hold a task to drag it, swipe to scroll
 - Full keyboard support and screen-reader labels
+- **Light and dark themes**: a switch in the top bar, plus System / Light / Dark in Settings. Dark mode is a
+  deep navy. Buttons, toasts and dialogs use a light "Liquid Glass" style (translucent, blurred); task cards and
+  the timeline stay solid for easy reading. Glass turns solid when the device asks for reduced transparency or
+  more contrast
+- **Sky backgrounds**: a soft day sky (drawn in CSS) in light mode and a night-sky picture in dark mode, with the
+  colors matched to it (moonlight-blue accent, warm "now" line). Panels are slightly see-through so the sky
+  shows. In Settings → Appearance each theme can use its sky, no picture, or **your own photo**. Photos are
+  shrunk on the device, kept on the device (not in backups or your account), and DayFlow adjusts a veil from the
+  photo's brightness so text stays readable
+- The night-sky picture is `images/night-sky.webp`. If you publish DayFlow, make sure you're allowed to use it
+  (or replace it with a free-licence photo, e.g. from Unsplash or Pexels)
 
 ## How the HCI concepts from the proposal are implemented
 
@@ -128,7 +144,7 @@ first, which is how undo works. The timeline is re-drawn from the array after ev
 |---|---|
 | Direct manipulation | Drag task cards to move them, drag the bottom edge to resize, click an empty slot to create. Changes appear immediately and can be undone. |
 | Interface metaphor | The timeline looks like a planner page: ruled hour lines, a margin line with hour labels, a big date number and ISO week number in the header. |
-| Visibility | All of the day's tasks are on the timeline and in the sidebar agenda; progress and "Up next" are always shown; hints under the timeline explain the main gestures. |
+| Visibility | The main screen shows only what's needed every day: the timeline, progress and "Up next", Quick add and the To-do list. Search, settings, backup and help (gestures, shortcuts, priority key) are one click away in the top bar. |
 | Feedback | Checkmark animation on completion; live time label and dashed "ghost" of the old position while dragging; a toast confirms every action. |
 | Constraints / error prevention | Overlaps are detected while dragging (striped card + label) and must be confirmed ("Keep it here" / "Move back"). The form shows the overlap and changes the button to "Save anyway". Tasks can't run past midnight. |
 | Consistency | Day and week views use the same card layout, the same priority colors, shapes and labels. |

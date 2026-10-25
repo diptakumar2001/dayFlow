@@ -16,7 +16,7 @@ shutil.rmtree(www, ignore_errors=True)
 www.mkdir()
 for name in ["index.html", "manifest.json"]:
     shutil.copy2(root / name, www / name)
-for folder in ["css", "js", "fonts", "icons"]:
+for folder in ["css", "js", "fonts", "icons", "images"]:
     shutil.copytree(root / folder, www / folder)
 
 # ---- single-file version ----
@@ -27,6 +27,7 @@ def inline_css(m):
     css = (root / m.group(1)).read_text(encoding="utf-8")
     # url(../fonts/x.woff2) -> embedded, so the single file still works offline
     css = re.sub(r"url\(\.\./fonts/([^)]+)\)", lambda f: f"url({data_uri(root / 'fonts' / f.group(1), 'font/woff2')})", css)
+    css = re.sub(r"url\(\.\./images/([^)]+)\)", lambda f: f"url({data_uri(root / 'images' / f.group(1), 'image/webp')})", css)
     return "<style>\n" + css + "\n</style>"
 
 def inline_js(m):

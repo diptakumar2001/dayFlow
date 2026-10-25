@@ -1,6 +1,6 @@
 /* =========================================================
    DayFlow — app controller
-   Header, sidebar lists (leftovers, agenda, to-do, search),
+   Header, sidebar lists (leftovers, to-do), search and settings dialogs,
    task form, quick add, toasts (feedback + undo), overlap
    confirmation, settings, backup, reminders, shortcuts.
    ========================================================= */
@@ -124,7 +124,6 @@
     $("#exampleBanner").hidden = !Store.all().some((t) => t.sample);
     Timeline.render(state, opts);
     renderSummary();
-    renderAgenda();
     renderLeftovers();
     renderTodos();
     renderSearch();
@@ -139,7 +138,7 @@
         <span class="dh-num">${D.fromKey(state.date).getDate()}</span>
         <span class="dh-text">
           <b>${D.fmt(state.date, { weekday: "long" })}${isToday ? ' <span class="today-pill">Today</span>' : ""}</b>
-          <span>${D.fmt(state.date, { month: "long", year: "numeric" })} · Week ${D.isoWeek(state.date)}</span>
+          <span>${D.fmt(state.date, { month: "long" })}</span>
         </span>`;
     } else {
       const days = D.weekDays(state.date);
@@ -211,7 +210,7 @@
     } else next = `<b>First up:</b> ${esc(open[0].title)} at ${D.fmtTime(open[0].start)}`;
     $("#upNext").innerHTML = next;
 
-    // Week totals, planned hours per course, and the streak
+    // Week totals, planned hours per course and the streak: week view only, to keep the day view calm
     const parts = [];
     if (state.view === "week") {
       const week = D.weekDays(k).flatMap((d) => Store.tasksOn(d));
@@ -220,36 +219,11 @@
       week.forEach((t) => t.course && (hours[t.course] = (hours[t.course] || 0) + t.duration));
       const byCourse = Object.entries(hours).sort((a, b) => b[1] - a[1]);
       if (byCourse.length) parts.push(`Planned: ${byCourse.map(([c, m]) => `${esc(c)} ${D.fmtDuration(m)}`).join(" · ")}`);
+      const s = streak();
+      if (s >= 2) parts.push(`${s} days in a row with everything done.`);
     }
-    const s = streak();
-    if (s >= 2) parts.push(`${s} days in a row with everything done.`);
     $("#weekStats").innerHTML = parts.join("<br>");
     $("#weekStats").hidden = !parts.length;
-  }
-
-  function renderAgenda() {
-    const k = state.date;
-    const list = Store.tasksOn(k);
-    const ag = $("#agenda");
-    if (!list.length) {
-      ag.innerHTML = `<li class="ag-empty">Click a time on the timeline, or type a task in Quick add.</li>`;
-      return;
-    }
-    ag.innerHTML = list
-      .map((t) => {
-        const flash = state.flash && state.flash.id === t.id && state.flash.date === k ? " just-done" : "";
-        return `<li class="ag-item p-${t.priority}${t.done ? " done" : ""}${flash}">
-          <button type="button" class="check" data-ag-toggle="${t.id}" aria-pressed="${t.done}"
-            aria-label="${t.done ? "Mark not done" : "Mark done"}: ${esc(t.title)}">${Timeline.CHECK_SVG}</button>
-          <button type="button" class="ag-main" data-ag-open="${t.id}">
-            <span class="ag-time">${D.fmtTime(t.start)}</span>
-            <span class="ag-title">${esc(t.title)}</span>
-            ${Timeline.courseTag(t.course)}
-            ${Timeline.priorityTag(t.priority)}
-          </button>
-        </li>`;
-      })
-      .join("");
   }
 
   // Unfinished one-off tasks from earlier days. Shown on today only; nothing moves by itself.
@@ -257,7 +231,7 @@
     const today = D.todayKey();
     const list = state.date === today ? Store.leftovers(today) : [];
     $("#leftoverSec").hidden = !list.length;
-    $("#leftoverCount").textContent = list.length ? `(${list.length})` : "";
+    $("#leftoverCount").textContent = `${list.length} unfinished from earlier`;
     $("#leftovers").innerHTML = list
       .map(
         (t) => `<li class="ag-item p-${t.priority}">
@@ -279,17 +253,25 @@
     if (n < 0) return `<span class="due over">overdue ${-n} day${n === -1 ? "" : "s"}</span>`;
     if (n === 0) return `<span class="due soon">due today</span>`;
     if (n === 1) return `<span class="due soon">due tomorrow</span>`;
-    return `<span class="due">due ${D.fmt(due, { weekday: "short", month: "short", day: "numeric" })} · in ${n} days</span>`;
+    return `<span class="due">due ${D.fmt(due, n < 7 ? { weekday: "short" } : { month: "short", day: "numeric" })}</span>`;
   }
 
+  const TODO_SHOWN = 5;
+  let todosExpanded = false;
+
   function renderTodos() {
-    const list = Store.todos();
+    const all = Store.todos();
     const ol = $("#todos");
-    if (!list.length) {
-      ol.innerHTML = `<li class="ag-empty">Things without a time go here. Type “due fri” in Quick add, or tick “No set time” in the form.</li>`;
+    const more = $("#todoMore");
+    const hidden = todosExpanded ? 0 : Math.max(0, all.length - TODO_SHOWN);
+    more.hidden = !hidden && !(todosExpanded && all.length > TODO_SHOWN);
+    more.textContent = hidden ? `Show ${hidden} more` : "Show less";
+    if (!all.length) {
+      ol.innerHTML = `<li class="ag-empty">Nothing yet. Type “due fri” in Quick add.</li>`;
       return;
     }
-    ol.innerHTML = list
+    ol.innerHTML = all
+      .slice(0, all.length - hidden)
       .map(
         (t) => `<li class="ag-item p-${t.priority}">
           <button type="button" class="check" data-td-done="${t.id}" aria-label="Mark done: ${esc(t.title)}">${Timeline.CHECK_SVG}</button>
@@ -545,6 +527,7 @@
     reminder: $("#fReminder"), course: $("#fCourse"), notes: $("#fNotes"), end: $("#fEnd"),
     warn: $("#overlapWarn"), save: $("#fSave"), del: $("#fDelete"), delDay: $("#fDeleteDay"), heading: $("#dlgTitle"),
     titleErr: $("#titleErr"), timeErr: $("#timeErr"), scope: $("#fScope"), scopeDay: $("#fScopeDay"),
+    more: $("#fMore"), moreHint: $("#fMoreHint"),
   };
   let editingId = null;
   let editingDate = null; // the clicked day of a repeating task
@@ -599,6 +582,9 @@
     f.form.querySelector(`input[name="priority"][value="${prio}"]`).checked = true;
     $("#courseList").innerHTML = Store.courses().map((c) => `<option value="${esc(c)}">`).join("");
 
+    // Less-used fields stay folded unless this task already uses them.
+    f.more.open = !!t && (!!t.course || t.reminder !== null || t.recurrence !== "none" || !!t.notes);
+
     const repeating = isRepeating(t);
     f.scope.hidden = !repeating;
     f.scopeDay.textContent = repeating ? `Only ${D.shortDate(date)}` : "This day only";
@@ -630,8 +616,19 @@
     };
   }
 
+  // What's set inside "More options", shown on the folded line.
+  function moreSummary(todo) {
+    const bits = [];
+    if (f.course.value.trim()) bits.push(f.course.value.trim());
+    if (!todo && f.reminder.value !== "") bits.push("reminder");
+    if (!todo && f.repeat.value !== "none") bits.push(f.repeat.options[f.repeat.selectedIndex].text.toLowerCase());
+    if (f.notes.value.trim()) bits.push("notes");
+    return bits.length ? `· ${bits.join(" · ")}` : "";
+  }
+
   function updateFormFeedback() {
     const todo = f.noTime.checked;
+    f.moreHint.textContent = moreSummary(todo);
     f.form.querySelectorAll(".timed").forEach((el) => (el.hidden = todo));
     f.dateLabel.textContent = todo ? "Due date (optional)" : "Date";
     f.date.required = !todo;
@@ -870,9 +867,10 @@
     const text = input.value.trim();
     box.classList.remove("warn");
     if (!text) {
-      box.innerHTML = "Add a time, a length, and a priority if you like.";
+      box.hidden = true; // the preview only shows while typing
       return null;
     }
+    box.hidden = false;
     const q = parseQuick(text);
     if (!q.title) {
       box.textContent = "Type a name for the task.";
@@ -1036,6 +1034,204 @@
   }
 
   // ---------------------------------------------------------
+  // Theme: System (follows the device), Light or Dark.
+  // Per device, not per account: people often want dark on the
+  // phone and light on a laptop. index.html applies it before
+  // the first paint; this keeps the button and Settings in step.
+  // ---------------------------------------------------------
+  const THEME_KEY = "dayflow.theme";
+  const darkQuery = matchMedia("(prefers-color-scheme: dark)");
+
+  function themeChoice() {
+    const t = Platform.storage.get(THEME_KEY);
+    return t === "light" || t === "dark" ? t : "system";
+  }
+  const isDark = () => themeChoice() === "dark" || (themeChoice() === "system" && darkQuery.matches);
+
+  function applyTheme() {
+    const choice = themeChoice();
+    const root = document.documentElement;
+    if (choice === "system") delete root.dataset.theme;
+    else root.dataset.theme = choice;
+    const dark = isDark();
+    const btn = $("#themeBtn");
+    const label = dark ? "Switch to light mode" : "Switch to dark mode";
+    btn.setAttribute("aria-label", label);
+    btn.title = label;
+    btn.classList.toggle("is-dark", dark);
+    $("#themeSeg")
+      .querySelectorAll("[data-theme-choice]")
+      .forEach((b) => b.setAttribute("aria-checked", String(b.dataset.themeChoice === choice)));
+    // Browser and phone status bar match the page.
+    $('meta[name="theme-color"]').content = getComputedStyle(root).getPropertyValue("--paper").trim();
+  }
+
+  function setTheme(choice) {
+    // A short cross-fade, only for this switch (not on every hover or render).
+    const root = document.documentElement;
+    root.classList.add("theme-fade");
+    setTimeout(() => root.classList.remove("theme-fade"), 350);
+    if (choice === "system") Platform.storage.remove(THEME_KEY);
+    else Platform.storage.set(THEME_KEY, choice);
+    applyTheme();
+  }
+
+  // ---------------------------------------------------------
+  // Backgrounds: one choice per theme (built-in sky, none, or
+  // the person's own photo). Photos are shrunk and kept on this
+  // device (Platform.images); the veil is set from the photo's
+  // brightness so text stays readable.
+  // ---------------------------------------------------------
+  const SKY = {
+    day: { key: "dayflow.sky.day", img: "sky-day", cssVar: "--sky-day", veilVar: "--veil-day", attr: "skyDay", name: "Light mode", builtin: "Sky" },
+    night: { key: "dayflow.sky.night", img: "sky-night", cssVar: "--sky-night", veilVar: "--veil-night", attr: "skyNight", name: "Dark mode", builtin: "Night sky" },
+  };
+  const skyUrls = {}; // object URLs of loaded photos
+
+  function skyChoice(w) {
+    try {
+      return JSON.parse(Platform.storage.get(SKY[w].key)) || { mode: "builtin" };
+    } catch (e) {
+      return { mode: "builtin" };
+    }
+  }
+  const saveSkyChoice = (w, c) => Platform.storage.set(SKY[w].key, JSON.stringify(c));
+
+  async function applySky(w) {
+    const s = SKY[w];
+    const c = skyChoice(w);
+    const root = document.documentElement;
+    if (c.photo && !skyUrls[w]) {
+      const blob = await Platform.images.get(s.img);
+      if (blob) skyUrls[w] = URL.createObjectURL(blob);
+      else {
+        // The photo is gone (storage cleared): quietly back to the built-in sky.
+        Object.assign(c, { mode: c.mode === "custom" ? "builtin" : c.mode, photo: false });
+        saveSkyChoice(w, c);
+      }
+    }
+    root.dataset[s.attr] = c.mode;
+    if (c.mode === "custom" && skyUrls[w]) {
+      root.style.setProperty(s.cssVar, `url("${skyUrls[w]}")`);
+      root.style.setProperty(s.veilVar, String(c.veil));
+    } else {
+      root.style.removeProperty(s.cssVar);
+      root.style.removeProperty(s.veilVar);
+    }
+  }
+
+  async function applySkies() {
+    await Promise.all([applySky("day"), applySky("night")]);
+    document.documentElement.classList.remove("sky-loading");
+    renderSkySettings();
+  }
+
+  function renderSkySettings() {
+    Object.keys(SKY).forEach((w) => {
+      const row = $(`.sky-row[data-sky="${w}"]`);
+      const c = skyChoice(w);
+      row.querySelectorAll("[data-sky-mode]").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.skyMode === c.mode)));
+      const thumb = row.querySelector(".sky-thumb");
+      thumb.hidden = !skyUrls[w];
+      if (skyUrls[w]) thumb.src = skyUrls[w];
+      row.querySelector("[data-sky-choose]").textContent = skyUrls[w] ? "Change photo…" : "Choose photo…";
+      row.querySelector("[data-sky-remove]").hidden = !skyUrls[w];
+    });
+  }
+
+  // Shrinks the photo (longest side 1600px, WebP or JPEG) and measures its average brightness (0–1).
+  async function prepareImage(file) {
+    if (file.size > 25 * 1024 * 1024) throw new Error("too big");
+    const bmp = await createImageBitmap(file);
+    const scale = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bmp.width * scale);
+    canvas.height = Math.round(bmp.height * scale);
+    canvas.getContext("2d").drawImage(bmp, 0, 0, canvas.width, canvas.height);
+    if (bmp.close) bmp.close();
+    const small = document.createElement("canvas");
+    small.width = small.height = 32;
+    const sx = small.getContext("2d", { willReadFrequently: true });
+    sx.drawImage(canvas, 0, 0, 32, 32);
+    const px = sx.getImageData(0, 0, 32, 32).data;
+    let sum = 0;
+    for (let i = 0; i < px.length; i += 4) sum += (0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2]) / 255;
+    const toBlob = (type, q) => new Promise((r) => canvas.toBlob(r, type, q));
+    let blob = await toBlob("image/webp", 0.82);
+    if (!blob || blob.type !== "image/webp") blob = await toBlob("image/jpeg", 0.82); // Safari can't make WebP
+    return { blob, brightness: sum / (px.length / 4) };
+  }
+
+  // Brighter photos get a darker veil at night; darker photos a lighter veil by day.
+  function veilFor(w, b) {
+    const v = w === "night" ? 0.35 + (b - 0.25) * 0.8 : 0.2 + (0.75 - b) * 0.8;
+    const [lo, hi] = w === "night" ? [0.35, 0.75] : [0.2, 0.6];
+    return Math.round(Math.min(hi, Math.max(lo, v)) * 100) / 100;
+  }
+
+  const skyLabel = (w, mode) => (mode === "builtin" ? SKY[w].builtin : mode === "none" ? "none" : "your photo");
+
+  async function setSkyMode(w, mode) {
+    const prev = skyChoice(w);
+    if (mode === prev.mode) return;
+    if (mode === "custom" && !prev.photo) return chooseSkyPhoto(w);
+    saveSkyChoice(w, { ...prev, mode });
+    await applySky(w);
+    renderSkySettings();
+    toast(`${SKY[w].name} background: ${skyLabel(w, mode)}.`, {
+      key: "sky",
+      actions: [
+        {
+          label: "Undo",
+          fn: async () => {
+            saveSkyChoice(w, prev);
+            await applySky(w);
+            renderSkySettings();
+          },
+        },
+      ],
+    });
+  }
+
+  async function chooseSkyPhoto(w) {
+    const file = await Platform.pickImage();
+    if (!file) return;
+    try {
+      const { blob, brightness } = await prepareImage(file);
+      await Platform.images.put(SKY[w].img, blob);
+      if (skyUrls[w]) URL.revokeObjectURL(skyUrls[w]);
+      skyUrls[w] = URL.createObjectURL(blob);
+      saveSkyChoice(w, { mode: "custom", photo: true, veil: veilFor(w, brightness) });
+      await applySky(w);
+      renderSkySettings();
+      toast(`${SKY[w].name} background set to your photo.`, { key: "sky" });
+    } catch (e) {
+      toast("That picture couldn't be used. Try a JPG or PNG under 25 MB.", { kind: "warn", key: "sky" });
+    }
+  }
+
+  async function removeSkyPhoto(w) {
+    await Platform.images.remove(SKY[w].img);
+    if (skyUrls[w]) URL.revokeObjectURL(skyUrls[w]);
+    delete skyUrls[w];
+    const c = skyChoice(w);
+    saveSkyChoice(w, { mode: c.mode === "custom" ? "builtin" : c.mode });
+    await applySky(w);
+    renderSkySettings();
+    toast(`Photo removed. ${SKY[w].name} uses ${skyLabel(w, skyChoice(w).mode)}.`, { key: "sky" });
+  }
+
+  function onSkyClick(e) {
+    const row = e.target.closest(".sky-row");
+    if (!row) return;
+    const w = row.dataset.sky;
+    const modeBtn = e.target.closest("[data-sky-mode]");
+    if (modeBtn) setSkyMode(w, modeBtn.dataset.skyMode);
+    if (e.target.closest("[data-sky-choose]")) chooseSkyPhoto(w);
+    if (e.target.closest("[data-sky-remove]")) removeSkyPhoto(w);
+  }
+
+  // ---------------------------------------------------------
   // Settings and backup
   // ---------------------------------------------------------
   const BACKUP_KEY = "dayflow.lastBackup";
@@ -1112,30 +1308,38 @@
   // ---------------------------------------------------------
   // Keyboard shortcuts
   // ---------------------------------------------------------
+  // Search and Settings live in their own dialogs, to keep the main screen calm.
+  const searchDlg = $("#searchDialog");
+  const settingsDlg = $("#settingsDialog");
+  const anyDialogOpen = () => [...document.querySelectorAll("dialog")].some((d) => d.open);
+
   function focusSearch() {
+    if (!searchDlg.open) searchDlg.showModal();
     $("#searchBox").focus();
     $("#searchBox").select();
+    renderSearch();
+  }
+
+  function openSettings() {
+    renderSettings();
+    updateNotifUI();
+    settingsDlg.showModal();
   }
 
   function onGlobalKey(e) {
     const tag = (e.target.tagName || "").toLowerCase();
     const typing = tag === "input" || tag === "textarea" || tag === "select" || e.target.isContentEditable;
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !typing && !dlg.open) {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !typing && !anyDialogOpen()) {
       e.preventDefault();
       doUndo();
       return;
     }
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k" && !dlg.open) {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k" && (!anyDialogOpen() || searchDlg.open)) {
       e.preventDefault();
       focusSearch();
       return;
     }
-    if (e.key === "Escape" && e.target === $("#searchBox") && e.target.value) {
-      e.target.value = "";
-      renderSearch();
-      return;
-    }
-    if (dlg.open || authDlg.open || typing || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (anyDialogOpen() || typing || e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.key === "Escape" && state.pending) {
       cancelPending();
       return;
@@ -1462,21 +1666,13 @@
 
   // Android back button: close what's open before leaving the app.
   function onBack() {
-    if (authDlg.open) {
-      authDlg.close();
-      return true;
-    }
-    if (dlg.open) {
-      dlg.close();
+    const open = [...document.querySelectorAll("dialog")].reverse().find((d) => d.open);
+    if (open) {
+      open.close();
       return true;
     }
     if (state.pending) {
       cancelPending();
-      return true;
-    }
-    if ($("#searchBox").value) {
-      $("#searchBox").value = "";
-      renderSearch();
       return true;
     }
     return false;
@@ -1548,12 +1744,6 @@
       updateQuickPreview();
     });
 
-    $("#agenda").addEventListener("click", (e) => {
-      const tg = e.target.closest("[data-ag-toggle]");
-      if (tg) return toggleDone(tg.dataset.agToggle, state.date);
-      const op = e.target.closest("[data-ag-open]");
-      if (op && !Timeline.focusCard(op.dataset.agOpen, state.date)) openForm({ id: op.dataset.agOpen, date: state.date });
-    });
     $("#leftovers").addEventListener("click", (e) => {
       const el = e.target.closest("[data-lo-done],[data-lo-move],[data-lo-del]");
       if (!el) return;
@@ -1573,7 +1763,31 @@
     $("#searchBox").addEventListener("input", renderSearch);
     $("#searchResults").addEventListener("click", (e) => {
       const el = e.target.closest("[data-sr-open]");
-      if (el) openTask(el.dataset.srOpen);
+      if (!el) return;
+      searchDlg.close();
+      openTask(el.dataset.srOpen);
+    });
+    $("#searchBtn").addEventListener("click", focusSearch);
+    $("#searchClose").addEventListener("click", () => searchDlg.close());
+    $("#settingsBtn").addEventListener("click", openSettings);
+    $("#themeBtn").addEventListener("click", () => setTheme(isDark() ? "light" : "dark"));
+    $("#themeSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("[data-theme-choice]");
+      if (b) setTheme(b.dataset.themeChoice);
+    });
+    darkQuery.addEventListener("change", applyTheme);
+    settingsDlg.addEventListener("click", onSkyClick);
+    applySkies();
+    applyTheme();
+    $("#settingsClose").addEventListener("click", () => settingsDlg.close());
+    [searchDlg, settingsDlg].forEach((d) =>
+      d.addEventListener("click", (e) => {
+        if (e.target === d) d.close(); // click on backdrop
+      })
+    );
+    $("#todoMore").addEventListener("click", () => {
+      todosExpanded = !todosExpanded;
+      renderTodos();
     });
 
     ["#setDayStart", "#setDayEnd", "#setWarnOverlaps"].forEach((s) => $(s).addEventListener("change", onSettingsChange));

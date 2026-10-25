@@ -17,8 +17,10 @@ features; don't re-read it to learn the structure, this file covers that.
 - `js/sync.js` — `Sync`: sign up/in/out, password reset, delete account, `push()`/`pull()` of task rows,
   settings. Disabled (device-only mode) when `CONFIG` is empty.
 - `js/timeline.js` — `Timeline`: day/week grid rendering, drag/resize (touch = hold first), keyboard moves.
-- `js/app.js` — everything else: header, sidebar lists, task form, quick add parser (`parseQuick`), settings,
-  backup UI, reminders, shortcuts. `init()` runs after `Platform.ready()`.
+- `js/app.js` — everything else: header, sidebar lists (leftovers, to-do), search and settings dialogs, task
+  form, quick add parser (`parseQuick`), backup UI, reminders, accounts, shortcuts. `init()` runs after `Platform.ready()`.
+- UI rule: keep the main screen calm (timeline, Today, Quick add, To-do). New options go in the Settings dialog
+  or the task form's "More options", not as new sidebar sections.
 - `css/styles.css` — theme tokens at the top (light + dark), grid areas for desktop vs phone at the bottom.
 
 ## Rules
@@ -32,6 +34,15 @@ features; don't re-read it to learn the structure, this file covers that.
 - Supabase only inside `sync.js`. Data safety comes from row-level security in `supabase/schema.sql`; the anon
   key is public, the service_role key must never be in the client. Schema changes go in `schema.sql`.
 - Device features only through `Platform` — never call `localStorage`, `Notification` or downloads directly.
+  One exception: the inline script in `index.html`'s `<head>` reads `dayflow.theme` to set the theme before
+  the first paint (Platform isn't loaded yet).
+- Theme: colors are tokens at the top of `styles.css`; the two dark blocks (media query + `[data-theme="dark"]`)
+  must stay identical. Text pairs must keep ≥ 4.5:1 contrast. Liquid Glass (`--glass-*`) only on controls and
+  floating surfaces (top-bar buttons, toasts, dialogs), never on task cards, the timeline or inputs.
+- Backgrounds: one fixed `body::before` layer = `var(--veil), var(--sky)`. Per theme: built-in (`--sky-day-builtin`
+  CSS sky / `images/night-sky.webp`), none, or the person's photo (`--sky-day`/`--sky-night` set by app.js,
+  `--veil-*` from the photo's brightness). Photos stay on the device in IndexedDB via `Platform.images`. Panels
+  use `--panel-fill` (see-through); task cards and inputs stay solid.
 - Tasks can't cross midnight. Overlap confirmation follows `settings.warnOverlaps`.
 - Style: IIFE modules, short "why" comments, escape user text with `esc()` before putting it in HTML.
 

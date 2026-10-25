@@ -95,8 +95,8 @@ const Timeline = (() => {
         <span class="card-meta">
           <span class="card-time">${range}</span>${priorityTag(t.priority)}
           ${courseTag(t.course)}
-          ${repeat ? '<span class="rep" title="Repeats">↻ Repeats</span>' : ""}
-          ${overlaps ? '<span class="ov">⚠ Overlap</span>' : ""}
+          ${repeat ? '<span class="rep" title="Repeats" aria-hidden="true">↻</span>' : ""}
+          ${overlaps ? '<span class="ov" title="Overlaps another task" aria-hidden="true">⚠</span>' : ""}
         </span>
       </div>
       <span class="resize" aria-hidden="true"></span>
@@ -158,8 +158,7 @@ const Timeline = (() => {
             ${days.map((d) => columnHtml(d, today, nowMin)).join("")}
           </div>
         </div>
-      </div>
-      <p class="tl-foot">Click an empty time to add a task · Drag a task to move it (on touch, hold first) · Drag its bottom edge to change its length</p>`;
+      </div>`;
 
     const scroller = root.querySelector(".tl-scroll");
     if (sameRange && prevScroll !== null && !opts.resetScroll) {
