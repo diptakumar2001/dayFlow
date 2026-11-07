@@ -10,13 +10,14 @@
   const D = DateUtil;
   const esc = Timeline.esc;
 
-  const state = { view: "day", date: D.todayKey(), pending: null, flash: null, dayStart: 7 * 60 };
+  const state = { view: "day", tab: "today", date: D.todayKey(), pending: null, flash: null, dayStart: 7 * 60 };
 
   // ---------------------------------------------------------
   // Settings (per device)
   // ---------------------------------------------------------
   const SETTINGS_KEY = "dayflow.settings";
-  const settings = { dayStart: 7 * 60, dayEnd: 23 * 60, warnOverlaps: true };
+  // remindBefore: minutes (null = none); alarmAtStart: ring when a task starts. Both are defaults for new tasks.
+  const settings = { dayStart: 7 * 60, dayEnd: 23 * 60, warnOverlaps: true, remindBefore: 15, alarmAtStart: true };
 
   function loadSettings() {
     try {
@@ -127,6 +128,38 @@
     renderLeftovers();
     renderTodos();
     renderSearch();
+    renderTabs();
+  }
+
+  // ---------------------------------------------------------
+  // Phone tab bar: Today / Week / To-do / More. The CSS shows one
+  // section at a time on phones; on bigger screens it's hidden.
+  // ---------------------------------------------------------
+  const TAB_KEY = "dayflow.tab";
+  const isPhone = () => matchMedia("(max-width: 760px)").matches;
+
+  function renderTabs() {
+    $(".app").dataset.tab = state.tab;
+    document.querySelectorAll(".tabbar [data-tab]").forEach((b) => {
+      if (b.dataset.tab === state.tab) b.setAttribute("aria-current", "page");
+      else b.removeAttribute("aria-current");
+    });
+    // Badge: open to-dos plus unfinished tasks from earlier days
+    const n = Store.todos().length + Store.leftovers(D.todayKey()).length;
+    const badge = $("#todoBadge");
+    badge.hidden = !n;
+    badge.textContent = n > 99 ? "99+" : String(n);
+    badge.setAttribute("aria-label", `${n} open`);
+  }
+
+  function setTab(tab) {
+    if (tab === "more") return openSettings();
+    state.tab = tab;
+    Platform.storage.set(TAB_KEY, tab);
+    if (tab === "today" && state.view !== "day") return setView("day");
+    if (tab === "week" && state.view !== "week") return setView("week");
+    render({ resetScroll: true });
+    if (tab === "todo") window.scrollTo({ top: 0 });
   }
 
   function renderHeader() {
@@ -473,6 +506,117 @@
     toast(`Done: “${t.title}”.`, { actions: [undoAction], key: "done" });
   }
 
+  // ---------------------------------------------------------
+  // Swipe gestures (phones): right = done, left = reschedule.
+  // Same actions as the check button and the task form, so
+  // keyboard and screen-reader users lose nothing.
+  // ---------------------------------------------------------
+  const moveSheet = $("#moveSheet");
+  let moving = null; // { id, date, later, tomorrow }
+
+  function onSwipe(id, date, dir) {
+    const t = Store.get(id);
+    if (!t) return;
+    if (dir === "left") return openMoveSheet(id, date);
+    if (t.start === null) toggleTodo(id);
+    else toggleDone(id, date);
+  }
+
+  const slotText = (s) => `${s.date === D.todayKey() ? "Today" : D.fmt(s.date, { weekday: "long" })}, ${D.fmtTime(s.start)}`;
+
+  function openMoveSheet(id, date) {
+    const t = Store.get(id);
+    if (!t) return;
+    const today = D.todayKey();
+    const tomorrow = D.addDays(today, 1);
+    const later = nextFreeSlot(today, t.duration);
+    const next = t.start !== null ? { date: tomorrow, start: t.start } : nextFreeSlot(tomorrow, t.duration);
+    moving = { id, date, later, tomorrow: next };
+    $("#moveWhat").textContent = `“${t.title}”`;
+    moveSheet.querySelector('[data-move="later"] b').textContent = later.date === today ? "Later today" : "Next free time";
+    $("#moveLater").textContent = slotText(later);
+    $("#moveTomorrow").textContent = t.start !== null ? `Same time, ${D.fmtTime(next.start)}` : slotText(next);
+    moveSheet.showModal();
+  }
+
+  // One day of a repeating task moves on its own; a to-do gets a time.
+  function moveTo(id, fromDate, slot) {
+    const t = Store.get(id);
+    if (!t) return;
+    const label = `Reschedule “${t.title}”`;
+    const patch = { date: slot.date, start: slot.start };
+    if (t.start !== null && t.recurrence !== "none") Store.detach(id, fromDate, patch, label);
+    else Store.update(id, patch, label);
+    render();
+    toast(`Moved “${t.title}” to ${slotText(slot)}.`, {
+      actions: [undoAction, { label: "Show", fn: () => goTo(slot.date, "day") }],
+      key: "move",
+    });
+  }
+
+  function onMoveSheetClick(e) {
+    const b = e.target.closest("[data-move]");
+    if (e.target === moveSheet || (b && b.dataset.move === "cancel")) return moveSheet.close();
+    if (!b || !moving) return;
+    const { id, date, later, tomorrow } = moving;
+    moveSheet.close();
+    if (b.dataset.move === "later") moveTo(id, date, later);
+    if (b.dataset.move === "tomorrow") moveTo(id, date, tomorrow);
+    if (b.dataset.move === "pick") {
+      const t = Store.get(id);
+      openForm(t.start === null ? { id, schedule: true } : { id, date });
+    }
+  }
+
+  // Lists (To-do, Left from earlier) get the same swipe as timeline cards.
+  // itemFor(li) → { id, date } or null.
+  function enableListSwipe(list, itemFor) {
+    list.addEventListener("pointerdown", (e) => {
+      if (e.pointerType !== "touch") return;
+      const li = e.target.closest(".ag-item");
+      const it = li && itemFor(li);
+      if (!it) return;
+      const t = Store.get(it.id);
+      const done = t && t.start !== null && t.doneDates.includes(it.date);
+      const tracker = Swipe.begin(li, e, {
+        labels: { right: done ? "Not done" : "Done", left: t && t.start === null ? "Schedule" : "Reschedule" },
+        onCommit: (dir) => onSwipe(it.id, it.date, dir),
+      });
+      const stop = () => {
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", up);
+        window.removeEventListener("pointercancel", cancel);
+      };
+      const move = (ev) => tracker.move(ev) === "no" && stop();
+      const up = () => {
+        if (tracker.swiping()) {
+          Swipe.swallowNextClick();
+          tracker.end();
+        }
+        stop();
+      };
+      const cancel = () => {
+        tracker.end(true);
+        stop();
+      };
+      window.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", up);
+      window.addEventListener("pointercancel", cancel);
+    });
+  }
+
+  // Once, on a touch phone: say how swiping works (it's invisible otherwise).
+  function showSwipeTip() {
+    const KEY = "dayflow.tip.swipe";
+    if (!isPhone() || !matchMedia("(pointer: coarse)").matches || Platform.storage.get(KEY) || !Store.all().length) return;
+    toast("Tip: swipe a task right to complete it, or left to reschedule. Hold a task to drag it.", {
+      timeout: 0,
+      key: "tip",
+      dismissable: false,
+      actions: [{ label: "Got it", fn: () => Platform.storage.set(KEY, "1") }],
+    });
+  }
+
   function goTo(date, view) {
     if (state.pending) cancelPending();
     state.date = date;
@@ -483,6 +627,9 @@
   function setView(v, rerender = true) {
     state.view = v;
     Platform.storage.set("dayflow.view", v);
+    // Keep the phone tab in step (D / W keys, opening a day from the week view, …)
+    state.tab = v === "week" ? "week" : "today";
+    Platform.storage.set(TAB_KEY, state.tab);
     if (rerender) render({ resetScroll: true });
   }
 
@@ -524,7 +671,7 @@
   const f = {
     form: $("#taskForm"), title: $("#fTitle"), noTime: $("#fNoTime"), date: $("#fDate"), dateLabel: $("#fDateLabel"),
     start: $("#fStart"), duration: $("#fDuration"), repeat: $("#fRepeat"), until: $("#fUntil"), untilField: $("#fUntilField"),
-    reminder: $("#fReminder"), course: $("#fCourse"), notes: $("#fNotes"), end: $("#fEnd"),
+    reminder: $("#fReminder"), alarm: $("#fAlarm"), course: $("#fCourse"), notes: $("#fNotes"), end: $("#fEnd"),
     warn: $("#overlapWarn"), save: $("#fSave"), del: $("#fDelete"), delDay: $("#fDeleteDay"), heading: $("#dlgTitle"),
     titleErr: $("#titleErr"), timeErr: $("#timeErr"), scope: $("#fScope"), scopeDay: $("#fScopeDay"),
     more: $("#fMore"), moreHint: $("#fMoreHint"),
@@ -575,7 +722,10 @@
     ensureDurationOption(t ? t.duration : 60);
     f.repeat.value = t ? t.recurrence : "none";
     f.until.value = (t && t.until) || "";
-    f.reminder.value = t && t.reminder !== null ? String(t.reminder) : "";
+    // New tasks start with the defaults from Settings → Reminders.
+    const reminder = t ? t.reminder : settings.remindBefore;
+    f.reminder.value = reminder !== null ? String(reminder) : "";
+    f.alarm.checked = t ? t.alarm : settings.alarmAtStart;
     f.course.value = t ? t.course : "";
     f.notes.value = t ? t.notes : "";
     const prio = t ? t.priority : "medium";
@@ -583,7 +733,8 @@
     $("#courseList").innerHTML = Store.courses().map((c) => `<option value="${esc(c)}">`).join("");
 
     // Less-used fields stay folded unless this task already uses them.
-    f.more.open = !!t && (!!t.course || t.reminder !== null || t.recurrence !== "none" || !!t.notes);
+    // (Reminder and alarm are usually set, so they don't open it; the folded line lists them.)
+    f.more.open = !!t && (!!t.course || t.recurrence !== "none" || !!t.notes);
 
     const repeating = isRepeating(t);
     f.scope.hidden = !repeating;
@@ -610,6 +761,7 @@
       recurrence: todo ? "none" : f.repeat.value,
       until: todo || f.repeat.value === "none" ? null : f.until.value || null,
       reminder: todo || f.reminder.value === "" ? null : Number(f.reminder.value),
+      alarm: !todo && f.alarm.checked,
       due: todo ? f.date.value || null : editing()?.due || null,
       course: f.course.value.trim(),
       notes: f.notes.value.trim(),
@@ -620,7 +772,8 @@
   function moreSummary(todo) {
     const bits = [];
     if (f.course.value.trim()) bits.push(f.course.value.trim());
-    if (!todo && f.reminder.value !== "") bits.push("reminder");
+    if (!todo && f.reminder.value !== "") bits.push(f.reminder.value === "0" ? "reminder at start" : `reminder ${f.reminder.value} min before`);
+    if (!todo && f.alarm.checked) bits.push("alarm");
     if (!todo && f.repeat.value !== "none") bits.push(f.repeat.options[f.repeat.selectedIndex].text.toLowerCase());
     if (f.notes.value.trim()) bits.push("notes");
     return bits.length ? `· ${bits.join(" · ")}` : "";
@@ -729,7 +882,7 @@
     if (v.start !== null) showDate(v.date);
     render();
     toast(msg, { actions: [undoAction], key: "save" });
-    if (v.reminder !== null) askForNotifications();
+    if (v.reminder !== null || v.alarm) askForNotifications();
   }
 
   // ---------------------------------------------------------
@@ -784,6 +937,7 @@
       grab(/\s(weekdays|every\s?weekday)(?=\s)/i, () => (out.recurrence = "weekdays")) ||
       grab(/\s(weekly|every\s?week)(?=\s)/i, () => (out.recurrence = "weekly"));
     grab(/\s(due|by)(?=\s)/i, () => (out.todo = true));
+    grab(/\s(noalarm|no\salarm)(?=\s)/i, () => (out.alarm = false)) || grab(/\s(alarm)(?=\s)/i, () => (out.alarm = true));
 
     // Days
     grab(/\s(tomorrow|tmrw|tmr)(?=\s)/i, () => setDate(D.addDays(D.todayKey(), 1))) ||
@@ -915,7 +1069,9 @@
     quickConfirmText = "";
     Store.add({
       title: q.title, date: q.todo ? D.todayKey() : q.date, start: q.start, duration: q.duration,
-      priority: q.priority, recurrence: q.recurrence, reminder: null, notes: "", course: q.course, due: q.due,
+      priority: q.priority, recurrence: q.recurrence, notes: "", course: q.course, due: q.due,
+      reminder: q.todo ? null : settings.remindBefore,
+      alarm: !q.todo && (q.alarm === undefined ? settings.alarmAtStart : q.alarm),
     });
     input.value = "";
     if (!q.todo) showDate(q.date);
@@ -928,40 +1084,75 @@
   }
 
   // ---------------------------------------------------------
-  // Reminders: in-app while open; on the phone app the device
-  // delivers them even when DayFlow is closed.
+  // Reminders and alarms. Each task can have a heads-up before
+  // it starts (default 15 min) and an alarm when it starts. In the
+  // phone app the device delivers both even when DayFlow is
+  // closed; in a browser they show while DayFlow is open.
   // ---------------------------------------------------------
   const FIRED_KEY = "dayflow.fired";
+  const SNOOZE_KEY = "dayflow.snoozes";
+  const SNOOZE_MIN = 5;
   const REMINDER_DAYS = 14;
   const fired = new Set();
   try {
     JSON.parse(Platform.storage.get(FIRED_KEY) || "[]").forEach((k) => fired.add(k));
   } catch (e) {}
   const reminderKey = (t, k) => `${t.id}|${k}|${t.start}|${t.reminder}`;
+  const alarmKey = (t, k) => `${t.id}|${k}|${t.start}|alarm`;
   function markFired(key, k) {
     fired.add(key);
     Platform.storage.set(FIRED_KEY, JSON.stringify([...fired].filter((x) => x.includes(`|${k}|`))));
   }
 
-  // Everything with a reminder in the next two weeks, for the device to schedule.
+  // Snoozed alarms are kept, so re-scheduling doesn't drop them. [{ id, date, title, at (ms) }]
+  function snoozes() {
+    try {
+      return JSON.parse(Platform.storage.get(SNOOZE_KEY) || "[]").filter((s) => s.at > Date.now() - 10 * 60000);
+    } catch (e) {
+      return [];
+    }
+  }
+  const saveSnoozes = (list) => Platform.storage.set(SNOOZE_KEY, JSON.stringify(list));
+  const startDate = (k, start) => {
+    const at = D.fromKey(k);
+    at.setMinutes(start);
+    return at;
+  };
+  const courseBit = (t) => (t.course ? ` · ${t.course}` : "");
+
+  // Everything to ring in the next two weeks, for the device to schedule.
   function upcomingReminders() {
     const today = D.todayKey();
     const out = [];
     for (let i = 0; i < REMINDER_DAYS; i++) {
       const k = D.addDays(today, i);
       Store.tasksOn(k).forEach((t) => {
-        if (t.reminder === null || t.done) return;
-        const at = D.fromKey(k);
-        at.setMinutes(t.start - t.reminder);
-        out.push({
-          key: reminderKey(t, k),
-          title: t.title,
-          body: `${t.reminder ? "Starts" : "Starting"} at ${D.fmtTime(t.start)}${t.course ? ` · ${t.course}` : ""}`,
-          at,
-          extra: { id: t.id, date: k },
-        });
+        if (t.done) return;
+        const at = startDate(k, t.start);
+        const range = D.fmtRange(t.start, t.duration);
+        if (t.reminder !== null && (t.reminder > 0 || !t.alarm)) {
+          out.push({
+            kind: "reminder", key: reminderKey(t, k), title: t.title,
+            body: t.reminder ? `In ${t.reminder} min · ${range}${courseBit(t)}` : `Starting now · ${range}${courseBit(t)}`,
+            at: new Date(at - t.reminder * 60000), extra: { id: t.id, date: k },
+          });
+        }
+        if (t.alarm) {
+          out.push({
+            kind: "alarm", key: alarmKey(t, k), title: `⏰ ${t.title}`,
+            body: `Time to start · ${range}${courseBit(t)}`, at, extra: { id: t.id, date: k },
+          });
+        }
       });
     }
+    snoozes().forEach((s) => {
+      const t = Store.get(s.id);
+      if (!t || t.doneDates.includes(s.date)) return;
+      out.push({
+        kind: "alarm", key: `${s.id}|${s.date}|snooze|${s.at}`, title: `⏰ ${t.title}`,
+        body: "Snoozed alarm", at: new Date(s.at), extra: { id: s.id, date: s.date },
+      });
+    });
     return out.sort((a, b) => a.at - b.at);
   }
 
@@ -972,33 +1163,90 @@
     syncTimer = setTimeout(() => Platform.reminders.sync(upcomingReminders()), 500);
   }
 
+  function snoozeAlarm(id, date) {
+    const t = Store.get(id);
+    if (!t) return;
+    const list = snoozes().filter((s) => !(s.id === id && s.date === date));
+    list.push({ id, date, at: Date.now() + SNOOZE_MIN * 60000 });
+    saveSnoozes(list);
+    scheduleReminderSync();
+    toast(`Snoozed “${t.title}” for ${SNOOZE_MIN} minutes.`, { key: "alarm" });
+  }
+
+  // The in-app alarm sound (browsers and the iPhone web app, while DayFlow is open).
+  // The phone app doesn't need it: its notification rings with the same sound.
+  let alarmAudio = null;
+  function ringAlarm() {
+    if (Platform.reminders.native) return;
+    try {
+      alarmAudio = alarmAudio || new Audio("sounds/dayflow-alarm.wav");
+      alarmAudio.currentTime = 0;
+      alarmAudio.play().catch(() => {}); // a browser may block sound until the page has been tapped
+    } catch (e) {}
+  }
+  const stopAlarm = () => alarmAudio && alarmAudio.pause();
+
+  function alarmToast(t, k) {
+    ringAlarm();
+    toast(`⏰ Time to start “${t.title}” (${D.fmtRange(t.start, t.duration)}).`, {
+      kind: "reminder",
+      timeout: 60000,
+      key: `alarm-${t.id}`,
+      actions: [
+        { label: "Done", fn: () => { stopAlarm(); if (!Store.get(t.id).doneDates.includes(k)) toggleDone(t.id, k); } },
+        { label: `Snooze ${SNOOZE_MIN} min`, fn: () => { stopAlarm(); snoozeAlarm(t.id, k); } },
+      ],
+    });
+    Platform.reminders.show(`⏰ DayFlow: ${t.title}`, `Time to start · ${D.fmtTime(t.start)}`);
+  }
+
   function checkReminders({ missed = false } = {}) {
     const k = D.todayKey();
     const now = D.nowMinutes();
     const passed = [];
     Store.tasksOn(k).forEach((t) => {
-      if (t.reminder === null || t.done) return;
-      const at = t.start - t.reminder;
-      const key = reminderKey(t, k);
-      if (fired.has(key) || now < at) return;
-      if (now > at + 10) {
-        // Passed while DayFlow was closed: summarised once, only while the task hasn't ended.
-        if (missed && now < t.start + t.duration) passed.push(t);
-        markFired(key, k);
-        return;
+      if (t.done) return;
+      // Heads-up before the start
+      if (t.reminder !== null && (t.reminder > 0 || !t.alarm)) {
+        const at = t.start - t.reminder;
+        const key = reminderKey(t, k);
+        if (!fired.has(key) && now >= at) {
+          markFired(key, k);
+          if (now > at + 10) {
+            // Passed while DayFlow was closed: summarised once, only while the task hasn't ended.
+            if (missed && now < t.start + t.duration) passed.push(t);
+          } else {
+            const when = t.reminder ? `starts in ${t.reminder} min, at ${D.fmtTime(t.start)}` : `starts now`;
+            toast(`Reminder: “${t.title}” ${when}.`, {
+              kind: "reminder",
+              timeout: 30000,
+              actions: [
+                { label: "Mark done", fn: () => toggleDone(t.id, k) },
+                { label: "Open", fn: () => openForm({ id: t.id, date: k }) },
+              ],
+            });
+            Platform.reminders.show(`DayFlow: ${t.title}`, `${t.reminder ? "Starts" : "Starting"} at ${D.fmtTime(t.start)}`);
+          }
+        }
       }
-      markFired(key, k);
-      const when = t.reminder ? `starts in ${t.reminder} min, at ${D.fmtTime(t.start)}` : `starts now`;
-      toast(`Reminder: “${t.title}” ${when}.`, {
-        kind: "reminder",
-        timeout: 30000,
-        actions: [
-          { label: "Mark done", fn: () => toggleDone(t.id, k) },
-          { label: "Open", fn: () => openForm({ id: t.id, date: k }) },
-        ],
-      });
-      Platform.reminders.show(`DayFlow: ${t.title}`, `${t.reminder ? "Starts" : "Starting"} at ${D.fmtTime(t.start)}`);
+      // Alarm at the start (only within its first 10 minutes; a late alarm is just noise)
+      if (t.alarm) {
+        const key = alarmKey(t, k);
+        if (!fired.has(key) && now >= t.start) {
+          markFired(key, k);
+          if (now <= t.start + 10) alarmToast(t, k);
+        }
+      }
     });
+    // Snoozed alarms that are due
+    const due = snoozes().filter((s) => s.at <= Date.now());
+    if (due.length) {
+      saveSnoozes(snoozes().filter((s) => s.at > Date.now()));
+      due.forEach((s) => {
+        const t = Store.tasksOn(s.date).find((x) => x.id === s.id);
+        if (t && !t.done) alarmToast(t, s.date);
+      });
+    }
     if (passed.length && !Platform.reminders.native) {
       const names = passed.slice(0, 2).map((t) => `“${t.title}” (${D.fmtTime(t.start)})`).join(" and ");
       toast(`While you were away: ${names}${passed.length > 2 ? ` and ${passed.length - 2} more` : ""}.`, {
@@ -1009,8 +1257,22 @@
     }
   }
 
+  // A notification (or one of the alarm's buttons) was tapped in the phone app.
+  function onReminderAction(action, x) {
+    if (!x.id || !x.date || !Store.get(x.id)) return;
+    if (action === "done") {
+      if (!Store.get(x.id).doneDates.includes(x.date)) toggleDone(x.id, x.date);
+      return;
+    }
+    if (action === "snooze") return snoozeAlarm(x.id, x.date);
+    goTo(x.date, "day");
+    Timeline.focusCard(x.id, x.date);
+  }
+
   async function updateNotifUI() {
     const perm = await Platform.reminders.permission();
+    // Android: on-time alarms are normally allowed automatically; warn only if they're switched off.
+    $("#exactWarn").hidden = !(Platform.reminders.native && perm === "granted" && !(await Platform.reminders.exactAllowed()));
     $("#notifBtn").hidden = perm !== "default";
     const native = Platform.reminders.native;
     $("#notifStatus").textContent = {
@@ -1064,6 +1326,7 @@
       .forEach((b) => b.setAttribute("aria-checked", String(b.dataset.themeChoice === choice)));
     // Browser and phone status bar match the page.
     $('meta[name="theme-color"]').content = getComputedStyle(root).getPropertyValue("--paper").trim();
+    Platform.ui.statusBar(dark); // phone app: status bar icons and color follow
   }
 
   function setTheme(choice) {
@@ -1232,6 +1495,23 @@
   }
 
   // ---------------------------------------------------------
+  // iPhone: a one-time hint to install DayFlow from Safari
+  // (Share → Add to Home Screen). Not shown in the phone app,
+  // once installed, or after it's dismissed.
+  // ---------------------------------------------------------
+  const HINT_KEY = "dayflow.installHint";
+  function showInstallHint() {
+    const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    if (!ios || Platform.native || Platform.standalone() || Platform.storage.get(HINT_KEY)) return;
+    toast("Install DayFlow: tap Share, then “Add to Home Screen”. It then opens like an app and works offline.", {
+      timeout: 0,
+      key: "install",
+      actions: [{ label: "Got it", fn: () => Platform.storage.set(HINT_KEY, "1") }],
+      dismissable: false,
+    });
+  }
+
+  // ---------------------------------------------------------
   // Settings and backup
   // ---------------------------------------------------------
   const BACKUP_KEY = "dayflow.lastBackup";
@@ -1240,6 +1520,8 @@
     $("#setDayStart").value = D.toInputTime(settings.dayStart);
     $("#setDayEnd").value = D.toInputTime(settings.dayEnd % 1440);
     $("#setWarnOverlaps").checked = settings.warnOverlaps;
+    $("#setRemind").value = settings.remindBefore === null ? "" : String(settings.remindBefore);
+    $("#setAlarm").checked = settings.alarmAtStart;
     const last = Platform.storage.get(BACKUP_KEY);
     const n = last ? D.diffDays(last, D.todayKey()) : null;
     const status = $("#backupStatus");
@@ -1261,6 +1543,8 @@
       settings.dayEnd = b;
     } else toast("Your day needs to be at least an hour long.", { kind: "warn", timeout: 3000, key: "settings" });
     settings.warnOverlaps = $("#setWarnOverlaps").checked;
+    settings.remindBefore = $("#setRemind").value === "" ? null : Number($("#setRemind").value);
+    settings.alarmAtStart = $("#setAlarm").checked;
     saveSettings();
     if (Sync.user()) Sync.pushSettings({ ...settings });
     renderSettings();
@@ -1329,6 +1613,11 @@
   function onGlobalKey(e) {
     const tag = (e.target.tagName || "").toLowerCase();
     const typing = tag === "input" || tag === "textarea" || tag === "select" || e.target.isContentEditable;
+    // Nothing behind the welcome page reacts to keys; Esc closes it only when opened from the top bar.
+    if (!welcome.hidden) {
+      if (e.key === "Escape" && welcomeClosable) closeWelcome();
+      return;
+    }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !typing && !anyDialogOpen()) {
       e.preventDefault();
       doUndo();
@@ -1373,12 +1662,41 @@
 
   const validEmail = (s) => /^\S+@\S+\.\S+$/.test(s);
 
+  // The account dialog has two views: the signed-in panel and "choose a new password".
+  // Signing in and creating an account happen on the welcome page.
   function showAuthView(view) {
-    $("#authForm").hidden = view !== "form";
     $("#acctView").hidden = view !== "account";
     $("#newPwForm").hidden = view !== "newpw";
-    $("#authTitle").textContent =
-      view === "account" ? "Your account" : view === "newpw" ? "New password" : authMode === "signup" ? "Create account" : "Sign in";
+    $("#authTitle").textContent = view === "newpw" ? "New password" : "Your account";
+  }
+
+  // ---- Welcome page (sign in / create account / continue without) ----
+  const welcome = $("#welcome");
+  const GUEST_KEY = "dayflow.guest"; // "continue without an account" was chosen on this device
+  let welcomeClosable = false; // opened from the top bar (can be closed), or the first thing people see
+
+  function openWelcome({ closable = false } = {}) {
+    if (!Sync.enabled) return;
+    welcomeClosable = closable;
+    setAuthMode(authMode);
+    welcome.hidden = false;
+    $(".app").inert = true; // keyboard and screen readers stay on the welcome page
+    document.body.classList.add("welcome-open");
+    setTimeout(() => $("#authEmail").focus(), 50);
+  }
+
+  function closeWelcome() {
+    welcome.hidden = true;
+    $(".app").inert = false;
+    document.body.classList.remove("welcome-open");
+  }
+
+  function continueWithout() {
+    Platform.storage.set(GUEST_KEY, "1");
+    closeWelcome();
+    toast("You're using DayFlow without an account. Your tasks stay on this device; you can sign in any time.", {
+      key: "auth",
+    });
   }
 
   function authMessage(err = "", ok = "") {
@@ -1397,18 +1715,16 @@
     $("#pwHint").hidden = mode !== "signup";
     $("#authForgot").hidden = mode === "signup";
     authMessage();
-    showAuthView("form");
   }
 
   function openAccount() {
     $("#acctErr").hidden = true;
     signOutAnyway = false;
-    if (Sync.user()) {
-      $("#deleteConfirm").value = "";
-      $("#deleteAcctBtn").disabled = true;
-      renderAccount();
-      showAuthView("account");
-    } else setAuthMode(authMode);
+    if (!Sync.user()) return openWelcome({ closable: true });
+    $("#deleteConfirm").value = "";
+    $("#deleteAcctBtn").disabled = true;
+    renderAccount();
+    showAuthView("account");
     authDlg.showModal();
   }
 
@@ -1470,7 +1786,8 @@
         }
       } else await Sync.signIn(email, pw);
       $("#authPassword").value = "";
-      authDlg.close();
+      Platform.storage.remove(GUEST_KEY);
+      closeWelcome();
       toast(`Signed in as ${email}. Your tasks are saved online.`, { key: "auth" });
     } catch (err) {
       authMessage(err.message);
@@ -1517,6 +1834,8 @@
       settings.dayEnd = s.dayEnd;
     }
     if (typeof s.warnOverlaps === "boolean") settings.warnOverlaps = s.warnOverlaps;
+    if (s.remindBefore === null || [0, 5, 10, 15, 30, 60].includes(s.remindBefore)) settings.remindBefore = s.remindBefore;
+    if (typeof s.alarmAtStart === "boolean") settings.alarmAtStart = s.alarmAtStart;
   }
 
   // Re-render after another device's changes, unless the person is in the middle of something.
@@ -1605,6 +1924,8 @@
     btn.disabled = false;
     authDlg.close();
     toast("Signed out. Your tasks are saved in your account.", { key: "auth" });
+    Platform.storage.remove(GUEST_KEY);
+    openWelcome(); // sign in again, as someone else, or continue without
   }
 
   async function doDeleteAccount() {
@@ -1621,6 +1942,7 @@
     }
     leaveAccount();
     Store.importTasks(keep, "merge"); // a copy stays on this device, without an account
+    Platform.storage.set(GUEST_KEY, "1");
     render();
     authDlg.close();
     toast("Your account and its online data were deleted. Your tasks are still on this device.", { key: "auth" });
@@ -1632,8 +1954,10 @@
       $("#newPwErr").hidden = true;
       showAuthView("newpw");
     }
-    if (u) enterAccount(u);
-    else leaveAccount();
+    if (u) {
+      closeWelcome(); // e.g. signed in by the link in a confirmation or reset email
+      enterAccount(u);
+    } else leaveAccount();
     renderAccount();
   }
 
@@ -1641,6 +1965,7 @@
     if (!Sync.enabled) return;
     $("#accountBtn").addEventListener("click", openAccount);
     $("#authClose").addEventListener("click", () => authDlg.close());
+    $("#welcomeSkip").addEventListener("click", continueWithout);
     authDlg.addEventListener("click", (e) => {
       if (e.target === authDlg) authDlg.close();
     });
@@ -1666,6 +1991,11 @@
 
   // Android back button: close what's open before leaving the app.
   function onBack() {
+    if (!welcome.hidden) {
+      if (!welcomeClosable) return false; // first screen: Back leaves the app
+      closeWelcome();
+      return true;
+    }
     const open = [...document.querySelectorAll("dialog")].reverse().find((d) => d.open);
     if (open) {
       open.close();
@@ -1673,6 +2003,11 @@
     }
     if (state.pending) {
       cancelPending();
+      return true;
+    }
+    // On a phone, Back from Week or To-do returns to Today before leaving the app.
+    if (isPhone() && state.tab !== "today") {
+      setTab("today");
       return true;
     }
     return false;
@@ -1690,6 +2025,12 @@
       Store.open(Sync.userKey(u));
     } else if (!Store.load()) Store.seed(makeExamples());
     if (Platform.storage.get("dayflow.view") === "week") state.view = "week";
+    const savedTab = Platform.storage.get(TAB_KEY);
+    state.tab = savedTab === "todo" ? "todo" : state.view === "week" ? "week" : "today";
+    document.querySelector(".tabbar").addEventListener("click", (e) => {
+      const b = e.target.closest("[data-tab]");
+      if (b) setTab(b.dataset.tab);
+    });
     Store.onSave(() => {
       scheduleReminderSync();
       Sync.schedulePush();
@@ -1704,6 +2045,7 @@
       onCreateAt: (date, start) => openForm({ date, start }),
       onDrop,
       onKeyMove: (m) => commitMove(m, { fromKeyboard: true }),
+      onSwipe,
       onRerender: () => render(),
     });
 
@@ -1744,6 +2086,16 @@
       updateQuickPreview();
     });
 
+    moveSheet.addEventListener("click", onMoveSheetClick);
+    enableListSwipe($("#todos"), (li) => {
+      const b = li.querySelector("[data-td-done]");
+      return b ? { id: b.dataset.tdDone, date: D.todayKey() } : null;
+    });
+    enableListSwipe($("#leftovers"), (li) => {
+      const b = li.querySelector("[data-lo-done]");
+      const t = b && Store.get(b.dataset.loDone);
+      return t ? { id: t.id, date: t.date } : null;
+    });
     $("#leftovers").addEventListener("click", (e) => {
       const el = e.target.closest("[data-lo-done],[data-lo-move],[data-lo-del]");
       if (!el) return;
@@ -1790,7 +2142,13 @@
       renderTodos();
     });
 
-    ["#setDayStart", "#setDayEnd", "#setWarnOverlaps"].forEach((s) => $(s).addEventListener("change", onSettingsChange));
+    ["#setDayStart", "#setDayEnd", "#setWarnOverlaps", "#setRemind", "#setAlarm"].forEach((s) =>
+      $(s).addEventListener("change", onSettingsChange)
+    );
+    $("#exactBtn").addEventListener("click", async () => {
+      await Platform.reminders.openExactSetting();
+      updateNotifUI();
+    });
     $("#exportBtn").addEventListener("click", exportBackup);
     $("#importBtn").addEventListener("click", importBackup);
     $("#notifBtn").addEventListener("click", async () => {
@@ -1800,11 +2158,8 @@
     });
     document.addEventListener("keydown", onGlobalKey);
     Platform.onBack(onBack);
-    Platform.reminders.onTap(({ id, date }) => {
-      if (!id || !date) return;
-      goTo(date, "day");
-      Timeline.focusCard(id, date);
-    });
+    Platform.reminders.setup();
+    Platform.reminders.onAction(onReminderAction);
 
     render({ resetScroll: true });
     renderSettings();
@@ -1813,6 +2168,14 @@
     updateNotifUI();
     scheduleReminderSync();
     if (u) refreshFromCloud();
+    Platform.ui.hideSplash();
+    Platform.registerOffline((apply) =>
+      toast("A new version of DayFlow is ready.", { timeout: 0, key: "update", actions: [{ label: "Reload", fn: apply }] })
+    );
+    showInstallHint();
+    // Accounts set up, nobody signed in, and no "continue without" yet: start on the welcome page.
+    if (Sync.enabled && !u && !Platform.storage.get(GUEST_KEY)) openWelcome();
+    else showSwipeTip();
 
     // Keep the "now" line, progress and reminders current.
     let lastMinute = D.nowMinutes();

@@ -43,25 +43,65 @@ Good to know:
 - People can delete their account in the app (Account → Delete account), which removes their online data.
   Apple requires this.
 
-### Phone app (Play Store / App Store)
+### Install on Android (free APK)
 
-The same code runs as a native app through [Capacitor](https://capacitorjs.com). You need Node.js, plus
-Android Studio for Android, or a Mac with Xcode for iOS.
+DayFlow's Android app is built for free on GitHub's computers (GitHub Actions); no Android Studio needed.
+
+1. On GitHub, open the repository's **Releases** page on your phone and tap the latest `DayFlow-x.y.z.apk`.
+2. When Android asks, allow your browser to **install unknown apps**, then tap **Install**.
+3. Open DayFlow and allow notifications. Reminders (default: 15 min before) and alarms (when a task
+   starts) then arrive on time, even when the app is closed and the phone is locked.
+
+To update, install the newer APK the same way; your tasks stay.
+
+**Make a new version:** `git tag v1.0.1` then `git push --tags`. GitHub builds the APK and puts it on a
+new Release page (about 5–8 minutes). You can also run it by hand: **Actions → Android APK → Run workflow**;
+the APK is then under that run's **Artifacts**.
+
+**Signing key (once).** Android only installs an update over an older version if both are signed with the
+same key. Create yours on your own computer, choose your own password, and keep the file **outside** the
+project folder and backed up (if it's lost, people have to uninstall to get updates):
 
 ```bash
-npm install
-npm run android
+keytool -genkeypair -v -keystore "$env:USERPROFILE\dayflow-release.jks" -alias dayflow -keyalg RSA -keysize 2048 -validity 10000
 ```
 
-`npm run android` (or `npm run ios`) rebuilds `www/`, copies it into the native project and opens the IDE,
-where you run it on a phone or emulator and build the release. In the app, reminders are delivered by the
-phone even when DayFlow is closed, and backups go through the share sheet.
+Copy it as text (PowerShell):
 
-To publish you also need: a Google Play developer account (one-time fee) and/or an Apple developer account
-(yearly fee), a short privacy policy page ("all data stays on your device; nothing is collected"), store
-screenshots, and app icons (`npx @capacitor/assets generate` makes them from one image). The app asks for
-exact-alarm permission on Android so reminders arrive on time; Google Play asks planner and reminder apps
-to explain why they need it.
+```bash
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("$env:USERPROFILE\dayflow-release.jks")) | Set-Clipboard
+```
+
+Then on GitHub: **Settings → Secrets and variables → Actions → New repository secret**, four times:
+`DAYFLOW_KEYSTORE_BASE64` (paste), `DAYFLOW_KEYSTORE_PASSWORD`, `DAYFLOW_KEY_ALIAS` (`dayflow`) and
+`DAYFLOW_KEY_PASSWORD` (the same password, unless you chose a different key password). Until these exist,
+the build makes a *debug* APK, which installs but can't be updated in place.
+
+### Install on iPhone (free, Add to Home Screen)
+
+1. Open the live DayFlow website in **Safari**.
+2. Tap **Share** → **Add to Home Screen** → **Add**. DayFlow gets its own icon, opens full screen and works
+   without a connection.
+
+Limits on iPhone (Apple's rules for web apps): reminders and the alarm only appear **while DayFlow is open**.
+Sign in, or save a backup now and then, so your tasks are safe if Safari clears website data. A native iPhone
+app needs a Mac or the paid Apple Developer Program; the Capacitor project is ready for that later.
+
+### Reminders and alarms
+
+Every new task gets a **reminder 15 minutes before** and an **alarm when it starts** (change the defaults in
+Settings → Reminders, or per task under **More options**; in Quick add, type `noalarm` or `alarm`). On
+Android the alarm uses its own loud channel and a chime, shows on the lock screen, and has **Done** and
+**Snooze 5 min** buttons. Notification-style alarms ring once (about 12 seconds); an alarm-clock screen that
+rings until stopped would need custom native code.
+
+### Developing the phone app
+
+`npm run android` rebuilds `www/`, copies it into `android/` and opens Android Studio (if installed).
+`node tools/make-icons.js` + `npx @capacitor/assets generate --android` remake the icons and splash screen;
+`python tools/make-alarm.py` remakes the alarm sound. The app ID is `io.github.diptakumar2001.dayflow`.
+Publishing on Google Play (one-time fee) or the App Store (yearly fee, needs a Mac or a cloud Mac) would
+also need a privacy policy page and store screenshots.
 
 ## Project structure
 
@@ -112,6 +152,11 @@ form folds the less-used fields (course, reminder, repeat, notes) under **More o
 - **Search** across all tasks, notes and courses
 - **Settings**: when your day starts and ends (new tasks are only suggested inside it), overlap questions on/off
 - **Backup**: save to a file and restore (replace or add)
+- **On phones**: a tab bar at the bottom (**Today · Week · To-do · More**) shows one section at a time, with a
+  count of open to-dos on the To-do tab. **Swipe a task right** to complete it and **left** to reschedule it
+  (Later today / Tomorrow / Pick a time); hold a task to drag it. A one-time tip explains the gestures
+- **Welcome page**: when accounts are set up, DayFlow opens on a sign-in / create-account page, with
+  **Continue without an account** for people who just want to use it on one device
 - **Accounts (optional)**: sign up with email and password, and tasks and settings sync between devices. It
   works offline and sends changes when you're back online. Includes forgot password, sign out and delete account
 - Day timeline and week view, with a live "now" line
@@ -175,4 +220,6 @@ form folds the less-used fields (course, reminder, repeat, notes) under **More o
 - Sync checks for changes from other devices when you switch back to DayFlow and about once a minute,
   not instantly. If the same task is changed on two devices before they sync, the last change saved wins.
 - In a browser, notifications only fire while the page is open (the phone app doesn't have this limit).
+- On iPhone (web app), reminders and alarms only show while DayFlow is open; Android alarms ring once (~12 s)
+  rather than until stopped.
 - Tasks can't run past midnight.

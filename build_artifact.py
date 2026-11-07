@@ -4,11 +4,27 @@ You don't need this to run the app — just open index.html. It makes:
   dist/dayflow-single.html  the whole app in one file (fonts and icon inlined)
   dist/artifact.html        the same, as a fragment for claude.ai Artifacts
   www/                      a clean copy of the web files for Capacitor (`npx cap sync`)
+It also stamps sw.js (the web app's offline cache) with a fingerprint of the app files, so every
+change reaches installed web apps. Commit sw.js after building.
 """
-import base64, pathlib, re, shutil
+import base64, hashlib, pathlib, re, shutil
 
 root = pathlib.Path(__file__).parent
 html = (root / "index.html").read_text(encoding="utf-8")
+
+# ---- sw.js version: a fingerprint of every file it caches ----
+sw = root / "sw.js"
+sw_text = sw.read_text(encoding="utf-8")
+cached = re.search(r"const FILES = \[(.*?)\];", sw_text, re.S).group(1)
+digest = hashlib.sha256()
+for name in re.findall(r'"([^"]+)"', cached):
+    f = root / ("index.html" if name == "./" else name)
+    if f.is_file():
+        digest.update(f.read_bytes())
+version = digest.hexdigest()[:10]
+new_sw = re.sub(r'const VERSION = "[^"]*";', f'const VERSION = "{version}";', sw_text)
+if new_sw != sw_text:
+    sw.write_text(new_sw, encoding="utf-8")
 
 # ---- www/ for the phone app (Capacitor's webDir) ----
 www = root / "www"

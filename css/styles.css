@@ -58,6 +58,7 @@
   --glass-edge: rgba(20, 32, 29, 0.12); --glass-shine: rgba(255, 255, 255, 0.9);
   --glass-shadow: 0 4px 14px rgba(20, 32, 29, 0.1);
   --now: var(--accent); --now-ink: var(--accent-ink);
+  --swipe-done-bg: #d3efe2; --swipe-done-ink: #0a4d36; --swipe-move-bg: #dbe5fa; --swipe-move-ink: #1c3a80;
   /* Day sky, drawn in CSS: soft blue with blurred clouds and a little sun glow (no image file) */
   --sky-day-builtin:
     radial-gradient(40% 30% at 85% 6%, rgba(255, 246, 222, 0.75), rgba(255, 246, 222, 0) 70%),
@@ -89,6 +90,7 @@
     --accent: #9db4ff; --accent-hover: #b8c8ff; --accent-ink: #0b1330; --accent-soft: #1a2350;
     --today-tint: rgba(157, 180, 255, 0.05);
     --now: #f3c9a4; --now-ink: #2a1806;
+    --swipe-done-bg: #123a2d; --swipe-done-ink: #a9eccf; --swipe-move-bg: #1b2752; --swipe-move-ink: #c9d5ff;
     --high: #f08a4b;   --high-soft: #3a2318;   --high-ink: #ffc9a6;
     --medium: #f2b83a; --medium-soft: #342a14; --medium-ink: #fbdc98;
     --low: #56b4e9;    --low-soft: #13284a;    --low-ink: #b2dbf4;
@@ -119,6 +121,7 @@
   --accent: #9db4ff; --accent-hover: #b8c8ff; --accent-ink: #0b1330; --accent-soft: #1a2350;
   --today-tint: rgba(157, 180, 255, 0.05);
   --now: #f3c9a4; --now-ink: #2a1806;
+  --swipe-done-bg: #123a2d; --swipe-done-ink: #a9eccf; --swipe-move-bg: #1b2752; --swipe-move-ink: #c9d5ff;
   --high: #f08a4b;   --high-soft: #3a2318;   --high-ink: #ffc9a6;
   --medium: #f2b83a; --medium-soft: #342a14; --medium-ink: #fbdc98;
   --low: #56b4e9;    --low-soft: #13284a;    --low-ink: #b2dbf4;
@@ -837,6 +840,120 @@ dialog {
 }
 @media (max-width: 420px) {
   .row2 { grid-template-columns: 1fr; }
+}
+
+/* ---------- Welcome page (sign in / create account) ----------
+   Full screen over the app, on the sky background; a glass card in the middle. */
+.welcome {
+  position: fixed; inset: 0; z-index: 90;
+  display: grid; place-items: center; overflow-y: auto;
+  padding: max(20px, env(safe-area-inset-top, 0px)) 16px max(20px, env(safe-area-inset-bottom, 0px));
+  background: color-mix(in srgb, var(--paper) 40%, transparent);
+}
+body.welcome-open { overflow: hidden; }
+.welcome-card {
+  width: min(440px, 100%);
+  display: flex; flex-direction: column; gap: 14px;
+  padding: 28px 24px 22px;
+  background: var(--glass-panel);
+  border: 1px solid var(--glass-edge);
+  border-radius: 24px;
+  box-shadow: inset 0 1px 0 var(--glass-shine), var(--shadow-2);
+  -webkit-backdrop-filter: var(--glass-blur-strong);
+  backdrop-filter: var(--glass-blur-strong);
+}
+.welcome-brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 800; font-size: 20px; }
+.welcome-brand .brand-mark { width: 34px; height: 34px; }
+.welcome h1 {
+  margin: 0; font-family: var(--font-display); font-weight: 800;
+  font-size: clamp(26px, 7vw, 32px); line-height: 1.08; letter-spacing: -0.02em;
+}
+.welcome-points { list-style: none; margin: 0 0 4px; padding: 0; display: grid; gap: 7px; font-size: 14.5px; color: var(--ink-2); }
+.welcome-points li { display: flex; align-items: baseline; gap: 10px; }
+.welcome-points li::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); transform: translateY(-1px); }
+.welcome .auth-mode { align-self: stretch; display: grid; grid-template-columns: 1fr 1fr; }
+.welcome #authSubmit { min-width: 120px; justify-content: center; }
+.welcome-skip { align-self: center; font-size: 15px; padding: 8px; }
+.welcome-note { margin: -8px 0 0; text-align: center; }
+
+/* ---------- Swipe gestures ----------
+   The item slides over a coloured layer: green = done (right), blue = reschedule (left). */
+.agenda { position: relative; }
+.ag-item { position: relative; touch-action: pan-y; }
+.ag-item.swiping { z-index: 2; background: var(--surface); border-radius: var(--r-sm); }
+.card.swiping { z-index: 6; box-shadow: var(--shadow-2); }
+.swipe-layer {
+  position: absolute; z-index: 1; pointer-events: none;
+  display: flex; align-items: center; justify-content: space-between; padding: 0 14px;
+  border-radius: var(--r-sm); font-size: 13px; font-weight: 700;
+}
+.swipe-layer[data-dir="right"] { background: var(--swipe-done-bg); color: var(--swipe-done-ink); }
+.swipe-layer[data-dir="left"] { background: var(--swipe-move-bg); color: var(--swipe-move-ink); }
+.swipe-layer[data-dir="right"] .sw-left, .swipe-layer[data-dir="left"] .sw-right, .swipe-layer:not([data-dir]) span { visibility: hidden; }
+.swipe-layer span { opacity: 0.7; transition: transform 0.15s, opacity 0.15s; }
+.swipe-layer.armed span { opacity: 1; transform: scale(1.12); }
+
+/* Reschedule sheet: slides up from the bottom on phones, a small dialog on bigger screens */
+dialog.sheet { width: min(420px, calc(100vw - 32px)); padding: 18px 18px 16px; }
+.sheet h2 { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: 22px; letter-spacing: -0.02em; }
+.sheet .fine { margin: 2px 0 14px; font-size: 14px; color: var(--ink-2); overflow-wrap: anywhere; }
+.sheet-actions { display: grid; gap: 8px; }
+.sheet-btn { flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; padding: 12px 14px; text-align: left; border-radius: 12px; }
+.sheet-btn b { font-size: 15px; }
+.sheet-btn span { font-size: 13px; color: var(--ink-2); font-weight: 400; }
+.sheet-cancel { width: 100%; justify-content: center; margin-top: 10px; border-radius: 12px; }
+@media (max-width: 760px) {
+  dialog.sheet {
+    width: 100vw; max-width: 100vw; margin: auto 0 0; border-radius: 22px 22px 0 0;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* ---------- Phone tab bar ----------
+   Phones show one section at a time (Today / Week / To-do), like a phone app; "More" opens Settings.
+   .app[data-tab] picks which grid areas are visible. Desktop and tablets keep the full layout. */
+.tabbar { display: none; }
+@media (max-width: 760px) {
+  .tabbar {
+    display: flex; gap: 4px;
+    position: fixed; z-index: 50;
+    left: max(12px, env(safe-area-inset-left, 0px)); right: max(12px, env(safe-area-inset-right, 0px));
+    bottom: max(10px, env(safe-area-inset-bottom, 0px));
+    padding: 6px;
+    background: var(--glass-fill);
+    border: 1px solid var(--glass-edge);
+    border-radius: 22px;
+    box-shadow: inset 0 1px 0 var(--glass-shine), var(--glass-shadow);
+    -webkit-backdrop-filter: var(--glass-blur-strong);
+    backdrop-filter: var(--glass-blur-strong);
+  }
+  .tabbar button {
+    position: relative; flex: 1; min-height: 52px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    border: 0; border-radius: 16px; background: none; cursor: pointer;
+    color: var(--ink-2); font-size: 11.5px; font-weight: 700;
+    transition: background-color 0.15s, color 0.15s, transform 0.2s cubic-bezier(0.3, 1.5, 0.5, 1);
+  }
+  .tabbar button:active { transform: scale(0.94); }
+  .tabbar button[aria-current="page"] { color: var(--ink); background: var(--glass-fill-hover); }
+  .tabbar button[aria-current="page"] svg { stroke: var(--accent); }
+  .tabbar svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .tab-badge {
+    position: absolute; top: 4px; left: calc(50% + 7px);
+    min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
+    background: var(--accent); color: var(--accent-ink);
+    font-size: 11px; line-height: 18px; text-align: center;
+  }
+
+  /* Room for the bar; toasts float above it */
+  .app { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
+  .toasts { bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
+  .controls .seg, #settingsBtn { display: none; } /* Day/Week and Settings live in the tab bar on phones */
+
+  .app[data-tab="today"] .side { display: none; }
+  .app[data-tab="week"] .summary, .app[data-tab="week"] .quick-sec, .app[data-tab="week"] .side { display: none; }
+  .app[data-tab="week"] .tl-panel { height: calc(100dvh - 250px); min-height: 360px; }
+  .app[data-tab="todo"] .summary, .app[data-tab="todo"] .tl-panel { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

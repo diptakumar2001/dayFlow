@@ -213,6 +213,7 @@ const Store = (() => {
       until: isKey(t.until) ? t.until : null, // last day a repeat happens
       skipDates: strList(t.skipDates), // repeat days removed or moved to their own task
       reminder: t.reminder === null || t.reminder === undefined || t.reminder === "" ? null : Number(t.reminder),
+      alarm: !!t.alarm, // ring when the task starts
       due: isKey(t.due) ? t.due : null,
       course: String(t.course || "").trim(),
       notes: t.notes || "",

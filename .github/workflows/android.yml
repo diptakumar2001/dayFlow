@@ -1,0 +1,96 @@
+# Builds the DayFlow Android app (APK) for free on GitHub's computers.
+# - Run it by hand: GitHub → Actions → "Android APK" → Run workflow. The APK is under the run's "Artifacts".
+# - Push a version tag (git tag v1.0.0 && git push --tags): the APK is also attached to a GitHub Release,
+#   a public page people can download it from on their phone.
+# Signing: with the four DAYFLOW_* secrets set (see README → "Signing key"), it builds a signed release
+# APK that installs over the previous version. Without them it builds a debug APK, which installs but
+# can't be updated in place.
+name: Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write # to create the Release on tags
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Version
+        id: version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then NAME="${GITHUB_REF#refs/tags/v}"; else NAME="$(node -p "require('./package.json').version")"; fi
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "DAYFLOW_VERSION_NAME=$NAME" >> "$GITHUB_ENV"
+          echo "DAYFLOW_VERSION_CODE=${{ github.run_number }}" >> "$GITHUB_ENV"
+
+      - name: Build the web files and copy them into the Android project
+        run: |
+          npm ci
+          python3 build_artifact.py
+          npx cap sync android
+
+      - name: Signing key
+        id: key
+        env:
+          KEYSTORE_B64: ${{ secrets.DAYFLOW_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.DAYFLOW_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.DAYFLOW_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.DAYFLOW_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/dayflow.jks"
+            {
+              echo "DAYFLOW_KEYSTORE=$RUNNER_TEMP/dayflow.jks"
+              echo "DAYFLOW_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD"
+              echo "DAYFLOW_KEY_ALIAS=$KEY_ALIAS"
+              echo "DAYFLOW_KEY_PASSWORD=${KEY_PASSWORD:-$KEYSTORE_PASSWORD}"
+            } >> "$GITHUB_ENV"
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::No signing key secrets set, so this is a debug APK (installs, but can't update an earlier install). See README → Signing key."
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build the APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          if [ "${{ steps.key.outputs.signed }}" = "true" ]; then
+            ./gradlew --no-daemon assembleRelease
+            cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/DayFlow-${{ steps.version.outputs.name }}.apk"
+          else
+            ./gradlew --no-daemon assembleDebug
+            cp app/build/outputs/apk/debug/app-debug.apk "$RUNNER_TEMP/DayFlow-${{ steps.version.outputs.name }}-debug.apk"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DayFlow-${{ steps.version.outputs.name }}
+          path: ${{ runner.temp }}/DayFlow-*.apk
+
+      - name: Attach to a GitHub Release (tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ runner.temp }}/DayFlow-*.apk
+          body: |
+            **Install on Android:** open this page on your phone, tap the `.apk` file below, allow your browser
+            to "install unknown apps" when asked, then tap Install. To update, install the newer APK the same way.

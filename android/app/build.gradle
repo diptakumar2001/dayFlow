@@ -1,14 +1,15 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "com.dayflow.planner"
+    namespace = "io.github.diptakumar2001.dayflow"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.dayflow.planner"
+        applicationId "io.github.diptakumar2001.dayflow"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        // Set by the GitHub Actions build (run number / package.json version); 1 / "1.0" for local builds.
+        versionCode((System.getenv("DAYFLOW_VERSION_CODE") ?: "1") as Integer)
+        versionName(System.getenv("DAYFLOW_VERSION_NAME") ?: "1.0")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,10 +17,24 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // The release signing key comes from the environment (GitHub Actions secrets), never from the repo.
+    // Without it, a release build is unsigned (fine for checking that it compiles).
+    signingConfigs {
+        release {
+            def ks = System.getenv("DAYFLOW_KEYSTORE")
+            if (ks) {
+                storeFile file(ks)
+                storePassword System.getenv("DAYFLOW_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("DAYFLOW_KEY_ALIAS")
+                keyPassword System.getenv("DAYFLOW_KEY_PASSWORD")
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (System.getenv("DAYFLOW_KEYSTORE")) signingConfig signingConfigs.release
         }
     }
 }

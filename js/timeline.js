@@ -222,11 +222,19 @@ const Timeline = (() => {
       armed: e.pointerType !== "touch",
     };
     if (drag.touch) {
+      // Day view: a sideways move (before the hold) is a swipe: right = done, left = reschedule.
+      if (state.view === "day" && drag.mode === "move" && cb.onSwipe) {
+        const done = t.doneDates.includes(card.dataset.date);
+        drag.swipe = Swipe.begin(card, e, {
+          labels: { right: done ? "Not done" : "Done", left: "Reschedule" },
+          onCommit: (dir) => cb.onSwipe(t.id, card.dataset.date, dir),
+        });
+      }
       drag.holdTimer = setTimeout(() => {
-        if (!drag) return;
+        if (!drag || drag.swiping) return;
         drag.armed = true;
         card.classList.add("lifted");
-        if (navigator.vibrate && navigator.userActivation?.hasBeenActive) navigator.vibrate(10);
+        Platform.ui.haptic();
       }, HOLD_MS);
     }
     window.addEventListener("pointermove", onMove);
@@ -247,6 +255,16 @@ const Timeline = (() => {
     if (!d) return;
     const dy = e.clientY - d.startY + (d.scroller.scrollTop - d.startScroll);
     const dx = e.clientX - d.startX;
+
+    if (d.swipe && !d.armed) {
+      const m = d.swipe.move(e);
+      if (m === "swipe") {
+        d.swiping = true;
+        clearTimeout(d.holdTimer);
+        return;
+      }
+      if (m === "wait") return; // not sure yet: neither swipe nor scroll
+    }
 
     if (!d.active) {
       if (Math.hypot(dx, dy) < 5) return;
@@ -323,6 +341,11 @@ const Timeline = (() => {
   function onUp() {
     const d = endDrag();
     if (!d) return;
+    if (d.swiping) {
+      Swipe.swallowNextClick();
+      d.swipe.end();
+      return;
+    }
     if (!d.active) {
       cb.onOpen(d.id, d.fromDate);
       return;
@@ -342,6 +365,7 @@ const Timeline = (() => {
 
   function cancelDrag() {
     const d = endDrag();
+    if (d && d.swiping) d.swipe.end(true); // spring back
     if (d && d.active) cb.onRerender();
   }
 

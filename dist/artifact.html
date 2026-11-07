@@ -22,6 +22,12 @@
   } catch (e) {}
 </script>
 <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjExMiIgZmlsbD0iIzBlNmI1OCIvPgogIDxwYXRoIGQ9Ik0xNDYgMTc2aDEyOE0xNDYgMjY0aDIyME0xNDYgMzUyaDkyIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iNDAiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxjaXJjbGUgY3g9IjM2NiIgY3k9IjE3NiIgcj0iNDQiIGZpbGw9IiNlNjlmMDAiLz4KPC9zdmc+Cg==" type="image/svg+xml">
+<!-- iPhone / iPad: Add to Home Screen opens DayFlow full screen with its own icon -->
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DayFlow">
 <style>
 /* =========================================================
    DayFlow — styles
@@ -83,6 +89,7 @@
   --glass-edge: rgba(20, 32, 29, 0.12); --glass-shine: rgba(255, 255, 255, 0.9);
   --glass-shadow: 0 4px 14px rgba(20, 32, 29, 0.1);
   --now: var(--accent); --now-ink: var(--accent-ink);
+  --swipe-done-bg: #d3efe2; --swipe-done-ink: #0a4d36; --swipe-move-bg: #dbe5fa; --swipe-move-ink: #1c3a80;
   /* Day sky, drawn in CSS: soft blue with blurred clouds and a little sun glow (no image file) */
   --sky-day-builtin:
     radial-gradient(40% 30% at 85% 6%, rgba(255, 246, 222, 0.75), rgba(255, 246, 222, 0) 70%),
@@ -114,6 +121,7 @@
     --accent: #9db4ff; --accent-hover: #b8c8ff; --accent-ink: #0b1330; --accent-soft: #1a2350;
     --today-tint: rgba(157, 180, 255, 0.05);
     --now: #f3c9a4; --now-ink: #2a1806;
+    --swipe-done-bg: #123a2d; --swipe-done-ink: #a9eccf; --swipe-move-bg: #1b2752; --swipe-move-ink: #c9d5ff;
     --high: #f08a4b;   --high-soft: #3a2318;   --high-ink: #ffc9a6;
     --medium: #f2b83a; --medium-soft: #342a14; --medium-ink: #fbdc98;
     --low: #56b4e9;    --low-soft: #13284a;    --low-ink: #b2dbf4;
@@ -144,6 +152,7 @@
   --accent: #9db4ff; --accent-hover: #b8c8ff; --accent-ink: #0b1330; --accent-soft: #1a2350;
   --today-tint: rgba(157, 180, 255, 0.05);
   --now: #f3c9a4; --now-ink: #2a1806;
+  --swipe-done-bg: #123a2d; --swipe-done-ink: #a9eccf; --swipe-move-bg: #1b2752; --swipe-move-ink: #c9d5ff;
   --high: #f08a4b;   --high-soft: #3a2318;   --high-ink: #ffc9a6;
   --medium: #f2b83a; --medium-soft: #342a14; --medium-ink: #fbdc98;
   --low: #56b4e9;    --low-soft: #13284a;    --low-ink: #b2dbf4;
@@ -864,6 +873,120 @@ dialog {
   .row2 { grid-template-columns: 1fr; }
 }
 
+/* ---------- Welcome page (sign in / create account) ----------
+   Full screen over the app, on the sky background; a glass card in the middle. */
+.welcome {
+  position: fixed; inset: 0; z-index: 90;
+  display: grid; place-items: center; overflow-y: auto;
+  padding: max(20px, env(safe-area-inset-top, 0px)) 16px max(20px, env(safe-area-inset-bottom, 0px));
+  background: color-mix(in srgb, var(--paper) 40%, transparent);
+}
+body.welcome-open { overflow: hidden; }
+.welcome-card {
+  width: min(440px, 100%);
+  display: flex; flex-direction: column; gap: 14px;
+  padding: 28px 24px 22px;
+  background: var(--glass-panel);
+  border: 1px solid var(--glass-edge);
+  border-radius: 24px;
+  box-shadow: inset 0 1px 0 var(--glass-shine), var(--shadow-2);
+  -webkit-backdrop-filter: var(--glass-blur-strong);
+  backdrop-filter: var(--glass-blur-strong);
+}
+.welcome-brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 800; font-size: 20px; }
+.welcome-brand .brand-mark { width: 34px; height: 34px; }
+.welcome h1 {
+  margin: 0; font-family: var(--font-display); font-weight: 800;
+  font-size: clamp(26px, 7vw, 32px); line-height: 1.08; letter-spacing: -0.02em;
+}
+.welcome-points { list-style: none; margin: 0 0 4px; padding: 0; display: grid; gap: 7px; font-size: 14.5px; color: var(--ink-2); }
+.welcome-points li { display: flex; align-items: baseline; gap: 10px; }
+.welcome-points li::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); transform: translateY(-1px); }
+.welcome .auth-mode { align-self: stretch; display: grid; grid-template-columns: 1fr 1fr; }
+.welcome #authSubmit { min-width: 120px; justify-content: center; }
+.welcome-skip { align-self: center; font-size: 15px; padding: 8px; }
+.welcome-note { margin: -8px 0 0; text-align: center; }
+
+/* ---------- Swipe gestures ----------
+   The item slides over a coloured layer: green = done (right), blue = reschedule (left). */
+.agenda { position: relative; }
+.ag-item { position: relative; touch-action: pan-y; }
+.ag-item.swiping { z-index: 2; background: var(--surface); border-radius: var(--r-sm); }
+.card.swiping { z-index: 6; box-shadow: var(--shadow-2); }
+.swipe-layer {
+  position: absolute; z-index: 1; pointer-events: none;
+  display: flex; align-items: center; justify-content: space-between; padding: 0 14px;
+  border-radius: var(--r-sm); font-size: 13px; font-weight: 700;
+}
+.swipe-layer[data-dir="right"] { background: var(--swipe-done-bg); color: var(--swipe-done-ink); }
+.swipe-layer[data-dir="left"] { background: var(--swipe-move-bg); color: var(--swipe-move-ink); }
+.swipe-layer[data-dir="right"] .sw-left, .swipe-layer[data-dir="left"] .sw-right, .swipe-layer:not([data-dir]) span { visibility: hidden; }
+.swipe-layer span { opacity: 0.7; transition: transform 0.15s, opacity 0.15s; }
+.swipe-layer.armed span { opacity: 1; transform: scale(1.12); }
+
+/* Reschedule sheet: slides up from the bottom on phones, a small dialog on bigger screens */
+dialog.sheet { width: min(420px, calc(100vw - 32px)); padding: 18px 18px 16px; }
+.sheet h2 { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: 22px; letter-spacing: -0.02em; }
+.sheet .fine { margin: 2px 0 14px; font-size: 14px; color: var(--ink-2); overflow-wrap: anywhere; }
+.sheet-actions { display: grid; gap: 8px; }
+.sheet-btn { flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; padding: 12px 14px; text-align: left; border-radius: 12px; }
+.sheet-btn b { font-size: 15px; }
+.sheet-btn span { font-size: 13px; color: var(--ink-2); font-weight: 400; }
+.sheet-cancel { width: 100%; justify-content: center; margin-top: 10px; border-radius: 12px; }
+@media (max-width: 760px) {
+  dialog.sheet {
+    width: 100vw; max-width: 100vw; margin: auto 0 0; border-radius: 22px 22px 0 0;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* ---------- Phone tab bar ----------
+   Phones show one section at a time (Today / Week / To-do), like a phone app; "More" opens Settings.
+   .app[data-tab] picks which grid areas are visible. Desktop and tablets keep the full layout. */
+.tabbar { display: none; }
+@media (max-width: 760px) {
+  .tabbar {
+    display: flex; gap: 4px;
+    position: fixed; z-index: 50;
+    left: max(12px, env(safe-area-inset-left, 0px)); right: max(12px, env(safe-area-inset-right, 0px));
+    bottom: max(10px, env(safe-area-inset-bottom, 0px));
+    padding: 6px;
+    background: var(--glass-fill);
+    border: 1px solid var(--glass-edge);
+    border-radius: 22px;
+    box-shadow: inset 0 1px 0 var(--glass-shine), var(--glass-shadow);
+    -webkit-backdrop-filter: var(--glass-blur-strong);
+    backdrop-filter: var(--glass-blur-strong);
+  }
+  .tabbar button {
+    position: relative; flex: 1; min-height: 52px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    border: 0; border-radius: 16px; background: none; cursor: pointer;
+    color: var(--ink-2); font-size: 11.5px; font-weight: 700;
+    transition: background-color 0.15s, color 0.15s, transform 0.2s cubic-bezier(0.3, 1.5, 0.5, 1);
+  }
+  .tabbar button:active { transform: scale(0.94); }
+  .tabbar button[aria-current="page"] { color: var(--ink); background: var(--glass-fill-hover); }
+  .tabbar button[aria-current="page"] svg { stroke: var(--accent); }
+  .tabbar svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .tab-badge {
+    position: absolute; top: 4px; left: calc(50% + 7px);
+    min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
+    background: var(--accent); color: var(--accent-ink);
+    font-size: 11px; line-height: 18px; text-align: center;
+  }
+
+  /* Room for the bar; toasts float above it */
+  .app { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
+  .toasts { bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
+  .controls .seg, #settingsBtn { display: none; } /* Day/Week and Settings live in the tab bar on phones */
+
+  .app[data-tab="today"] .side { display: none; }
+  .app[data-tab="week"] .summary, .app[data-tab="week"] .quick-sec, .app[data-tab="week"] .side { display: none; }
+  .app[data-tab="week"] .tl-panel { height: calc(100dvh - 250px); min-height: 360px; }
+  .app[data-tab="todo"] .summary, .app[data-tab="todo"] .tl-panel { display: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
@@ -972,6 +1095,27 @@ dialog {
       </section>
     </aside>
   </main>
+
+  <!-- ===== Phone tab bar (small screens only) ===== -->
+  <nav class="tabbar" aria-label="Sections">
+    <button type="button" data-tab="today" aria-current="page">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/><circle cx="12" cy="15" r="1.6"/></svg>
+      <span>Today</span>
+    </button>
+    <button type="button" data-tab="week">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4M9.2 10v10.5M14.8 10v10.5"/></svg>
+      <span>Week</span>
+    </button>
+    <button type="button" data-tab="todo">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 6.5h10M10 12h10M10 17.5h10"/><path d="m3.8 6.4 1.4 1.4 2.4-2.6M3.8 11.9l1.4 1.4 2.4-2.6"/><circle cx="5.6" cy="17.5" r="1.5"/></svg>
+      <span>To-do</span>
+      <b class="tab-badge" id="todoBadge" hidden></b>
+    </button>
+    <button type="button" data-tab="more" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5h7M15.5 7.5H20M4 16.5h2.5M11 16.5h9"/><circle cx="13.2" cy="7.5" r="2.3"/><circle cx="8.7" cy="16.5" r="2.3"/></svg>
+      <span>More</span>
+    </button>
+  </nav>
 </div>
 
 <!-- ===== Search ===== -->
@@ -1056,6 +1200,21 @@ dialog {
 
   <section class="set-sec">
     <h3 class="eyebrow">Reminders</h3>
+    <div class="field">
+      <label for="setRemind">Remind me before a task</label>
+      <select id="setRemind">
+        <option value="">Don't remind me</option>
+        <option value="5">5 min before</option>
+        <option value="10">10 min before</option>
+        <option value="15">15 min before</option>
+        <option value="30">30 min before</option>
+        <option value="60">1 hour before</option>
+      </select>
+    </div>
+    <label class="check-row"><input type="checkbox" id="setAlarm"> Alarm when a task starts</label>
+    <p class="fine">Used for new tasks. Any task can change them under More options.</p>
+    <p id="exactWarn" class="fine nudge-text" hidden>Android is holding back on-time alarms for DayFlow.
+      <button type="button" id="exactBtn" class="btn-link">Allow on-time alarms</button></p>
     <p id="notifStatus" class="fine"></p>
     <button type="button" id="notifBtn" class="btn sm" hidden>Allow notifications</button>
   </section>
@@ -1148,12 +1307,14 @@ dialog {
             <option value="">None</option>
             <option value="0">At start time</option>
             <option value="5">5 min before</option>
+            <option value="10">10 min before</option>
             <option value="15">15 min before</option>
             <option value="30">30 min before</option>
             <option value="60">1 hour before</option>
           </select>
         </div>
       </div>
+      <label class="check-row timed"><input type="checkbox" id="fAlarm"> Alarm at start time</label>
 
       <div class="row2 timed">
         <div class="field">
@@ -1198,7 +1359,55 @@ dialog {
   </form>
 </dialog>
 
-<!-- ===== Account (sign in, account panel, new password) ===== -->
+<!-- ===== Welcome page: sign in / create account (only when accounts are set up) ===== -->
+<section id="welcome" class="welcome" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle" hidden>
+  <div class="welcome-card">
+    <div class="welcome-brand">
+      <svg viewBox="0 0 28 28" aria-hidden="true" class="brand-mark">
+        <rect x="2" y="2" width="24" height="24" rx="6" class="bm-page"/>
+        <path d="M8 9h7M8 14h12M8 19h5" class="bm-lines"/>
+        <circle cx="20" cy="9" r="2.4" class="bm-dot"/>
+      </svg>
+      <span>DayFlow</span>
+    </div>
+    <h1 id="welcomeTitle">Plan your day, one block at a time.</h1>
+    <ul class="welcome-points">
+      <li>Drag tasks on a timeline, like a paper planner</li>
+      <li>A reminder before each task, and an alarm when it starts</li>
+      <li>Your tasks on your phone and your computer</li>
+    </ul>
+    <form id="authForm" class="auth-view" novalidate>
+      <div class="seg auth-mode" role="group" aria-label="Sign in or create an account">
+        <button type="button" id="modeSignIn" aria-pressed="true">Sign in</button>
+        <button type="button" id="modeSignUp" aria-pressed="false">Create account</button>
+      </div>
+      <p class="fine" id="authIntro">Sign in to keep your tasks safe online and use them on your phone and computer.</p>
+      <div class="field">
+        <label for="authEmail">Email</label>
+        <input id="authEmail" type="email" autocomplete="email" inputmode="email" required>
+      </div>
+      <div class="field">
+        <label for="authPassword">Password</label>
+        <div class="pw-row">
+          <input id="authPassword" type="password" autocomplete="current-password" minlength="8" required>
+          <button type="button" class="btn sm" id="authShowPw" aria-pressed="false">Show</button>
+        </div>
+        <p class="fine" id="pwHint" hidden>At least 8 characters.</p>
+      </div>
+      <p class="err" id="authErr" role="alert" hidden></p>
+      <p class="ok" id="authOk" role="status" hidden></p>
+      <div class="dlg-foot">
+        <button type="button" class="btn-link" id="authForgot">Forgot password?</button>
+        <span class="spacer"></span>
+        <button type="submit" class="btn primary" id="authSubmit">Sign in</button>
+      </div>
+    </form>
+    <button type="button" class="btn-link welcome-skip" id="welcomeSkip">Continue without an account</button>
+    <p class="fine welcome-note">Without an account, your tasks stay on this device. You can sign in later from the top bar.</p>
+  </div>
+</section>
+
+<!-- ===== Account (account panel, new password) ===== -->
 <dialog id="authDialog" aria-labelledby="authTitle">
   <div class="dlg-head">
     <h2 id="authTitle">Sign in</h2>
@@ -1207,33 +1416,6 @@ dialog {
     </button>
   </div>
 
-  <!-- Sign in / create account -->
-  <form id="authForm" class="auth-view" novalidate>
-    <div class="seg auth-mode" role="group" aria-label="Sign in or create an account">
-      <button type="button" id="modeSignIn" aria-pressed="true">Sign in</button>
-      <button type="button" id="modeSignUp" aria-pressed="false">Create account</button>
-    </div>
-    <p class="fine" id="authIntro">Sign in to save your tasks online and use them on your phone and computer.</p>
-    <div class="field">
-      <label for="authEmail">Email</label>
-      <input id="authEmail" type="email" autocomplete="email" inputmode="email" required>
-    </div>
-    <div class="field">
-      <label for="authPassword">Password</label>
-      <div class="pw-row">
-        <input id="authPassword" type="password" autocomplete="current-password" minlength="8" required>
-        <button type="button" class="btn sm" id="authShowPw" aria-pressed="false">Show</button>
-      </div>
-      <p class="fine" id="pwHint" hidden>At least 8 characters.</p>
-    </div>
-    <p class="err" id="authErr" role="alert" hidden></p>
-    <p class="ok" id="authOk" role="status" hidden></p>
-    <div class="dlg-foot">
-      <button type="button" class="btn-link" id="authForgot">Forgot password?</button>
-      <span class="spacer"></span>
-      <button type="submit" class="btn primary" id="authSubmit">Sign in</button>
-    </div>
-  </form>
 
   <!-- Signed in -->
   <div id="acctView" class="auth-view" hidden>
@@ -1267,6 +1449,18 @@ dialog {
       <button type="submit" class="btn primary">Save password</button>
     </div>
   </form>
+</dialog>
+
+<!-- ===== Reschedule sheet (swipe left, or the Reschedule button) ===== -->
+<dialog id="moveSheet" class="sheet" aria-labelledby="moveTitle">
+  <h2 id="moveTitle">Reschedule</h2>
+  <p class="fine" id="moveWhat"></p>
+  <div class="sheet-actions">
+    <button type="button" class="btn sheet-btn" data-move="later"><b>Later today</b><span id="moveLater"></span></button>
+    <button type="button" class="btn sheet-btn" data-move="tomorrow"><b>Tomorrow</b><span id="moveTomorrow"></span></button>
+    <button type="button" class="btn sheet-btn" data-move="pick"><b>Pick a time…</b><span>Open the task to choose</span></button>
+  </div>
+  <button type="button" class="btn sheet-cancel" data-move="cancel">Cancel</button>
 </dialog>
 
 <div id="toasts" class="toasts"></div>
@@ -1372,11 +1566,36 @@ const Platform = (() => {
     return Math.abs(h) || 1;
   };
 
+  const ALARM_SOUND = "dayflow_alarm.wav"; // res/raw on Android
+
   const reminders = {
     // True when the device itself delivers reminders (app closed or not).
     native: !!plugin("LocalNotifications"),
 
-    // list: [{ key, title, body, at: Date, extra }] — replaces everything scheduled before.
+    // Once at start-up: Android channels (a gentle one for reminders, a loud one for alarms)
+    // and the Done / Snooze buttons on alarms. Not needed on the web.
+    async setup() {
+      const ln = plugin("LocalNotifications");
+      if (!ln) return;
+      try {
+        await ln.createChannel({
+          id: "reminders", name: "Reminders", description: "A heads-up before a task starts",
+          importance: 4, visibility: 1, vibration: true,
+        });
+        await ln.createChannel({
+          id: "alarms", name: "Alarms", description: "Rings when a task starts",
+          importance: 5, visibility: 1, sound: ALARM_SOUND, vibration: true, lights: true, lightColor: "#4cc2a6",
+        });
+      } catch (e) {} // iOS has no channels
+      try {
+        await ln.registerActionTypes({
+          types: [{ id: "alarm", actions: [{ id: "done", title: "Done" }, { id: "snooze", title: "Snooze 5 min" }] }],
+        });
+      } catch (e) {}
+    },
+
+    // list: [{ key, kind: "reminder" | "alarm", title, body, at: Date, extra }]
+    // Replaces everything scheduled before. allowWhileIdle = on time even when the phone sleeps.
     async sync(list) {
       const ln = plugin("LocalNotifications");
       if (!ln) return; // web: app.js shows reminders while the page is open
@@ -1389,8 +1608,35 @@ const Platform = (() => {
         const notifications = list
           .filter((r) => r.at.getTime() > now)
           .slice(0, 60) // iOS allows 64 pending
-          .map((r) => ({ id: hashId(r.key), title: r.title, body: r.body, schedule: { at: r.at }, extra: r.extra }));
+          .map((r) => {
+            const alarm = r.kind === "alarm";
+            return {
+              id: hashId(r.key), title: r.title, body: r.body,
+              schedule: { at: r.at, allowWhileIdle: true },
+              channelId: alarm ? "alarms" : "reminders",
+              sound: alarm ? ALARM_SOUND : undefined,
+              actionTypeId: alarm ? "alarm" : undefined,
+              extra: { ...r.extra, kind: r.kind, key: r.key },
+            };
+          });
         if (notifications.length) await ln.schedule({ notifications });
+      } catch (e) {}
+    },
+
+    // Android 12+: are exact (on-time) alarms allowed? true when it doesn't apply.
+    async exactAllowed() {
+      const ln = plugin("LocalNotifications");
+      if (!ln || !ln.checkExactNotificationSetting) return true;
+      try {
+        const res = await ln.checkExactNotificationSetting();
+        return res.exact_alarm === "granted";
+      } catch (e) {
+        return true;
+      }
+    },
+    async openExactSetting() {
+      try {
+        await plugin("LocalNotifications").changeExactNotificationSetting();
       } catch (e) {}
     },
 
@@ -1428,12 +1674,75 @@ const Platform = (() => {
       } catch (e) {}
     },
 
-    // Called with the notification's `extra` when the person taps it.
-    onTap(fn) {
+    // fn(action, extra): action is "tap", "done" or "snooze" (the alarm's buttons).
+    onAction(fn) {
       const ln = plugin("LocalNotifications");
-      if (ln) ln.addListener("localNotificationActionPerformed", (e) => fn(e.notification.extra || {}));
+      if (!ln) return;
+      ln.addListener("localNotificationActionPerformed", (e) => {
+        const a = e.actionId === "done" || e.actionId === "snooze" ? e.actionId : "tap";
+        fn(a, e.notification.extra || {});
+      });
     },
   };
+
+  // ---- Look and feel inside the phone app (no-ops on the web) ----
+  const ui = {
+    // Status bar icons/background follow the app's theme.
+    async statusBar(dark) {
+      const sb = plugin("StatusBar");
+      if (!sb) return;
+      try {
+        await sb.setStyle({ style: dark ? "DARK" : "LIGHT" }); // DARK = light icons for a dark background
+        await sb.setBackgroundColor({ color: dark ? "#070b18" : "#f3f6f5" });
+      } catch (e) {}
+    },
+    // A small buzz, e.g. when a task is picked up by holding it.
+    haptic() {
+      const h = plugin("Haptics");
+      if (h) h.impact({ style: "LIGHT" }).catch(() => {});
+      else if (navigator.vibrate && navigator.userActivation && navigator.userActivation.hasBeenActive) navigator.vibrate(10);
+    },
+    hideSplash() {
+      const s = plugin("SplashScreen");
+      if (s) s.hide().catch(() => {});
+    },
+  };
+
+  // ---- Offline (web only) ----
+  // A service worker keeps the app files, so the installed web app opens without a connection.
+  // onUpdate(apply) is called when a new version is waiting; apply() switches to it and reloads.
+  // Off on localhost (so development always shows fresh files) unless dayflow.devOffline is set.
+  function registerOffline(onUpdate) {
+    if (native || !("serviceWorker" in navigator) || location.protocol === "file:") return;
+    const local = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+    if (local && !storage.get("dayflow.devOffline")) return;
+    // Reload only when switching to a new version, not when the first worker takes over on a first visit.
+    const hadController = !!navigator.serviceWorker.controller;
+    let reloading = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (!hadController || reloading) return;
+      reloading = true;
+      location.reload();
+    });
+    navigator.serviceWorker
+      .register("sw.js")
+      .then((reg) => {
+        const offer = (w) => onUpdate(() => w.postMessage("skip-waiting"));
+        if (reg.waiting && navigator.serviceWorker.controller) offer(reg.waiting);
+        reg.addEventListener("updatefound", () => {
+          const w = reg.installing;
+          if (!w) return;
+          w.addEventListener("statechange", () => {
+            if (w.state === "installed" && navigator.serviceWorker.controller) offer(w);
+          });
+        });
+      })
+      .catch(() => {});
+  }
+
+  // Running as an installed web app (Add to Home Screen)?
+  const standalone = () =>
+    matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
 
   // ---- Files (backup) ----
   async function saveFile(name, text) {
@@ -1524,7 +1833,10 @@ const Platform = (() => {
     });
   }
 
-  return { native, storage, ready, reminders, saveFile, openFile, pickImage, images, onBack, onResume };
+  return {
+    native, storage, ready, reminders, ui, registerOffline, standalone,
+    saveFile, openFile, pickImage, images, onBack, onResume,
+  };
 })();
 
 </script>
@@ -1744,6 +2056,7 @@ const Store = (() => {
       until: isKey(t.until) ? t.until : null, // last day a repeat happens
       skipDates: strList(t.skipDates), // repeat days removed or moved to their own task
       reminder: t.reminder === null || t.reminder === undefined || t.reminder === "" ? null : Number(t.reminder),
+      alarm: !!t.alarm, // ring when the task starts
       due: isKey(t.due) ? t.due : null,
       course: String(t.course || "").trim(),
       notes: t.notes || "",
@@ -2197,6 +2510,116 @@ const Sync = (() => {
 </script>
 <script>
 /* =========================================================
+   DayFlow — swipe gestures (touch only)
+   Swipe a task right to complete it, left to reschedule.
+   Used by timeline cards (timeline.js) and list rows (app.js).
+   The item follows the finger over a coloured layer; past the
+   threshold there's a small buzz, and letting go acts.
+   Vertical movement is left to the page (scrolling).
+   ========================================================= */
+
+const Swipe = (() => {
+  const START = 12; // px of sideways movement before it counts as a swipe
+  const RATIO = 1.5; // …and it must be clearly more sideways than up/down
+
+  // Starts watching a touch on `el`. Returns a tracker:
+  //   move(e) → "wait" (undecided) | "swipe" (the item is following the finger) | "no" (it's a scroll)
+  //   end(cancel) → finishes; calls onCommit("right" | "left") if it went past the threshold.
+  function begin(el, e, { onCommit, labels = {} }) {
+    const x0 = e.clientX;
+    const y0 = e.clientY;
+    const width = el.getBoundingClientRect().width;
+    const threshold = Math.min(90, width * 0.35);
+    let mode = "wait";
+    let dx = 0;
+    let armed = false;
+    let layer = null;
+
+    function start() {
+      mode = "swipe";
+      // The coloured layer sits exactly behind the item, in the same positioned parent.
+      layer = document.createElement("div");
+      layer.className = "swipe-layer";
+      layer.setAttribute("aria-hidden", "true");
+      layer.innerHTML = `<span class="sw-right">✓ ${labels.right || "Done"}</span><span class="sw-left">${labels.left || "Reschedule"} ↻</span>`;
+      Object.assign(layer.style, {
+        top: `${el.offsetTop}px`, left: `${el.offsetLeft}px`, width: `${el.offsetWidth}px`, height: `${el.offsetHeight}px`,
+      });
+      el.parentNode.insertBefore(layer, el);
+      el.classList.add("swiping");
+    }
+
+    function move(ev) {
+      dx = ev.clientX - x0;
+      const dy = ev.clientY - y0;
+      if (mode === "wait") {
+        if (Math.abs(dx) > START && Math.abs(dx) > RATIO * Math.abs(dy)) start();
+        else if (Math.abs(dy) > START) mode = "no";
+      }
+      if (mode === "swipe") {
+        el.style.transform = `translateX(${dx}px)`;
+        layer.dataset.dir = dx > 0 ? "right" : "left";
+        const over = Math.abs(dx) >= threshold;
+        if (over !== armed) {
+          armed = over;
+          layer.classList.toggle("armed", armed);
+          if (armed) Platform.ui.haptic();
+        }
+      }
+      return mode;
+    }
+
+    function cleanup() {
+      el.classList.remove("swiping");
+      el.style.transform = "";
+      el.style.transition = "";
+      if (layer) layer.remove();
+    }
+
+    function end(cancel = false) {
+      if (mode !== "swipe") return;
+      if (armed && !cancel) {
+        const dir = dx > 0 ? "right" : "left";
+        el.style.transition = "transform 0.18s ease-in";
+        el.style.transform = `translateX(${dx > 0 ? width : -width}px)`;
+        setTimeout(() => {
+          cleanup();
+          onCommit(dir);
+        }, 180);
+      } else {
+        el.style.transition = "transform 0.2s cubic-bezier(0.3, 1.4, 0.5, 1)";
+        el.style.transform = "translateX(0)";
+        setTimeout(cleanup, 200);
+      }
+    }
+
+    return { move, end, swiping: () => mode === "swipe" };
+  }
+
+  // A click fired by the end of a swipe shouldn't also open the item. Phones usually don't send one
+  // after the finger has moved, so the guard is dropped as soon as a new touch starts (or after 350 ms):
+  // it must never eat the person's next real tap.
+  function swallowNextClick() {
+    const stop = (ev) => {
+      ev.stopPropagation();
+      ev.preventDefault();
+      done();
+    };
+    const done = () => {
+      window.removeEventListener("click", stop, { capture: true });
+      window.removeEventListener("pointerdown", done, { capture: true });
+    };
+    window.addEventListener("click", stop, { capture: true });
+    window.addEventListener("pointerdown", done, { capture: true });
+    setTimeout(done, 350);
+  }
+
+  return { begin, swallowNextClick };
+})();
+
+</script>
+<script>
+/* =========================================================
    DayFlow — timeline
    Renders the day and week planner pages, and handles direct
    manipulation: drag to move, drag the bottom edge to resize,
@@ -2420,11 +2843,19 @@ const Timeline = (() => {
       armed: e.pointerType !== "touch",
     };
     if (drag.touch) {
+      // Day view: a sideways move (before the hold) is a swipe: right = done, left = reschedule.
+      if (state.view === "day" && drag.mode === "move" && cb.onSwipe) {
+        const done = t.doneDates.includes(card.dataset.date);
+        drag.swipe = Swipe.begin(card, e, {
+          labels: { right: done ? "Not done" : "Done", left: "Reschedule" },
+          onCommit: (dir) => cb.onSwipe(t.id, card.dataset.date, dir),
+        });
+      }
       drag.holdTimer = setTimeout(() => {
-        if (!drag) return;
+        if (!drag || drag.swiping) return;
         drag.armed = true;
         card.classList.add("lifted");
-        if (navigator.vibrate && navigator.userActivation?.hasBeenActive) navigator.vibrate(10);
+        Platform.ui.haptic();
       }, HOLD_MS);
     }
     window.addEventListener("pointermove", onMove);
@@ -2445,6 +2876,16 @@ const Timeline = (() => {
     if (!d) return;
     const dy = e.clientY - d.startY + (d.scroller.scrollTop - d.startScroll);
     const dx = e.clientX - d.startX;
+
+    if (d.swipe && !d.armed) {
+      const m = d.swipe.move(e);
+      if (m === "swipe") {
+        d.swiping = true;
+        clearTimeout(d.holdTimer);
+        return;
+      }
+      if (m === "wait") return; // not sure yet: neither swipe nor scroll
+    }
 
     if (!d.active) {
       if (Math.hypot(dx, dy) < 5) return;
@@ -2521,6 +2962,11 @@ const Timeline = (() => {
   function onUp() {
     const d = endDrag();
     if (!d) return;
+    if (d.swiping) {
+      Swipe.swallowNextClick();
+      d.swipe.end();
+      return;
+    }
     if (!d.active) {
       cb.onOpen(d.id, d.fromDate);
       return;
@@ -2540,6 +2986,7 @@ const Timeline = (() => {
 
   function cancelDrag() {
     const d = endDrag();
+    if (d && d.swiping) d.swipe.end(true); // spring back
     if (d && d.active) cb.onRerender();
   }
 
@@ -2632,13 +3079,14 @@ const Timeline = (() => {
   const D = DateUtil;
   const esc = Timeline.esc;
 
-  const state = { view: "day", date: D.todayKey(), pending: null, flash: null, dayStart: 7 * 60 };
+  const state = { view: "day", tab: "today", date: D.todayKey(), pending: null, flash: null, dayStart: 7 * 60 };
 
   // ---------------------------------------------------------
   // Settings (per device)
   // ---------------------------------------------------------
   const SETTINGS_KEY = "dayflow.settings";
-  const settings = { dayStart: 7 * 60, dayEnd: 23 * 60, warnOverlaps: true };
+  // remindBefore: minutes (null = none); alarmAtStart: ring when a task starts. Both are defaults for new tasks.
+  const settings = { dayStart: 7 * 60, dayEnd: 23 * 60, warnOverlaps: true, remindBefore: 15, alarmAtStart: true };
 
   function loadSettings() {
     try {
@@ -2749,6 +3197,38 @@ const Timeline = (() => {
     renderLeftovers();
     renderTodos();
     renderSearch();
+    renderTabs();
+  }
+
+  // ---------------------------------------------------------
+  // Phone tab bar: Today / Week / To-do / More. The CSS shows one
+  // section at a time on phones; on bigger screens it's hidden.
+  // ---------------------------------------------------------
+  const TAB_KEY = "dayflow.tab";
+  const isPhone = () => matchMedia("(max-width: 760px)").matches;
+
+  function renderTabs() {
+    $(".app").dataset.tab = state.tab;
+    document.querySelectorAll(".tabbar [data-tab]").forEach((b) => {
+      if (b.dataset.tab === state.tab) b.setAttribute("aria-current", "page");
+      else b.removeAttribute("aria-current");
+    });
+    // Badge: open to-dos plus unfinished tasks from earlier days
+    const n = Store.todos().length + Store.leftovers(D.todayKey()).length;
+    const badge = $("#todoBadge");
+    badge.hidden = !n;
+    badge.textContent = n > 99 ? "99+" : String(n);
+    badge.setAttribute("aria-label", `${n} open`);
+  }
+
+  function setTab(tab) {
+    if (tab === "more") return openSettings();
+    state.tab = tab;
+    Platform.storage.set(TAB_KEY, tab);
+    if (tab === "today" && state.view !== "day") return setView("day");
+    if (tab === "week" && state.view !== "week") return setView("week");
+    render({ resetScroll: true });
+    if (tab === "todo") window.scrollTo({ top: 0 });
   }
 
   function renderHeader() {
@@ -3095,6 +3575,117 @@ const Timeline = (() => {
     toast(`Done: “${t.title}”.`, { actions: [undoAction], key: "done" });
   }
 
+  // ---------------------------------------------------------
+  // Swipe gestures (phones): right = done, left = reschedule.
+  // Same actions as the check button and the task form, so
+  // keyboard and screen-reader users lose nothing.
+  // ---------------------------------------------------------
+  const moveSheet = $("#moveSheet");
+  let moving = null; // { id, date, later, tomorrow }
+
+  function onSwipe(id, date, dir) {
+    const t = Store.get(id);
+    if (!t) return;
+    if (dir === "left") return openMoveSheet(id, date);
+    if (t.start === null) toggleTodo(id);
+    else toggleDone(id, date);
+  }
+
+  const slotText = (s) => `${s.date === D.todayKey() ? "Today" : D.fmt(s.date, { weekday: "long" })}, ${D.fmtTime(s.start)}`;
+
+  function openMoveSheet(id, date) {
+    const t = Store.get(id);
+    if (!t) return;
+    const today = D.todayKey();
+    const tomorrow = D.addDays(today, 1);
+    const later = nextFreeSlot(today, t.duration);
+    const next = t.start !== null ? { date: tomorrow, start: t.start } : nextFreeSlot(tomorrow, t.duration);
+    moving = { id, date, later, tomorrow: next };
+    $("#moveWhat").textContent = `“${t.title}”`;
+    moveSheet.querySelector('[data-move="later"] b').textContent = later.date === today ? "Later today" : "Next free time";
+    $("#moveLater").textContent = slotText(later);
+    $("#moveTomorrow").textContent = t.start !== null ? `Same time, ${D.fmtTime(next.start)}` : slotText(next);
+    moveSheet.showModal();
+  }
+
+  // One day of a repeating task moves on its own; a to-do gets a time.
+  function moveTo(id, fromDate, slot) {
+    const t = Store.get(id);
+    if (!t) return;
+    const label = `Reschedule “${t.title}”`;
+    const patch = { date: slot.date, start: slot.start };
+    if (t.start !== null && t.recurrence !== "none") Store.detach(id, fromDate, patch, label);
+    else Store.update(id, patch, label);
+    render();
+    toast(`Moved “${t.title}” to ${slotText(slot)}.`, {
+      actions: [undoAction, { label: "Show", fn: () => goTo(slot.date, "day") }],
+      key: "move",
+    });
+  }
+
+  function onMoveSheetClick(e) {
+    const b = e.target.closest("[data-move]");
+    if (e.target === moveSheet || (b && b.dataset.move === "cancel")) return moveSheet.close();
+    if (!b || !moving) return;
+    const { id, date, later, tomorrow } = moving;
+    moveSheet.close();
+    if (b.dataset.move === "later") moveTo(id, date, later);
+    if (b.dataset.move === "tomorrow") moveTo(id, date, tomorrow);
+    if (b.dataset.move === "pick") {
+      const t = Store.get(id);
+      openForm(t.start === null ? { id, schedule: true } : { id, date });
+    }
+  }
+
+  // Lists (To-do, Left from earlier) get the same swipe as timeline cards.
+  // itemFor(li) → { id, date } or null.
+  function enableListSwipe(list, itemFor) {
+    list.addEventListener("pointerdown", (e) => {
+      if (e.pointerType !== "touch") return;
+      const li = e.target.closest(".ag-item");
+      const it = li && itemFor(li);
+      if (!it) return;
+      const t = Store.get(it.id);
+      const done = t && t.start !== null && t.doneDates.includes(it.date);
+      const tracker = Swipe.begin(li, e, {
+        labels: { right: done ? "Not done" : "Done", left: t && t.start === null ? "Schedule" : "Reschedule" },
+        onCommit: (dir) => onSwipe(it.id, it.date, dir),
+      });
+      const stop = () => {
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", up);
+        window.removeEventListener("pointercancel", cancel);
+      };
+      const move = (ev) => tracker.move(ev) === "no" && stop();
+      const up = () => {
+        if (tracker.swiping()) {
+          Swipe.swallowNextClick();
+          tracker.end();
+        }
+        stop();
+      };
+      const cancel = () => {
+        tracker.end(true);
+        stop();
+      };
+      window.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", up);
+      window.addEventListener("pointercancel", cancel);
+    });
+  }
+
+  // Once, on a touch phone: say how swiping works (it's invisible otherwise).
+  function showSwipeTip() {
+    const KEY = "dayflow.tip.swipe";
+    if (!isPhone() || !matchMedia("(pointer: coarse)").matches || Platform.storage.get(KEY) || !Store.all().length) return;
+    toast("Tip: swipe a task right to complete it, or left to reschedule. Hold a task to drag it.", {
+      timeout: 0,
+      key: "tip",
+      dismissable: false,
+      actions: [{ label: "Got it", fn: () => Platform.storage.set(KEY, "1") }],
+    });
+  }
+
   function goTo(date, view) {
     if (state.pending) cancelPending();
     state.date = date;
@@ -3105,6 +3696,9 @@ const Timeline = (() => {
   function setView(v, rerender = true) {
     state.view = v;
     Platform.storage.set("dayflow.view", v);
+    // Keep the phone tab in step (D / W keys, opening a day from the week view, …)
+    state.tab = v === "week" ? "week" : "today";
+    Platform.storage.set(TAB_KEY, state.tab);
     if (rerender) render({ resetScroll: true });
   }
 
@@ -3146,7 +3740,7 @@ const Timeline = (() => {
   const f = {
     form: $("#taskForm"), title: $("#fTitle"), noTime: $("#fNoTime"), date: $("#fDate"), dateLabel: $("#fDateLabel"),
     start: $("#fStart"), duration: $("#fDuration"), repeat: $("#fRepeat"), until: $("#fUntil"), untilField: $("#fUntilField"),
-    reminder: $("#fReminder"), course: $("#fCourse"), notes: $("#fNotes"), end: $("#fEnd"),
+    reminder: $("#fReminder"), alarm: $("#fAlarm"), course: $("#fCourse"), notes: $("#fNotes"), end: $("#fEnd"),
     warn: $("#overlapWarn"), save: $("#fSave"), del: $("#fDelete"), delDay: $("#fDeleteDay"), heading: $("#dlgTitle"),
     titleErr: $("#titleErr"), timeErr: $("#timeErr"), scope: $("#fScope"), scopeDay: $("#fScopeDay"),
     more: $("#fMore"), moreHint: $("#fMoreHint"),
@@ -3197,7 +3791,10 @@ const Timeline = (() => {
     ensureDurationOption(t ? t.duration : 60);
     f.repeat.value = t ? t.recurrence : "none";
     f.until.value = (t && t.until) || "";
-    f.reminder.value = t && t.reminder !== null ? String(t.reminder) : "";
+    // New tasks start with the defaults from Settings → Reminders.
+    const reminder = t ? t.reminder : settings.remindBefore;
+    f.reminder.value = reminder !== null ? String(reminder) : "";
+    f.alarm.checked = t ? t.alarm : settings.alarmAtStart;
     f.course.value = t ? t.course : "";
     f.notes.value = t ? t.notes : "";
     const prio = t ? t.priority : "medium";
@@ -3205,7 +3802,8 @@ const Timeline = (() => {
     $("#courseList").innerHTML = Store.courses().map((c) => `<option value="${esc(c)}">`).join("");
 
     // Less-used fields stay folded unless this task already uses them.
-    f.more.open = !!t && (!!t.course || t.reminder !== null || t.recurrence !== "none" || !!t.notes);
+    // (Reminder and alarm are usually set, so they don't open it; the folded line lists them.)
+    f.more.open = !!t && (!!t.course || t.recurrence !== "none" || !!t.notes);
 
     const repeating = isRepeating(t);
     f.scope.hidden = !repeating;
@@ -3232,6 +3830,7 @@ const Timeline = (() => {
       recurrence: todo ? "none" : f.repeat.value,
       until: todo || f.repeat.value === "none" ? null : f.until.value || null,
       reminder: todo || f.reminder.value === "" ? null : Number(f.reminder.value),
+      alarm: !todo && f.alarm.checked,
       due: todo ? f.date.value || null : editing()?.due || null,
       course: f.course.value.trim(),
       notes: f.notes.value.trim(),
@@ -3242,7 +3841,8 @@ const Timeline = (() => {
   function moreSummary(todo) {
     const bits = [];
     if (f.course.value.trim()) bits.push(f.course.value.trim());
-    if (!todo && f.reminder.value !== "") bits.push("reminder");
+    if (!todo && f.reminder.value !== "") bits.push(f.reminder.value === "0" ? "reminder at start" : `reminder ${f.reminder.value} min before`);
+    if (!todo && f.alarm.checked) bits.push("alarm");
     if (!todo && f.repeat.value !== "none") bits.push(f.repeat.options[f.repeat.selectedIndex].text.toLowerCase());
     if (f.notes.value.trim()) bits.push("notes");
     return bits.length ? `· ${bits.join(" · ")}` : "";
@@ -3351,7 +3951,7 @@ const Timeline = (() => {
     if (v.start !== null) showDate(v.date);
     render();
     toast(msg, { actions: [undoAction], key: "save" });
-    if (v.reminder !== null) askForNotifications();
+    if (v.reminder !== null || v.alarm) askForNotifications();
   }
 
   // ---------------------------------------------------------
@@ -3406,6 +4006,7 @@ const Timeline = (() => {
       grab(/\s(weekdays|every\s?weekday)(?=\s)/i, () => (out.recurrence = "weekdays")) ||
       grab(/\s(weekly|every\s?week)(?=\s)/i, () => (out.recurrence = "weekly"));
     grab(/\s(due|by)(?=\s)/i, () => (out.todo = true));
+    grab(/\s(noalarm|no\salarm)(?=\s)/i, () => (out.alarm = false)) || grab(/\s(alarm)(?=\s)/i, () => (out.alarm = true));
 
     // Days
     grab(/\s(tomorrow|tmrw|tmr)(?=\s)/i, () => setDate(D.addDays(D.todayKey(), 1))) ||
@@ -3537,7 +4138,9 @@ const Timeline = (() => {
     quickConfirmText = "";
     Store.add({
       title: q.title, date: q.todo ? D.todayKey() : q.date, start: q.start, duration: q.duration,
-      priority: q.priority, recurrence: q.recurrence, reminder: null, notes: "", course: q.course, due: q.due,
+      priority: q.priority, recurrence: q.recurrence, notes: "", course: q.course, due: q.due,
+      reminder: q.todo ? null : settings.remindBefore,
+      alarm: !q.todo && (q.alarm === undefined ? settings.alarmAtStart : q.alarm),
     });
     input.value = "";
     if (!q.todo) showDate(q.date);
@@ -3550,40 +4153,75 @@ const Timeline = (() => {
   }
 
   // ---------------------------------------------------------
-  // Reminders: in-app while open; on the phone app the device
-  // delivers them even when DayFlow is closed.
+  // Reminders and alarms. Each task can have a heads-up before
+  // it starts (default 15 min) and an alarm when it starts. In the
+  // phone app the device delivers both even when DayFlow is
+  // closed; in a browser they show while DayFlow is open.
   // ---------------------------------------------------------
   const FIRED_KEY = "dayflow.fired";
+  const SNOOZE_KEY = "dayflow.snoozes";
+  const SNOOZE_MIN = 5;
   const REMINDER_DAYS = 14;
   const fired = new Set();
   try {
     JSON.parse(Platform.storage.get(FIRED_KEY) || "[]").forEach((k) => fired.add(k));
   } catch (e) {}
   const reminderKey = (t, k) => `${t.id}|${k}|${t.start}|${t.reminder}`;
+  const alarmKey = (t, k) => `${t.id}|${k}|${t.start}|alarm`;
   function markFired(key, k) {
     fired.add(key);
     Platform.storage.set(FIRED_KEY, JSON.stringify([...fired].filter((x) => x.includes(`|${k}|`))));
   }
 
-  // Everything with a reminder in the next two weeks, for the device to schedule.
+  // Snoozed alarms are kept, so re-scheduling doesn't drop them. [{ id, date, title, at (ms) }]
+  function snoozes() {
+    try {
+      return JSON.parse(Platform.storage.get(SNOOZE_KEY) || "[]").filter((s) => s.at > Date.now() - 10 * 60000);
+    } catch (e) {
+      return [];
+    }
+  }
+  const saveSnoozes = (list) => Platform.storage.set(SNOOZE_KEY, JSON.stringify(list));
+  const startDate = (k, start) => {
+    const at = D.fromKey(k);
+    at.setMinutes(start);
+    return at;
+  };
+  const courseBit = (t) => (t.course ? ` · ${t.course}` : "");
+
+  // Everything to ring in the next two weeks, for the device to schedule.
   function upcomingReminders() {
     const today = D.todayKey();
     const out = [];
     for (let i = 0; i < REMINDER_DAYS; i++) {
       const k = D.addDays(today, i);
       Store.tasksOn(k).forEach((t) => {
-        if (t.reminder === null || t.done) return;
-        const at = D.fromKey(k);
-        at.setMinutes(t.start - t.reminder);
-        out.push({
-          key: reminderKey(t, k),
-          title: t.title,
-          body: `${t.reminder ? "Starts" : "Starting"} at ${D.fmtTime(t.start)}${t.course ? ` · ${t.course}` : ""}`,
-          at,
-          extra: { id: t.id, date: k },
-        });
+        if (t.done) return;
+        const at = startDate(k, t.start);
+        const range = D.fmtRange(t.start, t.duration);
+        if (t.reminder !== null && (t.reminder > 0 || !t.alarm)) {
+          out.push({
+            kind: "reminder", key: reminderKey(t, k), title: t.title,
+            body: t.reminder ? `In ${t.reminder} min · ${range}${courseBit(t)}` : `Starting now · ${range}${courseBit(t)}`,
+            at: new Date(at - t.reminder * 60000), extra: { id: t.id, date: k },
+          });
+        }
+        if (t.alarm) {
+          out.push({
+            kind: "alarm", key: alarmKey(t, k), title: `⏰ ${t.title}`,
+            body: `Time to start · ${range}${courseBit(t)}`, at, extra: { id: t.id, date: k },
+          });
+        }
       });
     }
+    snoozes().forEach((s) => {
+      const t = Store.get(s.id);
+      if (!t || t.doneDates.includes(s.date)) return;
+      out.push({
+        kind: "alarm", key: `${s.id}|${s.date}|snooze|${s.at}`, title: `⏰ ${t.title}`,
+        body: "Snoozed alarm", at: new Date(s.at), extra: { id: s.id, date: s.date },
+      });
+    });
     return out.sort((a, b) => a.at - b.at);
   }
 
@@ -3594,33 +4232,90 @@ const Timeline = (() => {
     syncTimer = setTimeout(() => Platform.reminders.sync(upcomingReminders()), 500);
   }
 
+  function snoozeAlarm(id, date) {
+    const t = Store.get(id);
+    if (!t) return;
+    const list = snoozes().filter((s) => !(s.id === id && s.date === date));
+    list.push({ id, date, at: Date.now() + SNOOZE_MIN * 60000 });
+    saveSnoozes(list);
+    scheduleReminderSync();
+    toast(`Snoozed “${t.title}” for ${SNOOZE_MIN} minutes.`, { key: "alarm" });
+  }
+
+  // The in-app alarm sound (browsers and the iPhone web app, while DayFlow is open).
+  // The phone app doesn't need it: its notification rings with the same sound.
+  let alarmAudio = null;
+  function ringAlarm() {
+    if (Platform.reminders.native) return;
+    try {
+      alarmAudio = alarmAudio || new Audio("sounds/dayflow-alarm.wav");
+      alarmAudio.currentTime = 0;
+      alarmAudio.play().catch(() => {}); // a browser may block sound until the page has been tapped
+    } catch (e) {}
+  }
+  const stopAlarm = () => alarmAudio && alarmAudio.pause();
+
+  function alarmToast(t, k) {
+    ringAlarm();
+    toast(`⏰ Time to start “${t.title}” (${D.fmtRange(t.start, t.duration)}).`, {
+      kind: "reminder",
+      timeout: 60000,
+      key: `alarm-${t.id}`,
+      actions: [
+        { label: "Done", fn: () => { stopAlarm(); if (!Store.get(t.id).doneDates.includes(k)) toggleDone(t.id, k); } },
+        { label: `Snooze ${SNOOZE_MIN} min`, fn: () => { stopAlarm(); snoozeAlarm(t.id, k); } },
+      ],
+    });
+    Platform.reminders.show(`⏰ DayFlow: ${t.title}`, `Time to start · ${D.fmtTime(t.start)}`);
+  }
+
   function checkReminders({ missed = false } = {}) {
     const k = D.todayKey();
     const now = D.nowMinutes();
     const passed = [];
     Store.tasksOn(k).forEach((t) => {
-      if (t.reminder === null || t.done) return;
-      const at = t.start - t.reminder;
-      const key = reminderKey(t, k);
-      if (fired.has(key) || now < at) return;
-      if (now > at + 10) {
-        // Passed while DayFlow was closed: summarised once, only while the task hasn't ended.
-        if (missed && now < t.start + t.duration) passed.push(t);
-        markFired(key, k);
-        return;
+      if (t.done) return;
+      // Heads-up before the start
+      if (t.reminder !== null && (t.reminder > 0 || !t.alarm)) {
+        const at = t.start - t.reminder;
+        const key = reminderKey(t, k);
+        if (!fired.has(key) && now >= at) {
+          markFired(key, k);
+          if (now > at + 10) {
+            // Passed while DayFlow was closed: summarised once, only while the task hasn't ended.
+            if (missed && now < t.start + t.duration) passed.push(t);
+          } else {
+            const when = t.reminder ? `starts in ${t.reminder} min, at ${D.fmtTime(t.start)}` : `starts now`;
+            toast(`Reminder: “${t.title}” ${when}.`, {
+              kind: "reminder",
+              timeout: 30000,
+              actions: [
+                { label: "Mark done", fn: () => toggleDone(t.id, k) },
+                { label: "Open", fn: () => openForm({ id: t.id, date: k }) },
+              ],
+            });
+            Platform.reminders.show(`DayFlow: ${t.title}`, `${t.reminder ? "Starts" : "Starting"} at ${D.fmtTime(t.start)}`);
+          }
+        }
       }
-      markFired(key, k);
-      const when = t.reminder ? `starts in ${t.reminder} min, at ${D.fmtTime(t.start)}` : `starts now`;
-      toast(`Reminder: “${t.title}” ${when}.`, {
-        kind: "reminder",
-        timeout: 30000,
-        actions: [
-          { label: "Mark done", fn: () => toggleDone(t.id, k) },
-          { label: "Open", fn: () => openForm({ id: t.id, date: k }) },
-        ],
-      });
-      Platform.reminders.show(`DayFlow: ${t.title}`, `${t.reminder ? "Starts" : "Starting"} at ${D.fmtTime(t.start)}`);
+      // Alarm at the start (only within its first 10 minutes; a late alarm is just noise)
+      if (t.alarm) {
+        const key = alarmKey(t, k);
+        if (!fired.has(key) && now >= t.start) {
+          markFired(key, k);
+          if (now <= t.start + 10) alarmToast(t, k);
+        }
+      }
     });
+    // Snoozed alarms that are due
+    const due = snoozes().filter((s) => s.at <= Date.now());
+    if (due.length) {
+      saveSnoozes(snoozes().filter((s) => s.at > Date.now()));
+      due.forEach((s) => {
+        const t = Store.tasksOn(s.date).find((x) => x.id === s.id);
+        if (t && !t.done) alarmToast(t, s.date);
+      });
+    }
     if (passed.length && !Platform.reminders.native) {
       const names = passed.slice(0, 2).map((t) => `“${t.title}” (${D.fmtTime(t.start)})`).join(" and ");
       toast(`While you were away: ${names}${passed.length > 2 ? ` and ${passed.length - 2} more` : ""}.`, {
@@ -3631,8 +4326,22 @@ const Timeline = (() => {
     }
   }
 
+  // A notification (or one of the alarm's buttons) was tapped in the phone app.
+  function onReminderAction(action, x) {
+    if (!x.id || !x.date || !Store.get(x.id)) return;
+    if (action === "done") {
+      if (!Store.get(x.id).doneDates.includes(x.date)) toggleDone(x.id, x.date);
+      return;
+    }
+    if (action === "snooze") return snoozeAlarm(x.id, x.date);
+    goTo(x.date, "day");
+    Timeline.focusCard(x.id, x.date);
+  }
+
   async function updateNotifUI() {
     const perm = await Platform.reminders.permission();
+    // Android: on-time alarms are normally allowed automatically; warn only if they're switched off.
+    $("#exactWarn").hidden = !(Platform.reminders.native && perm === "granted" && !(await Platform.reminders.exactAllowed()));
     $("#notifBtn").hidden = perm !== "default";
     const native = Platform.reminders.native;
     $("#notifStatus").textContent = {
@@ -3686,6 +4395,7 @@ const Timeline = (() => {
       .forEach((b) => b.setAttribute("aria-checked", String(b.dataset.themeChoice === choice)));
     // Browser and phone status bar match the page.
     $('meta[name="theme-color"]').content = getComputedStyle(root).getPropertyValue("--paper").trim();
+    Platform.ui.statusBar(dark); // phone app: status bar icons and color follow
   }
 
   function setTheme(choice) {
@@ -3854,6 +4564,23 @@ const Timeline = (() => {
   }
 
   // ---------------------------------------------------------
+  // iPhone: a one-time hint to install DayFlow from Safari
+  // (Share → Add to Home Screen). Not shown in the phone app,
+  // once installed, or after it's dismissed.
+  // ---------------------------------------------------------
+  const HINT_KEY = "dayflow.installHint";
+  function showInstallHint() {
+    const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    if (!ios || Platform.native || Platform.standalone() || Platform.storage.get(HINT_KEY)) return;
+    toast("Install DayFlow: tap Share, then “Add to Home Screen”. It then opens like an app and works offline.", {
+      timeout: 0,
+      key: "install",
+      actions: [{ label: "Got it", fn: () => Platform.storage.set(HINT_KEY, "1") }],
+      dismissable: false,
+    });
+  }
+
+  // ---------------------------------------------------------
   // Settings and backup
   // ---------------------------------------------------------
   const BACKUP_KEY = "dayflow.lastBackup";
@@ -3862,6 +4589,8 @@ const Timeline = (() => {
     $("#setDayStart").value = D.toInputTime(settings.dayStart);
     $("#setDayEnd").value = D.toInputTime(settings.dayEnd % 1440);
     $("#setWarnOverlaps").checked = settings.warnOverlaps;
+    $("#setRemind").value = settings.remindBefore === null ? "" : String(settings.remindBefore);
+    $("#setAlarm").checked = settings.alarmAtStart;
     const last = Platform.storage.get(BACKUP_KEY);
     const n = last ? D.diffDays(last, D.todayKey()) : null;
     const status = $("#backupStatus");
@@ -3883,6 +4612,8 @@ const Timeline = (() => {
       settings.dayEnd = b;
     } else toast("Your day needs to be at least an hour long.", { kind: "warn", timeout: 3000, key: "settings" });
     settings.warnOverlaps = $("#setWarnOverlaps").checked;
+    settings.remindBefore = $("#setRemind").value === "" ? null : Number($("#setRemind").value);
+    settings.alarmAtStart = $("#setAlarm").checked;
     saveSettings();
     if (Sync.user()) Sync.pushSettings({ ...settings });
     renderSettings();
@@ -3951,6 +4682,11 @@ const Timeline = (() => {
   function onGlobalKey(e) {
     const tag = (e.target.tagName || "").toLowerCase();
     const typing = tag === "input" || tag === "textarea" || tag === "select" || e.target.isContentEditable;
+    // Nothing behind the welcome page reacts to keys; Esc closes it only when opened from the top bar.
+    if (!welcome.hidden) {
+      if (e.key === "Escape" && welcomeClosable) closeWelcome();
+      return;
+    }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !typing && !anyDialogOpen()) {
       e.preventDefault();
       doUndo();
@@ -3995,12 +4731,41 @@ const Timeline = (() => {
 
   const validEmail = (s) => /^\S+@\S+\.\S+$/.test(s);
 
+  // The account dialog has two views: the signed-in panel and "choose a new password".
+  // Signing in and creating an account happen on the welcome page.
   function showAuthView(view) {
-    $("#authForm").hidden = view !== "form";
     $("#acctView").hidden = view !== "account";
     $("#newPwForm").hidden = view !== "newpw";
-    $("#authTitle").textContent =
-      view === "account" ? "Your account" : view === "newpw" ? "New password" : authMode === "signup" ? "Create account" : "Sign in";
+    $("#authTitle").textContent = view === "newpw" ? "New password" : "Your account";
+  }
+
+  // ---- Welcome page (sign in / create account / continue without) ----
+  const welcome = $("#welcome");
+  const GUEST_KEY = "dayflow.guest"; // "continue without an account" was chosen on this device
+  let welcomeClosable = false; // opened from the top bar (can be closed), or the first thing people see
+
+  function openWelcome({ closable = false } = {}) {
+    if (!Sync.enabled) return;
+    welcomeClosable = closable;
+    setAuthMode(authMode);
+    welcome.hidden = false;
+    $(".app").inert = true; // keyboard and screen readers stay on the welcome page
+    document.body.classList.add("welcome-open");
+    setTimeout(() => $("#authEmail").focus(), 50);
+  }
+
+  function closeWelcome() {
+    welcome.hidden = true;
+    $(".app").inert = false;
+    document.body.classList.remove("welcome-open");
+  }
+
+  function continueWithout() {
+    Platform.storage.set(GUEST_KEY, "1");
+    closeWelcome();
+    toast("You're using DayFlow without an account. Your tasks stay on this device; you can sign in any time.", {
+      key: "auth",
+    });
   }
 
   function authMessage(err = "", ok = "") {
@@ -4019,18 +4784,16 @@ const Timeline = (() => {
     $("#pwHint").hidden = mode !== "signup";
     $("#authForgot").hidden = mode === "signup";
     authMessage();
-    showAuthView("form");
   }
 
   function openAccount() {
     $("#acctErr").hidden = true;
     signOutAnyway = false;
-    if (Sync.user()) {
-      $("#deleteConfirm").value = "";
-      $("#deleteAcctBtn").disabled = true;
-      renderAccount();
-      showAuthView("account");
-    } else setAuthMode(authMode);
+    if (!Sync.user()) return openWelcome({ closable: true });
+    $("#deleteConfirm").value = "";
+    $("#deleteAcctBtn").disabled = true;
+    renderAccount();
+    showAuthView("account");
     authDlg.showModal();
   }
 
@@ -4092,7 +4855,8 @@ const Timeline = (() => {
         }
       } else await Sync.signIn(email, pw);
       $("#authPassword").value = "";
-      authDlg.close();
+      Platform.storage.remove(GUEST_KEY);
+      closeWelcome();
       toast(`Signed in as ${email}. Your tasks are saved online.`, { key: "auth" });
     } catch (err) {
       authMessage(err.message);
@@ -4139,6 +4903,8 @@ const Timeline = (() => {
       settings.dayEnd = s.dayEnd;
     }
     if (typeof s.warnOverlaps === "boolean") settings.warnOverlaps = s.warnOverlaps;
+    if (s.remindBefore === null || [0, 5, 10, 15, 30, 60].includes(s.remindBefore)) settings.remindBefore = s.remindBefore;
+    if (typeof s.alarmAtStart === "boolean") settings.alarmAtStart = s.alarmAtStart;
   }
 
   // Re-render after another device's changes, unless the person is in the middle of something.
@@ -4227,6 +4993,8 @@ const Timeline = (() => {
     btn.disabled = false;
     authDlg.close();
     toast("Signed out. Your tasks are saved in your account.", { key: "auth" });
+    Platform.storage.remove(GUEST_KEY);
+    openWelcome(); // sign in again, as someone else, or continue without
   }
 
   async function doDeleteAccount() {
@@ -4243,6 +5011,7 @@ const Timeline = (() => {
     }
     leaveAccount();
     Store.importTasks(keep, "merge"); // a copy stays on this device, without an account
+    Platform.storage.set(GUEST_KEY, "1");
     render();
     authDlg.close();
     toast("Your account and its online data were deleted. Your tasks are still on this device.", { key: "auth" });
@@ -4254,8 +5023,10 @@ const Timeline = (() => {
       $("#newPwErr").hidden = true;
       showAuthView("newpw");
     }
-    if (u) enterAccount(u);
-    else leaveAccount();
+    if (u) {
+      closeWelcome(); // e.g. signed in by the link in a confirmation or reset email
+      enterAccount(u);
+    } else leaveAccount();
     renderAccount();
   }
 
@@ -4263,6 +5034,7 @@ const Timeline = (() => {
     if (!Sync.enabled) return;
     $("#accountBtn").addEventListener("click", openAccount);
     $("#authClose").addEventListener("click", () => authDlg.close());
+    $("#welcomeSkip").addEventListener("click", continueWithout);
     authDlg.addEventListener("click", (e) => {
       if (e.target === authDlg) authDlg.close();
     });
@@ -4288,6 +5060,11 @@ const Timeline = (() => {
 
   // Android back button: close what's open before leaving the app.
   function onBack() {
+    if (!welcome.hidden) {
+      if (!welcomeClosable) return false; // first screen: Back leaves the app
+      closeWelcome();
+      return true;
+    }
     const open = [...document.querySelectorAll("dialog")].reverse().find((d) => d.open);
     if (open) {
       open.close();
@@ -4295,6 +5072,11 @@ const Timeline = (() => {
     }
     if (state.pending) {
       cancelPending();
+      return true;
+    }
+    // On a phone, Back from Week or To-do returns to Today before leaving the app.
+    if (isPhone() && state.tab !== "today") {
+      setTab("today");
       return true;
     }
     return false;
@@ -4312,6 +5094,12 @@ const Timeline = (() => {
       Store.open(Sync.userKey(u));
     } else if (!Store.load()) Store.seed(makeExamples());
     if (Platform.storage.get("dayflow.view") === "week") state.view = "week";
+    const savedTab = Platform.storage.get(TAB_KEY);
+    state.tab = savedTab === "todo" ? "todo" : state.view === "week" ? "week" : "today";
+    document.querySelector(".tabbar").addEventListener("click", (e) => {
+      const b = e.target.closest("[data-tab]");
+      if (b) setTab(b.dataset.tab);
+    });
     Store.onSave(() => {
       scheduleReminderSync();
       Sync.schedulePush();
@@ -4326,6 +5114,7 @@ const Timeline = (() => {
       onCreateAt: (date, start) => openForm({ date, start }),
       onDrop,
       onKeyMove: (m) => commitMove(m, { fromKeyboard: true }),
+      onSwipe,
       onRerender: () => render(),
     });
 
@@ -4366,6 +5155,16 @@ const Timeline = (() => {
       updateQuickPreview();
     });
 
+    moveSheet.addEventListener("click", onMoveSheetClick);
+    enableListSwipe($("#todos"), (li) => {
+      const b = li.querySelector("[data-td-done]");
+      return b ? { id: b.dataset.tdDone, date: D.todayKey() } : null;
+    });
+    enableListSwipe($("#leftovers"), (li) => {
+      const b = li.querySelector("[data-lo-done]");
+      const t = b && Store.get(b.dataset.loDone);
+      return t ? { id: t.id, date: t.date } : null;
+    });
     $("#leftovers").addEventListener("click", (e) => {
       const el = e.target.closest("[data-lo-done],[data-lo-move],[data-lo-del]");
       if (!el) return;
@@ -4412,7 +5211,13 @@ const Timeline = (() => {
       renderTodos();
     });
 
-    ["#setDayStart", "#setDayEnd", "#setWarnOverlaps"].forEach((s) => $(s).addEventListener("change", onSettingsChange));
+    ["#setDayStart", "#setDayEnd", "#setWarnOverlaps", "#setRemind", "#setAlarm"].forEach((s) =>
+      $(s).addEventListener("change", onSettingsChange)
+    );
+    $("#exactBtn").addEventListener("click", async () => {
+      await Platform.reminders.openExactSetting();
+      updateNotifUI();
+    });
     $("#exportBtn").addEventListener("click", exportBackup);
     $("#importBtn").addEventListener("click", importBackup);
     $("#notifBtn").addEventListener("click", async () => {
@@ -4422,11 +5227,8 @@ const Timeline = (() => {
     });
     document.addEventListener("keydown", onGlobalKey);
     Platform.onBack(onBack);
-    Platform.reminders.onTap(({ id, date }) => {
-      if (!id || !date) return;
-      goTo(date, "day");
-      Timeline.focusCard(id, date);
-    });
+    Platform.reminders.setup();
+    Platform.reminders.onAction(onReminderAction);
 
     render({ resetScroll: true });
     renderSettings();
@@ -4435,6 +5237,14 @@ const Timeline = (() => {
     updateNotifUI();
     scheduleReminderSync();
     if (u) refreshFromCloud();
+    Platform.ui.hideSplash();
+    Platform.registerOffline((apply) =>
+      toast("A new version of DayFlow is ready.", { timeout: 0, key: "update", actions: [{ label: "Reload", fn: apply }] })
+    );
+    showInstallHint();
+    // Accounts set up, nobody signed in, and no "continue without" yet: start on the welcome page.
+    if (Sync.enabled && !u && !Platform.storage.get(GUEST_KEY)) openWelcome();
+    else showSwipeTip();
 
     // Keep the "now" line, progress and reminders current.
     let lastMinute = D.nowMinutes();

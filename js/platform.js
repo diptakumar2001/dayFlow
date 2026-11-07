@@ -65,11 +65,36 @@ const Platform = (() => {
     return Math.abs(h) || 1;
   };
 
+  const ALARM_SOUND = "dayflow_alarm.wav"; // res/raw on Android
+
   const reminders = {
     // True when the device itself delivers reminders (app closed or not).
     native: !!plugin("LocalNotifications"),
 
-    // list: [{ key, title, body, at: Date, extra }] — replaces everything scheduled before.
+    // Once at start-up: Android channels (a gentle one for reminders, a loud one for alarms)
+    // and the Done / Snooze buttons on alarms. Not needed on the web.
+    async setup() {
+      const ln = plugin("LocalNotifications");
+      if (!ln) return;
+      try {
+        await ln.createChannel({
+          id: "reminders", name: "Reminders", description: "A heads-up before a task starts",
+          importance: 4, visibility: 1, vibration: true,
+        });
+        await ln.createChannel({
+          id: "alarms", name: "Alarms", description: "Rings when a task starts",
+          importance: 5, visibility: 1, sound: ALARM_SOUND, vibration: true, lights: true, lightColor: "#4cc2a6",
+        });
+      } catch (e) {} // iOS has no channels
+      try {
+        await ln.registerActionTypes({
+          types: [{ id: "alarm", actions: [{ id: "done", title: "Done" }, { id: "snooze", title: "Snooze 5 min" }] }],
+        });
+      } catch (e) {}
+    },
+
+    // list: [{ key, kind: "reminder" | "alarm", title, body, at: Date, extra }]
+    // Replaces everything scheduled before. allowWhileIdle = on time even when the phone sleeps.
     async sync(list) {
       const ln = plugin("LocalNotifications");
       if (!ln) return; // web: app.js shows reminders while the page is open
@@ -82,8 +107,35 @@ const Platform = (() => {
         const notifications = list
           .filter((r) => r.at.getTime() > now)
           .slice(0, 60) // iOS allows 64 pending
-          .map((r) => ({ id: hashId(r.key), title: r.title, body: r.body, schedule: { at: r.at }, extra: r.extra }));
+          .map((r) => {
+            const alarm = r.kind === "alarm";
+            return {
+              id: hashId(r.key), title: r.title, body: r.body,
+              schedule: { at: r.at, allowWhileIdle: true },
+              channelId: alarm ? "alarms" : "reminders",
+              sound: alarm ? ALARM_SOUND : undefined,
+              actionTypeId: alarm ? "alarm" : undefined,
+              extra: { ...r.extra, kind: r.kind, key: r.key },
+            };
+          });
         if (notifications.length) await ln.schedule({ notifications });
+      } catch (e) {}
+    },
+
+    // Android 12+: are exact (on-time) alarms allowed? true when it doesn't apply.
+    async exactAllowed() {
+      const ln = plugin("LocalNotifications");
+      if (!ln || !ln.checkExactNotificationSetting) return true;
+      try {
+        const res = await ln.checkExactNotificationSetting();
+        return res.exact_alarm === "granted";
+      } catch (e) {
+        return true;
+      }
+    },
+    async openExactSetting() {
+      try {
+        await plugin("LocalNotifications").changeExactNotificationSetting();
       } catch (e) {}
     },
 
@@ -121,12 +173,75 @@ const Platform = (() => {
       } catch (e) {}
     },
 
-    // Called with the notification's `extra` when the person taps it.
-    onTap(fn) {
+    // fn(action, extra): action is "tap", "done" or "snooze" (the alarm's buttons).
+    onAction(fn) {
       const ln = plugin("LocalNotifications");
-      if (ln) ln.addListener("localNotificationActionPerformed", (e) => fn(e.notification.extra || {}));
+      if (!ln) return;
+      ln.addListener("localNotificationActionPerformed", (e) => {
+        const a = e.actionId === "done" || e.actionId === "snooze" ? e.actionId : "tap";
+        fn(a, e.notification.extra || {});
+      });
     },
   };
+
+  // ---- Look and feel inside the phone app (no-ops on the web) ----
+  const ui = {
+    // Status bar icons/background follow the app's theme.
+    async statusBar(dark) {
+      const sb = plugin("StatusBar");
+      if (!sb) return;
+      try {
+        await sb.setStyle({ style: dark ? "DARK" : "LIGHT" }); // DARK = light icons for a dark background
+        await sb.setBackgroundColor({ color: dark ? "#070b18" : "#f3f6f5" });
+      } catch (e) {}
+    },
+    // A small buzz, e.g. when a task is picked up by holding it.
+    haptic() {
+      const h = plugin("Haptics");
+      if (h) h.impact({ style: "LIGHT" }).catch(() => {});
+      else if (navigator.vibrate && navigator.userActivation && navigator.userActivation.hasBeenActive) navigator.vibrate(10);
+    },
+    hideSplash() {
+      const s = plugin("SplashScreen");
+      if (s) s.hide().catch(() => {});
+    },
+  };
+
+  // ---- Offline (web only) ----
+  // A service worker keeps the app files, so the installed web app opens without a connection.
+  // onUpdate(apply) is called when a new version is waiting; apply() switches to it and reloads.
+  // Off on localhost (so development always shows fresh files) unless dayflow.devOffline is set.
+  function registerOffline(onUpdate) {
+    if (native || !("serviceWorker" in navigator) || location.protocol === "file:") return;
+    const local = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+    if (local && !storage.get("dayflow.devOffline")) return;
+    // Reload only when switching to a new version, not when the first worker takes over on a first visit.
+    const hadController = !!navigator.serviceWorker.controller;
+    let reloading = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (!hadController || reloading) return;
+      reloading = true;
+      location.reload();
+    });
+    navigator.serviceWorker
+      .register("sw.js")
+      .then((reg) => {
+        const offer = (w) => onUpdate(() => w.postMessage("skip-waiting"));
+        if (reg.waiting && navigator.serviceWorker.controller) offer(reg.waiting);
+        reg.addEventListener("updatefound", () => {
+          const w = reg.installing;
+          if (!w) return;
+          w.addEventListener("statechange", () => {
+            if (w.state === "installed" && navigator.serviceWorker.controller) offer(w);
+          });
+        });
+      })
+      .catch(() => {});
+  }
+
+  // Running as an installed web app (Add to Home Screen)?
+  const standalone = () =>
+    matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
 
   // ---- Files (backup) ----
   async function saveFile(name, text) {
@@ -217,5 +332,8 @@ const Platform = (() => {
     });
   }
 
-  return { native, storage, ready, reminders, saveFile, openFile, pickImage, images, onBack, onResume };
+  return {
+    native, storage, ready, reminders, ui, registerOffline, standalone,
+    saveFile, openFile, pickImage, images, onBack, onResume,
+  };
 })();

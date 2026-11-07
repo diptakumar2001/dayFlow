@@ -1,10 +1,18 @@
 {
+  "id": "./",
   "name": "DayFlow Planner",
   "short_name": "DayFlow",
   "description": "A task-first daily planner with a time-blocked timeline.",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#f3f6f5",
-  "theme_color": "#0e6b58",
-  "icons": [{ "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+  "orientation": "any",
+  "background_color": "#070b18",
+  "theme_color": "#070b18",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
 }
