@@ -1330,13 +1330,22 @@
   }
 
   function setTheme(choice) {
-    // A short cross-fade, only for this switch (not on every hover or render).
     const root = document.documentElement;
-    root.classList.add("theme-fade");
-    setTimeout(() => root.classList.remove("theme-fade"), 350);
-    if (choice === "system") Platform.storage.remove(THEME_KEY);
-    else Platform.storage.set(THEME_KEY, choice);
-    applyTheme();
+    const apply = () => {
+      // A short cross-fade of the colours, only for this switch (not on every hover or render).
+      root.classList.add("theme-fade");
+      setTimeout(() => root.classList.remove("theme-fade"), 350);
+      if (choice === "system") Platform.storage.remove(THEME_KEY);
+      else Platform.storage.set(THEME_KEY, choice);
+      applyTheme();
+    };
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return apply();
+    // Day turning into night (or back): the sky fades out, the theme changes, the new sky fades in.
+    root.classList.add("sky-fade");
+    setTimeout(() => {
+      apply();
+      root.classList.remove("sky-fade");
+    }, 200);
   }
 
   // ---------------------------------------------------------
@@ -1768,8 +1777,9 @@
     $("#acctLabel").hidden = !!u;
     $("#syncDot").hidden = !u;
     $("#syncDot").className = `sync-dot ${st.state}`;
+    btn.classList.toggle("signed-in", !!u);
     btn.setAttribute("aria-label", u ? `Account: ${u.email}. ${syncText(st)}` : "Sign in");
-    btn.title = u ? `${u.email} · ${syncText(st)}` : "";
+    btn.title = u ? `${u.email} · ${syncText(st)}` : "Sign in"; // the tooltip names the icon-only phone button
     if (u) {
       $("#acctEmail").textContent = u.email;
       $("#acctAvatarBig").textContent = initial;

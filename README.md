@@ -175,8 +175,9 @@ form folds the less-used fields (course, reminder, repeat, notes) under **More o
   deep navy. Buttons, toasts and dialogs use a light "Liquid Glass" style (translucent, blurred); task cards and
   the timeline stay solid for easy reading. Glass turns solid when the device asks for reduced transparency or
   more contrast
-- **Sky backgrounds**: a soft day sky in light mode and a starry night sky with a crescent moon and gently
-  twinkling stars in dark mode (both drawn in CSS, no image files), with the colors matched to them (moonlight-blue accent, warm "now" line). Panels are slightly see-through so the sky
+- **Sky backgrounds**: a soft day sky in light mode and the same sky at night in dark mode, with moonlit
+  clouds in the same places and a moon glow where the sun is (both drawn in CSS, no image files), with the
+  colors matched to them (moonlight-blue accent, warm "now" line). Panels are slightly see-through so the sky
   shows. In Settings → Appearance each theme can use its sky, no picture, or **your own photo**. Photos are
   shrunk on the device, kept on the device (not in backups or your account), and DayFlow adjusts a veil from the
   photo's brightness so text stays readable
