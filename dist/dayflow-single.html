@@ -92,6 +92,11 @@
   --glass-fill: rgba(255, 255, 255, 0.68); --glass-fill-hover: rgba(255, 255, 255, 0.85);
   --glass-edge: rgba(20, 32, 29, 0.12); --glass-shine: rgba(255, 255, 255, 0.9);
   --glass-shadow: 0 4px 14px rgba(20, 32, 29, 0.1);
+  /* Buttons (see "Buttons: hover and glass"). Dark mode swaps these for green glass. */
+  --btn-bg: var(--surface); --btn-bg-hover: var(--surface-2); --btn-edge: var(--rule-strong);
+  --btn-glow: 0 0 0 3px rgba(14, 107, 88, 0.14), 0 6px 18px rgba(14, 107, 88, 0.18);
+  --btn-primary: var(--accent); --btn-primary-hover: var(--accent-hover); --btn-primary-ink: var(--accent-ink);
+  --btn-primary-top: var(--glass-accent);
   --now: var(--accent); --now-ink: var(--accent-ink);
   /* Shiny big titles: a gradient (and in dark mode a soft glow) on large text only */
   --title-grad: linear-gradient(100deg, #0e6b58 0%, #4f3fc9 100%); --title-glow: none;
@@ -164,9 +169,14 @@
       rgba(6, 10, 22, calc(var(--veil-night, 0.1) + var(--veil-boost-night, 0.12))));
     --panel-fill: rgba(15, 21, 39, 0.8);
     --panel-edge: rgba(255, 255, 255, 0.08);
-    --glass-fill: rgba(20, 28, 52, 0.72); --glass-fill-hover: rgba(32, 42, 74, 0.8);
-    --glass-edge: rgba(255, 255, 255, 0.12); --glass-shine: rgba(255, 255, 255, 0.16);
+    --glass-fill: rgba(18, 52, 58, 0.62); --glass-fill-hover: rgba(26, 78, 82, 0.72);
+    --glass-edge: rgba(94, 234, 212, 0.22); --glass-shine: rgba(255, 255, 255, 0.16);
     --glass-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    /* Green see-through buttons with a soft glow, like the portfolio */
+    --btn-bg: rgba(45, 212, 191, 0.1); --btn-bg-hover: rgba(45, 212, 191, 0.18); --btn-edge: rgba(94, 234, 212, 0.3);
+    --btn-glow: 0 0 18px rgba(45, 212, 191, 0.35), 0 0 40px rgba(45, 212, 191, 0.18);
+    --btn-primary: linear-gradient(135deg, #6ee7b7, #22d3ee); --btn-primary-hover: linear-gradient(135deg, #a7f3d0, #67e8f9);
+    --btn-primary-ink: #04201c; --btn-primary-top: var(--btn-primary);
     color-scheme: dark;
   }
 }
@@ -197,9 +207,14 @@
     rgba(6, 10, 22, calc(var(--veil-night, 0.1) + var(--veil-boost-night, 0.12))));
   --panel-fill: rgba(15, 21, 39, 0.8);
   --panel-edge: rgba(255, 255, 255, 0.08);
-  --glass-fill: rgba(20, 28, 52, 0.72); --glass-fill-hover: rgba(32, 42, 74, 0.8);
-  --glass-edge: rgba(255, 255, 255, 0.12); --glass-shine: rgba(255, 255, 255, 0.16);
+  --glass-fill: rgba(18, 52, 58, 0.62); --glass-fill-hover: rgba(26, 78, 82, 0.72);
+  --glass-edge: rgba(94, 234, 212, 0.22); --glass-shine: rgba(255, 255, 255, 0.16);
   --glass-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  /* Green see-through buttons with a soft glow, like the portfolio */
+  --btn-bg: rgba(45, 212, 191, 0.1); --btn-bg-hover: rgba(45, 212, 191, 0.18); --btn-edge: rgba(94, 234, 212, 0.3);
+  --btn-glow: 0 0 18px rgba(45, 212, 191, 0.35), 0 0 40px rgba(45, 212, 191, 0.18);
+  --btn-primary: linear-gradient(135deg, #6ee7b7, #22d3ee); --btn-primary-hover: linear-gradient(135deg, #a7f3d0, #67e8f9);
+  --btn-primary-ink: #04201c; --btn-primary-top: var(--btn-primary);
   color-scheme: dark;
 }
 
@@ -249,9 +264,9 @@ code, kbd {
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  border: 1px solid var(--rule-strong);
+  border: 1px solid var(--btn-edge);
   border-radius: 8px;
-  background: var(--surface);
+  background: var(--btn-bg);
   color: var(--ink);
   font-weight: 700;
   font-size: 14px;
@@ -259,11 +274,11 @@ code, kbd {
   white-space: nowrap;
   transition: background-color 0.12s, border-color 0.12s;
 }
-.btn:hover { background: var(--surface-2); }
+.btn:hover { background: var(--btn-bg-hover); }
 .btn:disabled { opacity: 0.45; cursor: default; }
-.btn:disabled:hover { background: var(--surface); }
-.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-.btn.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.btn:disabled:hover { background: var(--btn-bg); }
+.btn.primary { background: var(--btn-primary); border-color: transparent; color: var(--btn-primary-ink); }
+.btn.primary:hover { background: var(--btn-primary-hover); }
 .btn.danger { color: var(--high-ink); border-color: var(--high); background: var(--surface); }
 .btn.danger:hover { background: var(--high-soft); }
 .btn.sm { padding: 5px 10px; font-size: 13px; }
@@ -271,13 +286,14 @@ code, kbd {
 .icon-btn {
   width: 36px; height: 36px;
   display: inline-grid; place-items: center;
-  border: 1px solid var(--rule-strong);
+  border: 1px solid var(--btn-edge);
   border-radius: 8px;
-  background: var(--surface);
+  background: var(--btn-bg);
+  color: var(--ink);
   cursor: pointer;
   padding: 0;
 }
-.icon-btn:hover { background: var(--surface-2); }
+.icon-btn:hover { background: var(--btn-bg-hover); }
 
 /* ---------- Top bar ---------- */
 .topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
@@ -893,8 +909,8 @@ html.sky-fade body::before { opacity: 0; transition-duration: 0.2s; } /* switchi
 .topbar .btn:hover:not(:disabled), .topbar .icon-btn:hover { background: var(--glass-fill-hover); }
 .topbar .btn:active:not(:disabled), .topbar .icon-btn:active { transform: scale(0.95); } /* a small "squish" */
 .topbar .btn:disabled { box-shadow: none; }
-.topbar .btn.primary { background: var(--glass-accent); color: var(--accent-ink); border-color: var(--glass-edge); }
-.topbar .btn.primary:hover { background: var(--accent-hover); }
+.topbar .btn.primary { background: var(--btn-primary-top); color: var(--btn-primary-ink); border-color: var(--glass-edge); }
+.topbar .btn.primary:hover { background: var(--btn-primary-hover); }
 .topbar .seg { padding: 3px; gap: 2px; overflow: visible; }
 .topbar .seg button { border-radius: 9px; padding: 5px 12px; }
 .topbar .seg button + button { border-left: 0; }
@@ -929,9 +945,58 @@ dialog {
     --glass-fill: var(--surface); --glass-fill-hover: var(--surface-2); --glass-panel: var(--surface);
     --glass-toast: var(--toast-bg); --glass-accent: var(--accent);
     --glass-edge: var(--rule-strong); --glass-shine: transparent;
+    --btn-bg: var(--surface); --btn-bg-hover: var(--surface-2); --btn-edge: var(--rule-strong);
     --glass-blur: none; --glass-blur-strong: none;
     --panel-fill: var(--surface); --panel-blur: none;
   }
+}
+
+/* ---------- Buttons: hover and glass ----------
+   Hovering a button lifts it, adds a soft glow (green in dark mode) and sweeps a shine across it once,
+   so it's obvious where the cursor is. Only on devices that really hover, so taps on phones don't leave
+   a "stuck" hover. Keyboard focus gets the same glow without the lift. */
+:where(.btn, .icon-btn) { position: relative; }
+.btn, .icon-btn, .toast-btn {
+  transition: background-color 0.15s, border-color 0.15s, box-shadow 0.2s, filter 0.2s,
+    transform 0.2s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+/* The shine: a light band parked off the left edge; hover slides it across, leaving snaps it back. */
+.btn::after, .icon-btn::after {
+  content: ""; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(110deg, transparent 40%, rgba(255, 255, 255, 0.32) 50%, transparent 60%) no-repeat;
+  background-size: 300% 100%; background-position: 100% 0;
+}
+.check svg { transition: transform 0.2s cubic-bezier(0.3, 1.5, 0.5, 1); }
+.btn-link { text-underline-offset: 2px; transition: text-underline-offset 0.15s, color 0.15s; }
+.seg button { transition: background-color 0.15s, box-shadow 0.2s, color 0.15s; }
+
+@media (hover: hover) {
+  .btn:hover:not(:disabled), .icon-btn:hover, .toast-btn:hover {
+    transform: translateY(-2px); box-shadow: var(--btn-glow); filter: brightness(1.08);
+  }
+  .topbar .btn:hover:not(:disabled), .topbar .icon-btn:hover {
+    box-shadow: inset 0 1px 0 var(--glass-shine), var(--btn-glow);
+  }
+  .btn.danger:hover:not(:disabled) {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--high) 18%, transparent), 0 6px 18px color-mix(in srgb, var(--high) 25%, transparent);
+  }
+  .btn:hover:not(:disabled)::after, .icon-btn:hover::after {
+    background-position: 0 0; transition: background-position 0.6s ease;
+  }
+  .icon-btn:hover svg { transform: scale(1.1); }
+  .icon-btn svg { transition: transform 0.2s cubic-bezier(0.3, 1.5, 0.5, 1); }
+  .check:hover svg { transform: scale(1.12); }
+  .seg button:not([aria-pressed="true"]):not([aria-checked="true"]):hover { box-shadow: var(--btn-glow); color: var(--ink); }
+  .btn-link:hover { text-underline-offset: 4px; color: var(--accent-hover); }
+}
+.btn:focus-visible, .icon-btn:focus-visible, .toast-btn:focus-visible { box-shadow: var(--btn-glow); }
+/* Pressing still "squishes", and wins over the lift */
+.btn:active:not(:disabled), .icon-btn:active, .toast-btn:active,
+.topbar .btn:active:not(:disabled), .topbar .icon-btn:active { transform: scale(0.95); }
+@media (prefers-reduced-motion: reduce) {
+  .btn:hover, .icon-btn:hover, .toast-btn:hover, .btn:active, .icon-btn:active, .toast-btn:active,
+  .icon-btn:hover svg, .check:hover svg { transform: none !important; }
+  .btn::after, .icon-btn::after { display: none; }
 }
 
 /* Theme switch */

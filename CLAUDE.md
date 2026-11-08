@@ -54,6 +54,8 @@ features; don't re-read it to learn the structure, this file covers that.
 - Theme: colors are tokens at the top of `styles.css`; the two dark blocks (media query + `[data-theme="dark"]`)
   must stay identical. Text pairs must keep ≥ 4.5:1 contrast. Liquid Glass (`--glass-*`) only on controls and
   floating surfaces (top-bar buttons, toasts, dialogs), never on task cards, the timeline or inputs.
+- Buttons: colors come from `--btn-*` tokens (dark mode = green see-through glass + mint→aqua main buttons).
+  Hover = lift + glow + one shine sweep (`::after`), only under `@media (hover: hover)`; see "Buttons: hover and glass".
 - Backgrounds: one fixed `body::before` layer = `var(--veil), var(--sky)`. Per theme: built-in (`--sky-day-builtin`
   CSS day sky / `--sky-night-builtin` = deep violet + the `.orbs` layer (shown via `--orbs`, parallax from `startOrbParallax()`);
   dark-mode choices "space" = `--sky-night-space` (SVGs from `tools/make-space.py`), "clouds" = `--sky-night-clouds`), none, or the person's photo (`--sky-day`/`--sky-night` set by app.js,
