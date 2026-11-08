@@ -55,8 +55,8 @@ features; don't re-read it to learn the structure, this file covers that.
   must stay identical. Text pairs must keep ≥ 4.5:1 contrast. Liquid Glass (`--glass-*`) only on controls and
   floating surfaces (top-bar buttons, toasts, dialogs), never on task cards, the timeline or inputs.
 - Backgrounds: one fixed `body::before` layer = `var(--veil), var(--sky)`. Per theme: built-in (`--sky-day-builtin`
-  CSS day sky / `--sky-night-builtin` = solar system SVGs `images/space-wide|tall.svg` from `tools/make-space.py`; dark-mode
-  choice "clouds" = `--sky-night-clouds`), none, or the person's photo (`--sky-day`/`--sky-night` set by app.js,
+  CSS day sky / `--sky-night-builtin` = deep violet + the `.orbs` layer (shown via `--orbs`, parallax from `startOrbParallax()`);
+  dark-mode choices "space" = `--sky-night-space` (SVGs from `tools/make-space.py`), "clouds" = `--sky-night-clouds`), none, or the person's photo (`--sky-day`/`--sky-night` set by app.js,
   `--veil-*` from the photo's brightness). Photos stay on the device in IndexedDB via `Platform.images`. Panels
   use `--panel-fill` (see-through); task cards and inputs stay solid.
 - Tasks can't cross midnight. Overlap confirmation follows `settings.warnOverlaps`.

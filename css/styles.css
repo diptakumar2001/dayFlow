@@ -58,6 +58,8 @@
   --glass-edge: rgba(20, 32, 29, 0.12); --glass-shine: rgba(255, 255, 255, 0.9);
   --glass-shadow: 0 4px 14px rgba(20, 32, 29, 0.1);
   --now: var(--accent); --now-ink: var(--accent-ink);
+  /* Shiny big titles: a gradient (and in dark mode a soft glow) on large text only */
+  --title-grad: linear-gradient(100deg, #0e6b58 0%, #4f3fc9 100%); --title-glow: none;
   --swipe-done-bg: #d3efe2; --swipe-done-ink: #0a4d36; --swipe-move-bg: #dbe5fa; --swipe-move-ink: #1c3a80;
   /* Day sky, drawn in CSS: soft blue with blurred clouds and a little sun glow (no image file) */
   --sky-day-builtin:
@@ -72,7 +74,12 @@
   /* Dark mode's built-in background: a dark solar system (hand-drawn SVGs from tools/make-space.py).
      A wide composition for computers, a tall one for phones (see the media query by the sky layer). */
   --space-art: url(../images/space-wide.svg);
-  --sky-night-builtin: var(--space-art); /* one layer, so the layer's "cover" sizing applies to it */
+  --sky-night-space: var(--space-art); /* one layer, so the layer's "cover" sizing applies to it */
+  /* Dark mode's built-in background: deep violet-black behind the glossy orbs (the .orbs layer) */
+  --sky-night-builtin:
+    radial-gradient(60vmax 50vmax at 22% 55%, rgba(110, 80, 220, 0.16), rgba(110, 80, 220, 0) 70%),
+    radial-gradient(40vmax 35vmax at 85% 85%, rgba(80, 120, 230, 0.10), rgba(80, 120, 230, 0) 70%),
+    linear-gradient(160deg, #06070f 0%, #0d0b1e 100%);
   /* "Clouds" choice for dark mode: the day sky's layout (same glow spot, same six clouds) in moonlit colours. */
   --sky-night-clouds:
     radial-gradient(40% 30% at 85% 6%, rgba(214, 224, 255, 0.22), rgba(214, 224, 255, 0) 70%),
@@ -97,12 +104,13 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --paper: #070b18; --surface: #0f1527; --surface-2: #171f38;
-    --ink: #eef1fb; --ink-2: #bcc4dc; --ink-3: #95a0bd;
+    --ink: #f4f6ff; --ink-2: #ccd3ea; --ink-3: #a5afca;
     --rule: #222c4a; --rule-strong: #313d63; --margin: #2b3a66;
     /* Moonlight accent and a warm glow, matched to the night sky */
     --accent: #9db4ff; --accent-hover: #b8c8ff; --accent-ink: #0b1330; --accent-soft: #1a2350;
     --today-tint: rgba(157, 180, 255, 0.05);
     --now: #f3c9a4; --now-ink: #2a1806;
+    --title-grad: linear-gradient(100deg, #7ee8ff 0%, #b69cff 100%); --title-glow: drop-shadow(0 0 14px rgba(150, 140, 255, 0.35));
     --swipe-done-bg: #123a2d; --swipe-done-ink: #a9eccf; --swipe-move-bg: #1b2752; --swipe-move-ink: #c9d5ff;
     --high: #f08a4b;   --high-soft: #3a2318;   --high-ink: #ffc9a6;
     --medium: #f2b83a; --medium-soft: #342a14; --medium-ink: #fbdc98;
@@ -116,6 +124,7 @@
     /* Background and glass (see "Night sky" and "Liquid Glass" below) */
     --glow-1: rgba(157, 180, 255, 0.12); --glow-2: rgba(243, 201, 164, 0.08);
     --sky: var(--sky-night, var(--sky-night-builtin));
+    --orbs: var(--orbs-night, block);
     --veil: linear-gradient(180deg, rgba(6, 10, 22, var(--veil-night, 0.1)),
       rgba(6, 10, 22, calc(var(--veil-night, 0.1) + var(--veil-boost-night, 0.12))));
     --panel-fill: rgba(15, 21, 39, 0.8);
@@ -128,12 +137,13 @@
 }
 :root[data-theme="dark"] {
   --paper: #070b18; --surface: #0f1527; --surface-2: #171f38;
-  --ink: #eef1fb; --ink-2: #bcc4dc; --ink-3: #95a0bd;
+  --ink: #f4f6ff; --ink-2: #ccd3ea; --ink-3: #a5afca;
   --rule: #222c4a; --rule-strong: #313d63; --margin: #2b3a66;
   /* Moonlight accent and a warm glow, matched to the night sky */
   --accent: #9db4ff; --accent-hover: #b8c8ff; --accent-ink: #0b1330; --accent-soft: #1a2350;
   --today-tint: rgba(157, 180, 255, 0.05);
   --now: #f3c9a4; --now-ink: #2a1806;
+  --title-grad: linear-gradient(100deg, #7ee8ff 0%, #b69cff 100%); --title-glow: drop-shadow(0 0 14px rgba(150, 140, 255, 0.35));
   --swipe-done-bg: #123a2d; --swipe-done-ink: #a9eccf; --swipe-move-bg: #1b2752; --swipe-move-ink: #c9d5ff;
   --high: #f08a4b;   --high-soft: #3a2318;   --high-ink: #ffc9a6;
   --medium: #f2b83a; --medium-soft: #342a14; --medium-ink: #fbdc98;
@@ -147,6 +157,7 @@
   /* Background and glass (see "Night sky" and "Liquid Glass" below) */
   --glow-1: rgba(157, 180, 255, 0.12); --glow-2: rgba(243, 201, 164, 0.08);
   --sky: var(--sky-night, var(--sky-night-builtin));
+  --orbs: var(--orbs-night, block);
   --veil: linear-gradient(180deg, rgba(6, 10, 22, var(--veil-night, 0.1)),
     rgba(6, 10, 22, calc(var(--veil-night, 0.1) + var(--veil-boost-night, 0.12))));
   --panel-fill: rgba(15, 21, 39, 0.8);
@@ -750,6 +761,44 @@ body::before {
 html[data-sky-day="none"] { --sky-day: none; --veil-day: 0; --veil-boost-day: 0; }
 html[data-sky-night="none"] { --sky-night: none; --veil-night: 0; --veil-boost-night: 0; }
 html[data-sky-night="clouds"] { --sky-night: var(--sky-night-clouds); }
+html[data-sky-night="space"] { --sky-night: var(--sky-night-space); }
+/* The orbs belong to the built-in background only */
+html[data-sky-night="space"], html[data-sky-night="clouds"], html[data-sky-night="none"], html[data-sky-night="custom"] { --orbs-night: none; }
+
+/* ---------- Glossy orbs (dark mode, built-in background) ----------
+   Three glossy dark spheres lit from the top-left with a violet glow. On computers they drift with the mouse
+   (app.js sets --px/--py from -1 to 1; each depth moves a different amount); on phones they float gently.
+   Only transform changes, so it's cheap; reduced motion stops both. */
+.orbs { display: var(--orbs, none); position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+.orb-wrap {
+  position: absolute; display: block;
+  transform: translate(calc(var(--px, 0) * var(--depth)), calc(var(--py, 0) * var(--depth)));
+  transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.orb {
+  display: block; width: 100%; height: 100%; border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, rgba(196, 168, 255, 0.9) 0%, rgba(122, 92, 224, 0.6) 16%,
+    rgba(46, 30, 96, 0.92) 42%, #0c0a1c 74%);
+  box-shadow: inset -2.5vmin -3.5vmin 7vmin rgba(0, 0, 0, 0.6), 0 4vmin 9vmin rgba(0, 0, 0, 0.55),
+    0 0 12vmin rgba(124, 92, 255, 0.16);
+  animation: orb-float 11s ease-in-out infinite alternate;
+}
+.ow-big   { --depth: 14px; width: 46vmin; height: 46vmin; left: -6vmin; top: 30vh; }
+.ow-small { --depth: 36px; width: 9vmin;  height: 9vmin;  right: 9vw;   top: 14vh; }
+.ow-mid   { --depth: 24px; width: 18vmin; height: 18vmin; right: 16vw;  bottom: 12vh; }
+.ow-small .orb { animation-duration: 9s; animation-delay: -3s; }
+.ow-mid .orb {
+  animation-duration: 14s; animation-delay: -7s;
+  background: radial-gradient(circle at 34% 30%, rgba(214, 222, 255, 0.85) 0%, rgba(110, 120, 210, 0.55) 16%,
+    rgba(36, 34, 80, 0.92) 42%, #0b0b18 74%);
+}
+@keyframes orb-float { from { translate: 0 -1.2vmin; } to { translate: 0 1.2vmin; } }
+/* Phones: the orbs sit where the background shows around the stacked panels */
+@media (max-aspect-ratio: 4/5) {
+  .ow-big   { width: 62vmin; height: 62vmin; left: -18vmin; top: 46vh; }
+  .ow-small { right: 6vw; top: 24vh; width: 11vmin; height: 11vmin; }
+  .ow-mid   { right: -4vmin; bottom: 20vh; width: 24vmin; height: 24vmin; }
+}
 /* Phones and other tall screens get the solar system composed for portrait */
 @media (max-aspect-ratio: 4/5) { :root { --space-art: url(../images/space-tall.svg); } }
 html.sky-loading body::before { opacity: 0; } /* a photo fades in once it's loaded */
@@ -768,6 +817,22 @@ html.sky-fade body::before { opacity: 0; transition-duration: 0.2s; } /* switchi
 .summary.side-sec, .quick-sec.side-sec { padding: 14px 16px; border-top: 1px solid var(--panel-edge); }
 .side { padding: 2px 16px; }
 .side > .side-sec:first-child { border-top: 0; }
+
+/* ---------- Shiny titles ----------
+   The big text (brand name, big date, progress number, dialog and page titles) gets a gradient and, in dark mode,
+   a soft glow. Only large bold text: every gradient colour keeps >= 5.9:1 on its background (checked). */
+.brand span, .dh-num, .progress-num, .dlg-head h2, .welcome h1, .welcome-brand span, .sheet h2 {
+  background: var(--title-grad);
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent; -webkit-text-fill-color: transparent;
+  filter: var(--title-glow);
+}
+@media (forced-colors: active) {
+  .brand span, .dh-num, .progress-num, .dlg-head h2, .welcome h1, .welcome-brand span, .sheet h2 {
+    background: none; color: CanvasText; -webkit-text-fill-color: CanvasText; filter: none;
+  }
+}
+.sky-controls .seg { flex-wrap: wrap; } /* five background choices may need two lines in the dialog */
 
 /* ---------- Liquid Glass (a light touch) ----------
    Only on controls and floating surfaces: the top-bar buttons, toasts and dialogs.

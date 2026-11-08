@@ -1356,7 +1356,7 @@
   // ---------------------------------------------------------
   const SKY = {
     day: { key: "dayflow.sky.day", img: "sky-day", cssVar: "--sky-day", veilVar: "--veil-day", attr: "skyDay", name: "Light mode", builtin: "Sky" },
-    night: { key: "dayflow.sky.night", img: "sky-night", cssVar: "--sky-night", veilVar: "--veil-night", attr: "skyNight", name: "Dark mode", builtin: "Space" },
+    night: { key: "dayflow.sky.night", img: "sky-night", cssVar: "--sky-night", veilVar: "--veil-night", attr: "skyNight", name: "Dark mode", builtin: "Orbs" },
   };
   const skyUrls = {}; // object URLs of loaded photos
 
@@ -1390,6 +1390,27 @@
       root.style.removeProperty(s.cssVar);
       root.style.removeProperty(s.veilVar);
     }
+  }
+
+  // Glossy orbs drift a little with the mouse (computers only; nothing with reduced motion).
+  // CSS does the movement from --px/--py (-1…1); this only updates them, at most once per frame.
+  function startOrbParallax() {
+    if (!matchMedia("(pointer: fine)").matches || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const orbs = $(".orbs");
+    let x = 0;
+    let y = 0;
+    let queued = false;
+    window.addEventListener("pointermove", (e) => {
+      x = (e.clientX / innerWidth) * 2 - 1;
+      y = (e.clientY / innerHeight) * 2 - 1;
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(() => {
+        queued = false;
+        orbs.style.setProperty("--px", x.toFixed(3));
+        orbs.style.setProperty("--py", y.toFixed(3));
+      });
+    }, { passive: true });
   }
 
   async function applySkies() {
@@ -1441,7 +1462,7 @@
     return Math.round(Math.min(hi, Math.max(lo, v)) * 100) / 100;
   }
 
-  const SKY_LABELS = { none: "none", custom: "your photo", clouds: "moonlit clouds" };
+  const SKY_LABELS = { none: "none", custom: "your photo", clouds: "moonlit clouds", space: "space" };
   const skyLabel = (w, mode) => (mode === "builtin" ? SKY[w].builtin : SKY_LABELS[mode] || mode);
 
   async function setSkyMode(w, mode) {
@@ -2156,6 +2177,7 @@
     darkQuery.addEventListener("change", applyTheme);
     settingsDlg.addEventListener("click", onSkyClick);
     applySkies();
+    startOrbParallax();
     applyTheme();
     $("#settingsClose").addEventListener("click", () => settingsDlg.close());
     [searchDlg, settingsDlg].forEach((d) =>

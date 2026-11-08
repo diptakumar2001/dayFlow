@@ -6,7 +6,7 @@
    build_artifact.py, so each deploy replaces the old cache.
    ========================================================= */
 
-const VERSION = "ed880f3384";
+const VERSION = "4814c13883";
 const CACHE = `dayflow-${VERSION}`;
 const FILES = [
   "./", "index.html", "manifest.json",

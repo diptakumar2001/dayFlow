@@ -36,6 +36,12 @@
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+<!-- Dark mode's built-in background: three glossy orbs (pure CSS; drift with the mouse, float on phones) -->
+<div class="orbs" aria-hidden="true">
+  <span class="orb-wrap ow-big"><span class="orb"></span></span>
+  <span class="orb-wrap ow-small"><span class="orb"></span></span>
+  <span class="orb-wrap ow-mid"><span class="orb"></span></span>
+</div>
 <div class="app">
 
   <!-- ===== Top bar: brand, date, navigation, view switch ===== -->
@@ -211,7 +217,8 @@
       <div class="sky-controls">
         <img class="sky-thumb" alt="" hidden>
         <div class="seg" role="radiogroup" aria-labelledby="skyNightLabel">
-          <button type="button" role="radio" data-sky-mode="builtin" aria-checked="true">Space</button>
+          <button type="button" role="radio" data-sky-mode="builtin" aria-checked="true">Orbs</button>
+          <button type="button" role="radio" data-sky-mode="space" aria-checked="false">Space</button>
           <button type="button" role="radio" data-sky-mode="clouds" aria-checked="false">Clouds</button>
           <button type="button" role="radio" data-sky-mode="none" aria-checked="false">None</button>
           <button type="button" role="radio" data-sky-mode="custom" aria-checked="false">My photo</button>

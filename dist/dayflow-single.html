@@ -93,6 +93,8 @@
   --glass-edge: rgba(20, 32, 29, 0.12); --glass-shine: rgba(255, 255, 255, 0.9);
   --glass-shadow: 0 4px 14px rgba(20, 32, 29, 0.1);
   --now: var(--accent); --now-ink: var(--accent-ink);
+  /* Shiny big titles: a gradient (and in dark mode a soft glow) on large text only */
+  --title-grad: linear-gradient(100deg, #0e6b58 0%, #4f3fc9 100%); --title-glow: none;
   --swipe-done-bg: #d3efe2; --swipe-done-ink: #0a4d36; --swipe-move-bg: #dbe5fa; --swipe-move-ink: #1c3a80;
   /* Day sky, drawn in CSS: soft blue with blurred clouds and a little sun glow (no image file) */
   --sky-day-builtin:
@@ -107,7 +109,12 @@
   /* Dark mode's built-in background: a dark solar system (hand-drawn SVGs from tools/make-space.py).
      A wide composition for computers, a tall one for phones (see the media query by the sky layer). */
   --space-art: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAwIDEwMDAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIHNsaWNlIj4NCiAgPCEtLSBEYXlGbG93IGRhcmstbW9kZSBiYWNrZ3JvdW5kOiBhIGRhcmsgc29sYXIgc3lzdGVtLiBHZW5lcmF0ZWQgYnkgdG9vbHMvbWFrZS1zcGFjZS5weSAtLT4NCiAgPGRlZnM+DQogICAgPHJhZGlhbEdyYWRpZW50IGlkPSJzcGFjZSIgY3g9IjAuNTUiIGN5PSIwLjUiIHI9IjAuNzUiPg0KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjMGQxNTMzIi8+DQogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwNTA4MTYiLz4NCiAgICA8L3JhZGlhbEdyYWRpZW50Pg0KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iaGF6ZSIgY3g9IjAuNSIgY3k9IjAuNiIgcj0iMC41Ij4NCiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzViNGFhOCIgc3RvcC1vcGFjaXR5PSIwLjEyIi8+DQogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM1YjRhYTgiIHN0b3Atb3BhY2l0eT0iMCIvPg0KICAgIDwvcmFkaWFsR3JhZGllbnQ+DQogICAgPHJhZGlhbEdyYWRpZW50IGlkPSJzdW4iIGN4PSItOTAiIGN5PSItNzAiIHI9Ijg4MCIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPg0KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZkNjk2IiBzdG9wLW9wYWNpdHk9IjAuMzYiLz4NCiAgICAgIDxzdG9wIG9mZnNldD0iMC4zIiBzdG9wLWNvbG9yPSIjZmZiZTgyIiBzdG9wLW9wYWNpdHk9IjAuMTIiLz4NCiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2ZmYmU4MiIgc3RvcC1vcGFjaXR5PSIwIi8+DQogICAgPC9yYWRpYWxHcmFkaWVudD4NCiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9ImctZWFydGgiIGN4PSIwLjM3IiBjeT0iMC4yMSIgcj0iMC43NSI+DQogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiM3Y2M0ZTgiIHN0b3Atb3BhY2l0eT0iMC44NSIvPg0KICAgICAgPHN0b3Agb2Zmc2V0PSIwLjQ1IiBzdG9wLWNvbG9yPSIjMmY2ZjhmIiBzdG9wLW9wYWNpdHk9IjAuNzUiLz4NCiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzBiMTAyMiIvPg0KICAgIDwvcmFkaWFsR3JhZGllbnQ+DQogICAgPHJhZGlhbEdyYWRpZW50IGlkPSJnLW1hcnMiIGN4PSIwLjE5IiBjeT0iMC40NCIgcj0iMC43NSI+DQogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNlMDg5NmEiIHN0b3Atb3BhY2l0eT0iMC44NSIvPg0KICAgICAgPHN0b3Agb2Zmc2V0PSIwLjQ1IiBzdG9wLWNvbG9yPSIjOGEzZjJlIiBzdG9wLW9wYWNpdHk9IjAuNzUiLz4NCiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzBiMTAyMiIvPg0KICAgIDwvcmFkaWFsR3JhZGllbnQ+DQogICAgPHJhZGlhbEdyYWRpZW50IGlkPSJnLWp1cGl0ZXIiIGN4PSIwLjM2IiBjeT0iMC4yMSIgcj0iMC43NSI+DQogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNlM2MzOWEiIHN0b3Atb3BhY2l0eT0iMC44NSIvPg0KICAgICAgPHN0b3Agb2Zmc2V0PSIwLjQ1IiBzdG9wLWNvbG9yPSIjOWE3NjUwIiBzdG9wLW9wYWNpdHk9IjAuNzUiLz4NCiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzBiMTAyMiIvPg0KICAgIDwvcmFkaWFsR3JhZGllbnQ+PGNsaXBQYXRoIGlkPSJjbGlwLWoiPjxjaXJjbGUgY3g9IjMzMCIgY3k9Ijc4MSIgcj0iMzQiLz48L2NsaXBQYXRoPg0KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iZy1zYXR1cm4iIGN4PSIwLjIzIiBjeT0iMC4zNCIgcj0iMC43NSI+DQogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNlOWQ2YTYiIHN0b3Atb3BhY2l0eT0iMC44NSIvPg0KICAgICAgPHN0b3Agb2Zmc2V0PSIwLjQ1IiBzdG9wLWNvbG9yPSIjOWM4YTVlIiBzdG9wLW9wYWNpdHk9IjAuNzUiLz4NCiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzBiMTAyMiIvPg0KICAgIDwvcmFkaWFsR3JhZGllbnQ+DQogIDwvZGVmcz4NCiAgPHJlY3Qgd2lkdGg9IjE2MDAiIGhlaWdodD0iMTAwMCIgZmlsbD0idXJsKCNzcGFjZSkiLz4NCiAgPHJlY3Qgd2lkdGg9IjE2MDAiIGhlaWdodD0iMTAwMCIgZmlsbD0idXJsKCNoYXplKSIvPg0KICA8Y2lyY2xlIGN4PSI5OTciIGN5PSI3NDIiIHI9IjEuNCIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC41OCIvPjxjaXJjbGUgY3g9IjE0NzYiIGN5PSIyOSIgcj0iMS4wIiBmaWxsPSIjZGZlNmZmIiBvcGFjaXR5PSIwLjY3Ii8+PGNpcmNsZSBjeD0iMTAzOCIgY3k9IjkwMSIgcj0iMC43IiBmaWxsPSIjZGZlNmZmIiBvcGFjaXR5PSIwLjQ2Ii8+PGNpcmNsZSBjeD0iMjEiIGN5PSIyMTciIHI9IjAuOCIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC42NiIvPjxjaXJjbGUgY3g9IjEyMjUiIGN5PSIxNjAiIHI9IjEuMiIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC4zMSIvPjxjaXJjbGUgY3g9Ijk4OCIgY3k9IjEyNyIgcj0iMC42IiBmaWxsPSIjZGZlNmZmIiBvcGFjaXR5PSIwLjY0Ii8+PGNpcmNsZSBjeD0iMzM1IiBjeT0iMjE1IiByPSIxLjMiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuMzgiLz48Y2lyY2xlIGN4PSIxNTM4IiBjeT0iNTM5IiByPSIxLjEiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuMzQiLz48Y2lyY2xlIGN4PSIxNTA2IiBjeT0iNjkxIiByPSIxLjQiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuNjUiLz48Y2lyY2xlIGN4PSIyMzMiIGN5PSI2NSIgcj0iMC44IiBmaWxsPSIjZGZlNmZmIiBvcGFjaXR5PSIwLjUyIi8+PGNpcmNsZSBjeD0iNSIgY3k9IjY3OCIgcj0iMC45IiBmaWxsPSIjZGZlNmZmIiBvcGFjaXR5PSIwLjM5Ii8+PGNpcmNsZSBjeD0iMTMxMCIgY3k9IjQ4MSIgcj0iMC45IiBmaWxsPSIjZGZlNmZmIiBvcGFjaXR5PSIwLjQ3Ii8+PGNpcmNsZSBjeD0iMTEyNyIgY3k9IjU3IiByPSIxLjQiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuMjYiLz48Y2lyY2xlIGN4PSIxMjAwIiBjeT0iODQ1IiByPSIwLjYiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuNjAiLz48Y2lyY2xlIGN4PSI3NSIgY3k9IjE4MSIgcj0iMS40IiBmaWxsPSIjZGZlNmZmIiBvcGFjaXR5PSIwLjM0Ii8+PGNpcmNsZSBjeD0iMTIwOSIgY3k9IjkzMCIgcj0iMS40IiBmaWxsPSIjZGZlNmZmIiBvcGFjaXR5PSIwLjQwIi8+PGNpcmNsZSBjeD0iNTY4IiBjeT0iNTI1IiByPSIwLjciIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuNTkiLz48Y2lyY2xlIGN4PSIxMjc2IiBjeT0iODYwIiByPSIwLjYiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuNjgiLz48Y2lyY2xlIGN4PSIxNDYiIGN5PSIzNDEiIHI9IjEuMSIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC42NiIvPjxjaXJjbGUgY3g9IjU0NCIgY3k9IjkyNCIgcj0iMS4wIiBmaWxsPSIjZGZlNmZmIiBvcGFjaXR5PSIwLjM5Ii8+PGNpcmNsZSBjeD0iNTA3IiBjeT0iMTc3IiByPSIwLjciIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuMzIiLz48Y2lyY2xlIGN4PSIxMTAzIiBjeT0iOTk3IiByPSIwLjciIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuMjciLz48Y2lyY2xlIGN4PSIxNTc5IiBjeT0iNTM0IiByPSIwLjkiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuMzYiLz48Y2lyY2xlIGN4PSI5NTAiIGN5PSI4MjYiIHI9IjEuMCIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC40NCIvPjxjaXJjbGUgY3g9Ijg5IiBjeT0iOTE2IiByPSIwLjYiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuNDciLz48Y2lyY2xlIGN4PSIxMzQxIiBjeT0iMTMxIiByPSIxLjIiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuNjgiLz48Y2lyY2xlIGN4PSI2OTUiIGN5PSIxNDkiIHI9IjEuMyIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC4zOCIvPjxjaXJjbGUgY3g9IjcyNSIgY3k9Ijk5OSIgcj0iMS4zIiBmaWxsPSIjZGZlNmZmIiBvcGFjaXR5PSIwLjY5Ii8+PGNpcmNsZSBjeD0iNzI2IiBjeT0iNDg4IiByPSIxLjAiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuMzgiLz48Y2lyY2xlIGN4PSI2NDYiIGN5PSIxNDciIHI9IjAuOSIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC42OSIvPjxjaXJjbGUgY3g9IjE1MzYiIGN5PSI2MjciIHI9IjEuMCIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC40MCIvPjxjaXJjbGUgY3g9IjE0MyIgY3k9IjI3MiIgcj0iMS4yIiBmaWxsPSIjZGZlNmZmIiBvcGFjaXR5PSIwLjY0Ii8+PGNpcmNsZSBjeD0iNTc4IiBjeT0iNzg2IiByPSIxLjIiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuNTUiLz48Y2lyY2xlIGN4PSIxMjE1IiBjeT0iMzYzIiByPSIwLjgiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuNDciLz48Y2lyY2xlIGN4PSIxNTEzIiBjeT0iNjUwIiByPSIxLjEiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuMjYiLz48Y2lyY2xlIGN4PSI4NzUiIGN5PSIyNTEiIHI9IjEuMCIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC42MiIvPjxjaXJjbGUgY3g9IjEwMzEiIGN5PSI3MzgiIHI9IjAuOSIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC42MyIvPjxjaXJjbGUgY3g9IjEzOTIiIGN5PSI2ODgiIHI9IjEuNCIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC42OCIvPjxjaXJjbGUgY3g9IjEzMzkiIGN5PSI5MzciIHI9IjEuMCIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC41NiIvPjxjaXJjbGUgY3g9IjEyNDkiIGN5PSI1ODEiIHI9IjAuOSIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC41MyIvPjxjaXJjbGUgY3g9IjEyNDAiIGN5PSI2MzciIHI9IjAuNiIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC4zMiIvPjxjaXJjbGUgY3g9IjIxNCIgY3k9IjMxNyIgcj0iMC43IiBmaWxsPSIjZGZlNmZmIiBvcGFjaXR5PSIwLjM0Ii8+PGNpcmNsZSBjeD0iNTciIGN5PSI0NjUiIHI9IjAuOSIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC41MyIvPjxjaXJjbGUgY3g9Ijk0NCIgY3k9IjIzOCIgcj0iMC42IiBmaWxsPSIjZGZlNmZmIiBvcGFjaXR5PSIwLjQzIi8+PGNpcmNsZSBjeD0iMTMzMCIgY3k9IjM3NCIgcj0iMC42IiBmaWxsPSIjZGZlNmZmIiBvcGFjaXR5PSIwLjUzIi8+PGNpcmNsZSBjeD0iMTUyIiBjeT0iNTQ1IiByPSIwLjkiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuNTEiLz4NCiAgPHJlY3Qgd2lkdGg9IjE2MDAiIGhlaWdodD0iMTAwMCIgZmlsbD0idXJsKCNzdW4pIi8+DQogIDxlbGxpcHNlIGN4PSItOTAiIGN5PSItNzAiIHJ4PSI0NzAiIHJ5PSIzODUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2FhYjlmMCIgc3Ryb2tlLW9wYWNpdHk9IjAuMTAiIHN0cm9rZS13aWR0aD0iMS4yIi8+PGVsbGlwc2UgY3g9Ii05MCIgY3k9Ii03MCIgcng9Ijc2MCIgcnk9IjYyMyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYWFiOWYwIiBzdHJva2Utb3BhY2l0eT0iMC4xMCIgc3Ryb2tlLXdpZHRoPSIxLjIiLz48ZWxsaXBzZSBjeD0iLTkwIiBjeT0iLTcwIiByeD0iMTEyMCIgcnk9IjkxOCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYWFiOWYwIiBzdHJva2Utb3BhY2l0eT0iMC4xMCIgc3Ryb2tlLXdpZHRoPSIxLjIiLz48ZWxsaXBzZSBjeD0iLTkwIiBjeT0iLTcwIiByeD0iMTUyMCIgcnk9IjEyNDYiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2FhYjlmMCIgc3Ryb2tlLW9wYWNpdHk9IjAuMTAiIHN0cm9rZS13aWR0aD0iMS4yIi8+DQogIDxjaXJjbGUgY3g9IjcxIiBjeT0iMjkyIiByPSIxNiIgZmlsbD0idXJsKCNnLWVhcnRoKSIvPjxjaXJjbGUgY3g9IjY0NyIgY3k9IjgxIiByPSIxMyIgZmlsbD0idXJsKCNnLW1hcnMpIi8+PGNpcmNsZSBjeD0iMzMwIiBjeT0iNzgxIiByPSIzNCIgZmlsbD0idXJsKCNnLWp1cGl0ZXIpIi8+PGcgY2xpcC1wYXRoPSJ1cmwoI2NsaXAtaikiPjxyZWN0IHg9IjI5NiIgeT0iNzYyIiB3aWR0aD0iNjgiIGhlaWdodD0iNS40IiBmaWxsPSIjMmExZDE0IiBvcGFjaXR5PSIwLjM1Ii8+PHJlY3QgeD0iMjk2IiB5PSI3NzQiIHdpZHRoPSI2OCIgaGVpZ2h0PSI1LjQiIGZpbGw9IiMyYTFkMTQiIG9wYWNpdHk9IjAuMzUiLz48cmVjdCB4PSIyOTYiIHk9Ijc4NiIgd2lkdGg9IjY4IiBoZWlnaHQ9IjUuNCIgZmlsbD0iIzJhMWQxNCIgb3BhY2l0eT0iMC4zNSIvPjxyZWN0IHg9IjI5NiIgeT0iNzk4IiB3aWR0aD0iNjgiIGhlaWdodD0iNS40IiBmaWxsPSIjMmExZDE0IiBvcGFjaXR5PSIwLjM1Ii8+PC9nPjxnIHRyYW5zZm9ybT0icm90YXRlKC0xOCAxMTQwIDY2MikiPjxlbGxpcHNlIGN4PSIxMTQwIiBjeT0iNjYyIiByeD0iNTAuNCIgcnk9IjEzLjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2U5ZDZhNiIgc3Ryb2tlLXdpZHRoPSIzLjgiIHN0cm9rZS1vcGFjaXR5PSIwLjE4Ii8+PC9nPjxjaXJjbGUgY3g9IjExNDAiIGN5PSI2NjIiIHI9IjI0IiBmaWxsPSJ1cmwoI2ctc2F0dXJuKSIvPjxnIHRyYW5zZm9ybT0icm90YXRlKC0xOCAxMTQwIDY2MikiPjxwYXRoIGQ9Ik0gMTA4OS4zIDY2MiBBIDUwLjQgMTMuMiAwIDAgMCAxMTkwLjEgNjYyIiBmaWxsPSJub25lIiBzdHJva2U9IiNlOWQ2YTYiIHN0cm9rZS1vcGFjaXR5PSIwLjMyIiBzdHJva2Utd2lkdGg9IjMuOCIvPjwvZz4NCjwvc3ZnPg0K);
-  --sky-night-builtin: var(--space-art); /* one layer, so the layer's "cover" sizing applies to it */
+  --sky-night-space: var(--space-art); /* one layer, so the layer's "cover" sizing applies to it */
+  /* Dark mode's built-in background: deep violet-black behind the glossy orbs (the .orbs layer) */
+  --sky-night-builtin:
+    radial-gradient(60vmax 50vmax at 22% 55%, rgba(110, 80, 220, 0.16), rgba(110, 80, 220, 0) 70%),
+    radial-gradient(40vmax 35vmax at 85% 85%, rgba(80, 120, 230, 0.10), rgba(80, 120, 230, 0) 70%),
+    linear-gradient(160deg, #06070f 0%, #0d0b1e 100%);
   /* "Clouds" choice for dark mode: the day sky's layout (same glow spot, same six clouds) in moonlit colours. */
   --sky-night-clouds:
     radial-gradient(40% 30% at 85% 6%, rgba(214, 224, 255, 0.22), rgba(214, 224, 255, 0) 70%),
@@ -132,12 +139,13 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --paper: #070b18; --surface: #0f1527; --surface-2: #171f38;
-    --ink: #eef1fb; --ink-2: #bcc4dc; --ink-3: #95a0bd;
+    --ink: #f4f6ff; --ink-2: #ccd3ea; --ink-3: #a5afca;
     --rule: #222c4a; --rule-strong: #313d63; --margin: #2b3a66;
     /* Moonlight accent and a warm glow, matched to the night sky */
     --accent: #9db4ff; --accent-hover: #b8c8ff; --accent-ink: #0b1330; --accent-soft: #1a2350;
     --today-tint: rgba(157, 180, 255, 0.05);
     --now: #f3c9a4; --now-ink: #2a1806;
+    --title-grad: linear-gradient(100deg, #7ee8ff 0%, #b69cff 100%); --title-glow: drop-shadow(0 0 14px rgba(150, 140, 255, 0.35));
     --swipe-done-bg: #123a2d; --swipe-done-ink: #a9eccf; --swipe-move-bg: #1b2752; --swipe-move-ink: #c9d5ff;
     --high: #f08a4b;   --high-soft: #3a2318;   --high-ink: #ffc9a6;
     --medium: #f2b83a; --medium-soft: #342a14; --medium-ink: #fbdc98;
@@ -151,6 +159,7 @@
     /* Background and glass (see "Night sky" and "Liquid Glass" below) */
     --glow-1: rgba(157, 180, 255, 0.12); --glow-2: rgba(243, 201, 164, 0.08);
     --sky: var(--sky-night, var(--sky-night-builtin));
+    --orbs: var(--orbs-night, block);
     --veil: linear-gradient(180deg, rgba(6, 10, 22, var(--veil-night, 0.1)),
       rgba(6, 10, 22, calc(var(--veil-night, 0.1) + var(--veil-boost-night, 0.12))));
     --panel-fill: rgba(15, 21, 39, 0.8);
@@ -163,12 +172,13 @@
 }
 :root[data-theme="dark"] {
   --paper: #070b18; --surface: #0f1527; --surface-2: #171f38;
-  --ink: #eef1fb; --ink-2: #bcc4dc; --ink-3: #95a0bd;
+  --ink: #f4f6ff; --ink-2: #ccd3ea; --ink-3: #a5afca;
   --rule: #222c4a; --rule-strong: #313d63; --margin: #2b3a66;
   /* Moonlight accent and a warm glow, matched to the night sky */
   --accent: #9db4ff; --accent-hover: #b8c8ff; --accent-ink: #0b1330; --accent-soft: #1a2350;
   --today-tint: rgba(157, 180, 255, 0.05);
   --now: #f3c9a4; --now-ink: #2a1806;
+  --title-grad: linear-gradient(100deg, #7ee8ff 0%, #b69cff 100%); --title-glow: drop-shadow(0 0 14px rgba(150, 140, 255, 0.35));
   --swipe-done-bg: #123a2d; --swipe-done-ink: #a9eccf; --swipe-move-bg: #1b2752; --swipe-move-ink: #c9d5ff;
   --high: #f08a4b;   --high-soft: #3a2318;   --high-ink: #ffc9a6;
   --medium: #f2b83a; --medium-soft: #342a14; --medium-ink: #fbdc98;
@@ -182,6 +192,7 @@
   /* Background and glass (see "Night sky" and "Liquid Glass" below) */
   --glow-1: rgba(157, 180, 255, 0.12); --glow-2: rgba(243, 201, 164, 0.08);
   --sky: var(--sky-night, var(--sky-night-builtin));
+  --orbs: var(--orbs-night, block);
   --veil: linear-gradient(180deg, rgba(6, 10, 22, var(--veil-night, 0.1)),
     rgba(6, 10, 22, calc(var(--veil-night, 0.1) + var(--veil-boost-night, 0.12))));
   --panel-fill: rgba(15, 21, 39, 0.8);
@@ -785,6 +796,44 @@ body::before {
 html[data-sky-day="none"] { --sky-day: none; --veil-day: 0; --veil-boost-day: 0; }
 html[data-sky-night="none"] { --sky-night: none; --veil-night: 0; --veil-boost-night: 0; }
 html[data-sky-night="clouds"] { --sky-night: var(--sky-night-clouds); }
+html[data-sky-night="space"] { --sky-night: var(--sky-night-space); }
+/* The orbs belong to the built-in background only */
+html[data-sky-night="space"], html[data-sky-night="clouds"], html[data-sky-night="none"], html[data-sky-night="custom"] { --orbs-night: none; }
+
+/* ---------- Glossy orbs (dark mode, built-in background) ----------
+   Three glossy dark spheres lit from the top-left with a violet glow. On computers they drift with the mouse
+   (app.js sets --px/--py from -1 to 1; each depth moves a different amount); on phones they float gently.
+   Only transform changes, so it's cheap; reduced motion stops both. */
+.orbs { display: var(--orbs, none); position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+.orb-wrap {
+  position: absolute; display: block;
+  transform: translate(calc(var(--px, 0) * var(--depth)), calc(var(--py, 0) * var(--depth)));
+  transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.orb {
+  display: block; width: 100%; height: 100%; border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, rgba(196, 168, 255, 0.9) 0%, rgba(122, 92, 224, 0.6) 16%,
+    rgba(46, 30, 96, 0.92) 42%, #0c0a1c 74%);
+  box-shadow: inset -2.5vmin -3.5vmin 7vmin rgba(0, 0, 0, 0.6), 0 4vmin 9vmin rgba(0, 0, 0, 0.55),
+    0 0 12vmin rgba(124, 92, 255, 0.16);
+  animation: orb-float 11s ease-in-out infinite alternate;
+}
+.ow-big   { --depth: 14px; width: 46vmin; height: 46vmin; left: -6vmin; top: 30vh; }
+.ow-small { --depth: 36px; width: 9vmin;  height: 9vmin;  right: 9vw;   top: 14vh; }
+.ow-mid   { --depth: 24px; width: 18vmin; height: 18vmin; right: 16vw;  bottom: 12vh; }
+.ow-small .orb { animation-duration: 9s; animation-delay: -3s; }
+.ow-mid .orb {
+  animation-duration: 14s; animation-delay: -7s;
+  background: radial-gradient(circle at 34% 30%, rgba(214, 222, 255, 0.85) 0%, rgba(110, 120, 210, 0.55) 16%,
+    rgba(36, 34, 80, 0.92) 42%, #0b0b18 74%);
+}
+@keyframes orb-float { from { translate: 0 -1.2vmin; } to { translate: 0 1.2vmin; } }
+/* Phones: the orbs sit where the background shows around the stacked panels */
+@media (max-aspect-ratio: 4/5) {
+  .ow-big   { width: 62vmin; height: 62vmin; left: -18vmin; top: 46vh; }
+  .ow-small { right: 6vw; top: 24vh; width: 11vmin; height: 11vmin; }
+  .ow-mid   { right: -4vmin; bottom: 20vh; width: 24vmin; height: 24vmin; }
+}
 /* Phones and other tall screens get the solar system composed for portrait */
 @media (max-aspect-ratio: 4/5) { :root { --space-art: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA5MDAgMTk1MCIgcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQgc2xpY2UiPg0KICA8IS0tIERheUZsb3cgZGFyay1tb2RlIGJhY2tncm91bmQ6IGEgZGFyayBzb2xhciBzeXN0ZW0uIEdlbmVyYXRlZCBieSB0b29scy9tYWtlLXNwYWNlLnB5IC0tPg0KICA8ZGVmcz4NCiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9InNwYWNlIiBjeD0iMC41NSIgY3k9IjAuNSIgcj0iMC43NSI+DQogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMwZDE1MzMiLz4NCiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzA1MDgxNiIvPg0KICAgIDwvcmFkaWFsR3JhZGllbnQ+DQogICAgPHJhZGlhbEdyYWRpZW50IGlkPSJoYXplIiBjeD0iMC41IiBjeT0iMC42IiByPSIwLjUiPg0KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjNWI0YWE4IiBzdG9wLW9wYWNpdHk9IjAuMTIiLz4NCiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzViNGFhOCIgc3RvcC1vcGFjaXR5PSIwIi8+DQogICAgPC9yYWRpYWxHcmFkaWVudD4NCiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9InN1biIgY3g9Ii03MCIgY3k9Ii02MCIgcj0iMTA3MiIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPg0KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZkNjk2IiBzdG9wLW9wYWNpdHk9IjAuMzYiLz4NCiAgICAgIDxzdG9wIG9mZnNldD0iMC4zIiBzdG9wLWNvbG9yPSIjZmZiZTgyIiBzdG9wLW9wYWNpdHk9IjAuMTIiLz4NCiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2ZmYmU4MiIgc3RvcC1vcGFjaXR5PSIwIi8+DQogICAgPC9yYWRpYWxHcmFkaWVudD4NCiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9ImctZWFydGgiIGN4PSIwLjMzIiBjeT0iMC4yMyIgcj0iMC43NSI+DQogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiM3Y2M0ZTgiIHN0b3Atb3BhY2l0eT0iMC44NSIvPg0KICAgICAgPHN0b3Agb2Zmc2V0PSIwLjQ1IiBzdG9wLWNvbG9yPSIjMmY2ZjhmIiBzdG9wLW9wYWNpdHk9IjAuNzUiLz4NCiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzBiMTAyMiIvPg0KICAgIDwvcmFkaWFsR3JhZGllbnQ+DQogICAgPHJhZGlhbEdyYWRpZW50IGlkPSJnLW1hcnMiIGN4PSIwLjE4IiBjeT0iMC40NSIgcj0iMC43NSI+DQogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNlMDg5NmEiIHN0b3Atb3BhY2l0eT0iMC44NSIvPg0KICAgICAgPHN0b3Agb2Zmc2V0PSIwLjQ1IiBzdG9wLWNvbG9yPSIjOGEzZjJlIiBzdG9wLW9wYWNpdHk9IjAuNzUiLz4NCiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzBiMTAyMiIvPg0KICAgIDwvcmFkaWFsR3JhZGllbnQ+DQogICAgPHJhZGlhbEdyYWRpZW50IGlkPSJnLWp1cGl0ZXIiIGN4PSIwLjIzIiBjeT0iMC4zMiIgcj0iMC43NSI+DQogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNlM2MzOWEiIHN0b3Atb3BhY2l0eT0iMC44NSIvPg0KICAgICAgPHN0b3Agb2Zmc2V0PSIwLjQ1IiBzdG9wLWNvbG9yPSIjOWE3NjUwIiBzdG9wLW9wYWNpdHk9IjAuNzUiLz4NCiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzBiMTAyMiIvPg0KICAgIDwvcmFkaWFsR3JhZGllbnQ+PGNsaXBQYXRoIGlkPSJjbGlwLWoiPjxjaXJjbGUgY3g9Ijc3OSIgY3k9IjUwMyIgcj0iMzYiLz48L2NsaXBQYXRoPg0KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iZy1zYXR1cm4iIGN4PSIwLjQzIiBjeT0iMC4xOSIgcj0iMC43NSI+DQogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNlOWQ2YTYiIHN0b3Atb3BhY2l0eT0iMC44NSIvPg0KICAgICAgPHN0b3Agb2Zmc2V0PSIwLjQ1IiBzdG9wLWNvbG9yPSIjOWM4YTVlIiBzdG9wLW9wYWNpdHk9IjAuNzUiLz4NCiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzBiMTAyMiIvPg0KICAgIDwvcmFkaWFsR3JhZGllbnQ+DQogIDwvZGVmcz4NCiAgPHJlY3Qgd2lkdGg9IjkwMCIgaGVpZ2h0PSIxOTUwIiBmaWxsPSJ1cmwoI3NwYWNlKSIvPg0KICA8cmVjdCB3aWR0aD0iOTAwIiBoZWlnaHQ9IjE5NTAiIGZpbGw9InVybCgjaGF6ZSkiLz4NCiAgPGNpcmNsZSBjeD0iNzgwIiBjeT0iMTMiIHI9IjEuMCIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC42NSIvPjxjaXJjbGUgY3g9IjczIiBjeT0iMTA4MSIgcj0iMS4xIiBmaWxsPSIjZGZlNmZmIiBvcGFjaXR5PSIwLjI3Ii8+PGNpcmNsZSBjeD0iNjUzIiBjeT0iMzA2IiByPSIwLjgiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuMzAiLz48Y2lyY2xlIGN4PSI0NTYiIGN5PSIxODAxIiByPSIxLjEiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuNjAiLz48Y2lyY2xlIGN4PSIyNjIiIGN5PSIxMzE1IiByPSIwLjkiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuMjkiLz48Y2lyY2xlIGN4PSI3MjkiIGN5PSIzODkiIHI9IjEuMyIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC42NSIvPjxjaXJjbGUgY3g9IjQ5IiBjeT0iNzM5IiByPSIxLjAiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuMjYiLz48Y2lyY2xlIGN4PSIzODIiIGN5PSIxNzY4IiByPSIwLjciIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuNTIiLz48Y2lyY2xlIGN4PSIxMDkiIGN5PSIxMTI4IiByPSIxLjMiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuMzQiLz48Y2lyY2xlIGN4PSI3IiBjeT0iMTYzIiByPSIxLjAiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuMjYiLz48Y2lyY2xlIGN4PSI3NiIgY3k9Ijk2OSIgcj0iMS4zIiBmaWxsPSIjZGZlNmZmIiBvcGFjaXR5PSIwLjQ0Ii8+PGNpcmNsZSBjeD0iNTIyIiBjeT0iMzM2IiByPSIxLjEiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuNjgiLz48Y2lyY2xlIGN4PSI0OSIgY3k9IjEwODIiIHI9IjEuMSIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC4zMiIvPjxjaXJjbGUgY3g9IjI0MSIgY3k9IjE5NDAiIHI9IjEuNCIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC4zMCIvPjxjaXJjbGUgY3g9IjYzNSIgY3k9IjE4NTQiIHI9IjAuOCIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC41MyIvPjxjaXJjbGUgY3g9IjM5IiBjeT0iNzE0IiByPSIxLjEiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuNTIiLz48Y2lyY2xlIGN4PSI2OTciIGN5PSIxNjkiIHI9IjAuOSIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC42NCIvPjxjaXJjbGUgY3g9Ijg4NyIgY3k9IjExMjAiIHI9IjAuNiIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC42MSIvPjxjaXJjbGUgY3g9IjU2NyIgY3k9IjIwMSIgcj0iMS4yIiBmaWxsPSIjZGZlNmZmIiBvcGFjaXR5PSIwLjI2Ii8+PGNpcmNsZSBjeD0iNzAzIiBjeT0iMTU3NSIgcj0iMS4wIiBmaWxsPSIjZGZlNmZmIiBvcGFjaXR5PSIwLjU3Ii8+PGNpcmNsZSBjeD0iMjA4IiBjeT0iMTg4MCIgcj0iMC45IiBmaWxsPSIjZGZlNmZmIiBvcGFjaXR5PSIwLjQyIi8+PGNpcmNsZSBjeD0iNzc0IiBjeT0iNzIwIiByPSIxLjEiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuMzMiLz48Y2lyY2xlIGN4PSI3NTkiIGN5PSI1MDUiIHI9IjAuNiIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC42OSIvPjxjaXJjbGUgY3g9IjE1NSIgY3k9IjE4NDYiIHI9IjEuNCIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC41MiIvPjxjaXJjbGUgY3g9IjExIiBjeT0iMTE5IiByPSIwLjgiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuNDIiLz48Y2lyY2xlIGN4PSI1NTAiIGN5PSIxODg1IiByPSIwLjkiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuMzEiLz48Y2lyY2xlIGN4PSI1MDYiIGN5PSIyNjgiIHI9IjAuNyIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC41MCIvPjxjaXJjbGUgY3g9IjYyNiIgY3k9IjEyOCIgcj0iMS4wIiBmaWxsPSIjZGZlNmZmIiBvcGFjaXR5PSIwLjU3Ii8+PGNpcmNsZSBjeD0iNjg4IiBjeT0iNzQ3IiByPSIwLjciIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuNTciLz48Y2lyY2xlIGN4PSI2OTUiIGN5PSIxNzE2IiByPSIxLjAiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuMjkiLz48Y2lyY2xlIGN4PSI0NCIgY3k9IjEwMzEiIHI9IjAuNyIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC41MyIvPjxjaXJjbGUgY3g9Ijc2IiBjeT0iMTUyMSIgcj0iMC44IiBmaWxsPSIjZGZlNmZmIiBvcGFjaXR5PSIwLjI2Ii8+PGNpcmNsZSBjeD0iMTU4IiBjeT0iODkxIiByPSIxLjAiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuNDIiLz48Y2lyY2xlIGN4PSIxNTYiIGN5PSI5NDAiIHI9IjEuNCIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC40OSIvPjxjaXJjbGUgY3g9Ijg0NyIgY3k9IjU2IiByPSIxLjQiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuNjUiLz48Y2lyY2xlIGN4PSI4MTkiIGN5PSIxMjgiIHI9IjEuMSIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC40OSIvPjxjaXJjbGUgY3g9IjI3MCIgY3k9IjE0MTQiIHI9IjAuNyIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC41NiIvPjxjaXJjbGUgY3g9IjQwOCIgY3k9Ijk1NiIgcj0iMC42IiBmaWxsPSIjZGZlNmZmIiBvcGFjaXR5PSIwLjUyIi8+PGNpcmNsZSBjeD0iMzM2IiBjeT0iMTcxNCIgcj0iMC44IiBmaWxsPSIjZGZlNmZmIiBvcGFjaXR5PSIwLjYyIi8+PGNpcmNsZSBjeD0iNjU3IiBjeT0iMTIxOSIgcj0iMC42IiBmaWxsPSIjZGZlNmZmIiBvcGFjaXR5PSIwLjUyIi8+PGNpcmNsZSBjeD0iNjIiIGN5PSIzNjkiIHI9IjEuMSIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC4zMyIvPjxjaXJjbGUgY3g9IjU4IiBjeT0iNjkyIiByPSIxLjAiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuNDkiLz48Y2lyY2xlIGN4PSIyMyIgY3k9IjE1MTIiIHI9IjAuOSIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC42MCIvPjxjaXJjbGUgY3g9IjgiIGN5PSIxODYwIiByPSIxLjEiIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuNjkiLz48Y2lyY2xlIGN4PSI4ODgiIGN5PSIxNjI0IiByPSIwLjciIGZpbGw9IiNkZmU2ZmYiIG9wYWNpdHk9IjAuNDEiLz48Y2lyY2xlIGN4PSIxOTkiIGN5PSIyMTYiIHI9IjAuNyIgZmlsbD0iI2RmZTZmZiIgb3BhY2l0eT0iMC42NyIvPg0KICA8cmVjdCB3aWR0aD0iOTAwIiBoZWlnaHQ9IjE5NTAiIGZpbGw9InVybCgjc3VuKSIvPg0KICA8ZWxsaXBzZSBjeD0iLTcwIiBjeT0iLTYwIiByeD0iMzgwIiByeT0iNDM3IiBmaWxsPSJub25lIiBzdHJva2U9IiNhYWI5ZjAiIHN0cm9rZS1vcGFjaXR5PSIwLjEwIiBzdHJva2Utd2lkdGg9IjEuMiIvPjxlbGxpcHNlIGN4PSItNzAiIGN5PSItNjAiIHJ4PSI2NDAiIHJ5PSI3MzYiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2FhYjlmMCIgc3Ryb2tlLW9wYWNpdHk9IjAuMTAiIHN0cm9rZS13aWR0aD0iMS4yIi8+PGVsbGlwc2UgY3g9Ii03MCIgY3k9Ii02MCIgcng9Ijk4MCIgcnk9IjExMjciIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2FhYjlmMCIgc3Ryb2tlLW9wYWNpdHk9IjAuMTAiIHN0cm9rZS13aWR0aD0iMS4yIi8+PGVsbGlwc2UgY3g9Ii03MCIgY3k9Ii02MCIgcng9IjE0MDAiIHJ5PSIxNjEwIiBmaWxsPSJub25lIiBzdHJva2U9IiNhYWI5ZjAiIHN0cm9rZS1vcGFjaXR5PSIwLjEwIiBzdHJva2Utd2lkdGg9IjEuMiIvPg0KICA8Y2lyY2xlIGN4PSIxNDgiIGN5PSIyOTgiIHI9IjE3IiBmaWxsPSJ1cmwoI2ctZWFydGgpIi8+PGNpcmNsZSBjeD0iNTY0IiBjeT0iNDIiIHI9IjE0IiBmaWxsPSJ1cmwoI2ctbWFycykiLz48Y2lyY2xlIGN4PSI3NzkiIGN5PSI1MDMiIHI9IjM2IiBmaWxsPSJ1cmwoI2ctanVwaXRlcikiLz48ZyBjbGlwLXBhdGg9InVybCgjY2xpcC1qKSI+PHJlY3QgeD0iNzQzIiB5PSI0ODQiIHdpZHRoPSI3MiIgaGVpZ2h0PSI1LjgiIGZpbGw9IiMyYTFkMTQiIG9wYWNpdHk9IjAuMzUiLz48cmVjdCB4PSI3NDMiIHk9IjQ5NiIgd2lkdGg9IjcyIiBoZWlnaHQ9IjUuOCIgZmlsbD0iIzJhMWQxNCIgb3BhY2l0eT0iMC4zNSIvPjxyZWN0IHg9Ijc0MyIgeT0iNTA5IiB3aWR0aD0iNzIiIGhlaWdodD0iNS44IiBmaWxsPSIjMmExZDE0IiBvcGFjaXR5PSIwLjM1Ii8+PHJlY3QgeD0iNzQzIiB5PSI1MjEiIHdpZHRoPSI3MiIgaGVpZ2h0PSI1LjgiIGZpbGw9IiMyYTFkMTQiIG9wYWNpdHk9IjAuMzUiLz48L2c+PGcgdHJhbnNmb3JtPSJyb3RhdGUoLTE4IDI5MiAxNDk1KSI+PGVsbGlwc2UgY3g9IjI5MiIgY3k9IjE0OTUiIHJ4PSI1Ni43IiByeT0iMTQuOSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZTlkNmE2IiBzdHJva2Utd2lkdGg9IjQuMyIgc3Ryb2tlLW9wYWNpdHk9IjAuMTgiLz48L2c+PGNpcmNsZSBjeD0iMjkyIiBjeT0iMTQ5NSIgcj0iMjciIGZpbGw9InVybCgjZy1zYXR1cm4pIi8+PGcgdHJhbnNmb3JtPSJyb3RhdGUoLTE4IDI5MiAxNDk1KSI+PHBhdGggZD0iTSAyMzUuNiAxNDk1IEEgNTYuNyAxNC45IDAgMCAwIDM0OS4wIDE0OTUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2U5ZDZhNiIgc3Ryb2tlLW9wYWNpdHk9IjAuMzIiIHN0cm9rZS13aWR0aD0iNC4zIi8+PC9nPg0KPC9zdmc+DQo=); } }
 html.sky-loading body::before { opacity: 0; } /* a photo fades in once it's loaded */
@@ -803,6 +852,22 @@ html.sky-fade body::before { opacity: 0; transition-duration: 0.2s; } /* switchi
 .summary.side-sec, .quick-sec.side-sec { padding: 14px 16px; border-top: 1px solid var(--panel-edge); }
 .side { padding: 2px 16px; }
 .side > .side-sec:first-child { border-top: 0; }
+
+/* ---------- Shiny titles ----------
+   The big text (brand name, big date, progress number, dialog and page titles) gets a gradient and, in dark mode,
+   a soft glow. Only large bold text: every gradient colour keeps >= 5.9:1 on its background (checked). */
+.brand span, .dh-num, .progress-num, .dlg-head h2, .welcome h1, .welcome-brand span, .sheet h2 {
+  background: var(--title-grad);
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent; -webkit-text-fill-color: transparent;
+  filter: var(--title-glow);
+}
+@media (forced-colors: active) {
+  .brand span, .dh-num, .progress-num, .dlg-head h2, .welcome h1, .welcome-brand span, .sheet h2 {
+    background: none; color: CanvasText; -webkit-text-fill-color: CanvasText; filter: none;
+  }
+}
+.sky-controls .seg { flex-wrap: wrap; } /* five background choices may need two lines in the dialog */
 
 /* ---------- Liquid Glass (a light touch) ----------
    Only on controls and floating surfaces: the top-bar buttons, toasts and dialogs.
@@ -1052,6 +1117,12 @@ dialog.sheet { width: min(420px, calc(100vw - 32px)); padding: 18px 18px 16px; }
 </style>
 </head>
 <body>
+<!-- Dark mode's built-in background: three glossy orbs (pure CSS; drift with the mouse, float on phones) -->
+<div class="orbs" aria-hidden="true">
+  <span class="orb-wrap ow-big"><span class="orb"></span></span>
+  <span class="orb-wrap ow-small"><span class="orb"></span></span>
+  <span class="orb-wrap ow-mid"><span class="orb"></span></span>
+</div>
 <div class="app">
 
   <!-- ===== Top bar: brand, date, navigation, view switch ===== -->
@@ -1227,7 +1298,8 @@ dialog.sheet { width: min(420px, calc(100vw - 32px)); padding: 18px 18px 16px; }
       <div class="sky-controls">
         <img class="sky-thumb" alt="" hidden>
         <div class="seg" role="radiogroup" aria-labelledby="skyNightLabel">
-          <button type="button" role="radio" data-sky-mode="builtin" aria-checked="true">Space</button>
+          <button type="button" role="radio" data-sky-mode="builtin" aria-checked="true">Orbs</button>
+          <button type="button" role="radio" data-sky-mode="space" aria-checked="false">Space</button>
           <button type="button" role="radio" data-sky-mode="clouds" aria-checked="false">Clouds</button>
           <button type="button" role="radio" data-sky-mode="none" aria-checked="false">None</button>
           <button type="button" role="radio" data-sky-mode="custom" aria-checked="false">My photo</button>
@@ -4484,7 +4556,7 @@ const Timeline = (() => {
   // ---------------------------------------------------------
   const SKY = {
     day: { key: "dayflow.sky.day", img: "sky-day", cssVar: "--sky-day", veilVar: "--veil-day", attr: "skyDay", name: "Light mode", builtin: "Sky" },
-    night: { key: "dayflow.sky.night", img: "sky-night", cssVar: "--sky-night", veilVar: "--veil-night", attr: "skyNight", name: "Dark mode", builtin: "Space" },
+    night: { key: "dayflow.sky.night", img: "sky-night", cssVar: "--sky-night", veilVar: "--veil-night", attr: "skyNight", name: "Dark mode", builtin: "Orbs" },
   };
   const skyUrls = {}; // object URLs of loaded photos
 
@@ -4518,6 +4590,27 @@ const Timeline = (() => {
       root.style.removeProperty(s.cssVar);
       root.style.removeProperty(s.veilVar);
     }
+  }
+
+  // Glossy orbs drift a little with the mouse (computers only; nothing with reduced motion).
+  // CSS does the movement from --px/--py (-1…1); this only updates them, at most once per frame.
+  function startOrbParallax() {
+    if (!matchMedia("(pointer: fine)").matches || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const orbs = $(".orbs");
+    let x = 0;
+    let y = 0;
+    let queued = false;
+    window.addEventListener("pointermove", (e) => {
+      x = (e.clientX / innerWidth) * 2 - 1;
+      y = (e.clientY / innerHeight) * 2 - 1;
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(() => {
+        queued = false;
+        orbs.style.setProperty("--px", x.toFixed(3));
+        orbs.style.setProperty("--py", y.toFixed(3));
+      });
+    }, { passive: true });
   }
 
   async function applySkies() {
@@ -4569,7 +4662,7 @@ const Timeline = (() => {
     return Math.round(Math.min(hi, Math.max(lo, v)) * 100) / 100;
   }
 
-  const SKY_LABELS = { none: "none", custom: "your photo", clouds: "moonlit clouds" };
+  const SKY_LABELS = { none: "none", custom: "your photo", clouds: "moonlit clouds", space: "space" };
   const skyLabel = (w, mode) => (mode === "builtin" ? SKY[w].builtin : SKY_LABELS[mode] || mode);
 
   async function setSkyMode(w, mode) {
@@ -5284,6 +5377,7 @@ const Timeline = (() => {
     darkQuery.addEventListener("change", applyTheme);
     settingsDlg.addEventListener("click", onSkyClick);
     applySkies();
+    startOrbParallax();
     applyTheme();
     $("#settingsClose").addEventListener("click", () => settingsDlg.close());
     [searchDlg, settingsDlg].forEach((d) =>

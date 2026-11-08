@@ -175,9 +175,10 @@ form folds the less-used fields (course, reminder, repeat, notes) under **More o
   deep navy. Buttons, toasts and dialogs use a light "Liquid Glass" style (translucent, blurred); task cards and
   the timeline stay solid for easy reading. Glass turns solid when the device asks for reduced transparency or
   more contrast
-- **Sky backgrounds**: a soft day sky in light mode (drawn in CSS) and a dark solar system in dark mode: a sun
+- **Sky backgrounds**: a soft day sky in light mode (drawn in CSS) and, in dark mode, **glossy violet orbs** that
+  drift with the mouse on computers and float gently on phones (pure CSS). Dark mode can also use **Space**, a dark solar system: a sun
   glow off the top-left corner, faint orbits, and Earth, Mars, Jupiter and Saturn lit on their sun-facing side
-  (hand-drawn SVGs, `python tools/make-space.py`). Dark mode can also use **Clouds** (the day sky at night) (moonlight-blue accent, warm "now" line). Panels are slightly see-through so the sky
+  (hand-drawn SVGs, `python tools/make-space.py`). or **Clouds** (the day sky at night). Big titles have a cyan-to-violet shine (moonlight-blue accent, warm "now" line). Panels are slightly see-through so the sky
   shows. In Settings → Appearance each theme can use its sky, no picture, or **your own photo**. Photos are
   shrunk on the device, kept on the device (not in backups or your account), and DayFlow adjusts a veil from the
   photo's brightness so text stays readable
