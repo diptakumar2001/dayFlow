@@ -69,6 +69,102 @@
     radial-gradient(34% 20% at 80% 92%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 70%),
     linear-gradient(180deg, #a9cdf0 0%, #cfe3f6 50%, #eef4f9 100%);
   --sky: var(--sky-day, var(--sky-day-builtin));
+  /* Night sky, drawn in CSS: deep navy to indigo, a field of stars and a crescent moon with a soft glow
+     (generated star positions; no image file). Used by the dark theme below. */
+  --sky-night-builtin:
+    radial-gradient(15px 15px at calc(86% + 7px) calc(9% - 4px), #0b1126 98%, transparent 100%),
+    radial-gradient(16px 16px at 86% 9%, #f3ead6 96%, transparent 100%),
+    radial-gradient(22vmax 22vmax at 86% 8%, rgba(255, 240, 214, 0.14), transparent 70%),
+    radial-gradient(2.5px 2.5px at 45.3% 54.2%, rgba(205, 220, 255, 0.58) 50%, transparent 100%),
+    radial-gradient(2.4px 2.4px at 84.8% 19.0%, rgba(205, 220, 255, 0.59) 50%, transparent 100%),
+    radial-gradient(1.9px 1.9px at 78.7% 9.9%, rgba(255, 238, 205, 0.4) 50%, transparent 100%),
+    radial-gradient(2.0px 2.0px at 63.2% 57.6%, rgba(255, 238, 205, 0.58) 50%, transparent 100%),
+    radial-gradient(1.6px 1.6px at 61.3% 16.0%, rgba(255, 255, 255, 0.61) 50%, transparent 100%),
+    radial-gradient(2.2px 2.2px at 4.5% 84.6%, rgba(255, 255, 255, 0.74) 50%, transparent 100%),
+    radial-gradient(2.1px 2.1px at 44.2% 81.0%, rgba(205, 220, 255, 0.67) 50%, transparent 100%),
+    radial-gradient(2.3px 2.3px at 1.5% 9.1%, rgba(205, 220, 255, 0.55) 50%, transparent 100%),
+    radial-gradient(2.3px 2.3px at 98.6% 80.8%, rgba(255, 255, 255, 0.51) 50%, transparent 100%),
+    radial-gradient(2.2px 2.2px at 51.3% 3.8%, rgba(255, 255, 255, 0.4) 50%, transparent 100%),
+    radial-gradient(2.6px 2.6px at 84.0% 37.7%, rgba(255, 255, 255, 0.77) 50%, transparent 100%),
+    radial-gradient(1.7px 1.7px at 21.9% 89.1%, rgba(255, 238, 205, 0.54) 50%, transparent 100%),
+    radial-gradient(2.2px 2.2px at 39.9% 7.9%, rgba(255, 255, 255, 0.74) 50%, transparent 100%),
+    radial-gradient(1.6px 1.6px at 34.0% 30.6%, rgba(255, 255, 255, 0.56) 50%, transparent 100%),
+    radial-gradient(1.6px 1.6px at 14.2% 68.2%, rgba(205, 220, 255, 0.58) 50%, transparent 100%),
+    radial-gradient(2.0px 2.0px at 18.4% 54.1%, rgba(255, 238, 205, 0.45) 50%, transparent 100%),
+    radial-gradient(2.0px 2.0px at 76.4% 40.8%, rgba(255, 255, 255, 0.55) 50%, transparent 100%),
+    radial-gradient(2.6px 2.6px at 1.0% 83.1%, rgba(255, 255, 255, 0.65) 50%, transparent 100%),
+    radial-gradient(2.5px 2.5px at 21.6% 38.5%, rgba(255, 255, 255, 0.67) 50%, transparent 100%),
+    radial-gradient(2.0px 2.0px at 5.1% 14.9%, rgba(205, 220, 255, 0.35) 50%, transparent 100%),
+    radial-gradient(1.7px 1.7px at 33.2% 29.2%, rgba(205, 220, 255, 0.4) 50%, transparent 100%),
+    radial-gradient(2.0px 2.0px at 63.4% 2.5%, rgba(255, 255, 255, 0.66) 50%, transparent 100%),
+    radial-gradient(2.2px 2.2px at 95.0% 47.0%, rgba(255, 255, 255, 0.78) 50%, transparent 100%),
+    radial-gradient(1.8px 1.8px at 62.5% 30.5%, rgba(255, 238, 205, 0.66) 50%, transparent 100%),
+    radial-gradient(2.5px 2.5px at 19.6% 71.2%, rgba(205, 220, 255, 0.45) 50%, transparent 100%),
+    radial-gradient(2.0px 2.0px at 87.5% 58.3%, rgba(255, 255, 255, 0.4) 50%, transparent 100%),
+    radial-gradient(2.3px 2.3px at 51.2% 25.2%, rgba(205, 220, 255, 0.55) 50%, transparent 100%),
+    radial-gradient(1.9px 1.9px at 81.7% 57.7%, rgba(255, 238, 205, 0.44) 50%, transparent 100%),
+    radial-gradient(2.1px 2.1px at 96.8% 13.0%, rgba(205, 220, 255, 0.68) 50%, transparent 100%),
+    radial-gradient(2.5px 2.5px at 61.2% 27.6%, rgba(255, 255, 255, 0.45) 50%, transparent 100%),
+    radial-gradient(1.8px 1.8px at 7.8% 40.1%, rgba(255, 255, 255, 0.37) 50%, transparent 100%),
+    radial-gradient(1.7px 1.7px at 37.1% 55.4%, rgba(205, 220, 255, 0.53) 50%, transparent 100%),
+    radial-gradient(2.3px 2.3px at 97.1% 63.4%, rgba(255, 255, 255, 0.64) 50%, transparent 100%),
+    radial-gradient(2.1px 2.1px at 58.8% 88.7%, rgba(255, 255, 255, 0.53) 50%, transparent 100%),
+    radial-gradient(2.2px 2.2px at 95.4% 3.0%, rgba(255, 238, 205, 0.59) 50%, transparent 100%),
+    radial-gradient(1.7px 1.7px at 31.5% 14.0%, rgba(255, 255, 255, 0.58) 50%, transparent 100%),
+    radial-gradient(2.3px 2.3px at 73.2% 86.5%, rgba(255, 255, 255, 0.7) 50%, transparent 100%),
+    radial-gradient(2.5px 2.5px at 35.5% 66.1%, rgba(205, 220, 255, 0.79) 50%, transparent 100%),
+    radial-gradient(2.1px 2.1px at 93.5% 3.9%, rgba(255, 238, 205, 0.36) 50%, transparent 100%),
+    radial-gradient(2.2px 2.2px at 38.5% 56.4%, rgba(255, 238, 205, 0.39) 50%, transparent 100%),
+    radial-gradient(2.0px 2.0px at 12.3% 25.4%, rgba(255, 238, 205, 0.52) 50%, transparent 100%),
+    radial-gradient(2.1px 2.1px at 69.0% 44.5%, rgba(205, 220, 255, 0.62) 50%, transparent 100%),
+    radial-gradient(2.2px 2.2px at 74.5% 3.8%, rgba(255, 255, 255, 0.59) 50%, transparent 100%),
+    radial-gradient(2.4px 2.4px at 94.8% 11.7%, rgba(205, 220, 255, 0.68) 50%, transparent 100%),
+    radial-gradient(1.9px 1.9px at 26.1% 2.1%, rgba(255, 255, 255, 0.69) 50%, transparent 100%),
+    radial-gradient(1.9px 1.9px at 51.8% 72.6%, rgba(205, 220, 255, 0.82) 50%, transparent 100%),
+    radial-gradient(2.3px 2.3px at 88.4% 32.1%, rgba(205, 220, 255, 0.45) 50%, transparent 100%),
+    radial-gradient(1.8px 1.8px at 79.8% 72.7%, rgba(255, 255, 255, 0.46) 50%, transparent 100%),
+    radial-gradient(1.7px 1.7px at 58.1% 31.1%, rgba(255, 255, 255, 0.6) 50%, transparent 100%),
+    radial-gradient(1.9px 1.9px at 70.7% 91.3%, rgba(205, 220, 255, 0.43) 50%, transparent 100%),
+    radial-gradient(2.4px 2.4px at 47.2% 88.9%, rgba(205, 220, 255, 0.54) 50%, transparent 100%),
+    radial-gradient(2.4px 2.4px at 49.4% 31.0%, rgba(205, 220, 255, 0.84) 50%, transparent 100%),
+    radial-gradient(1.9px 1.9px at 32.4% 79.7%, rgba(255, 238, 205, 0.65) 50%, transparent 100%),
+    radial-gradient(1.9px 1.9px at 70.4% 55.2%, rgba(255, 255, 255, 0.75) 50%, transparent 100%),
+    radial-gradient(1.8px 1.8px at 63.8% 39.5%, rgba(255, 255, 255, 0.73) 50%, transparent 100%),
+    radial-gradient(1.6px 1.6px at 24.3% 14.4%, rgba(205, 220, 255, 0.66) 50%, transparent 100%),
+    radial-gradient(2.2px 2.2px at 11.7% 51.9%, rgba(255, 255, 255, 0.53) 50%, transparent 100%),
+    radial-gradient(2.1px 2.1px at 68.1% 19.9%, rgba(255, 255, 255, 0.44) 50%, transparent 100%),
+    radial-gradient(1.6px 1.6px at 75.0% 51.8%, rgba(255, 255, 255, 0.46) 50%, transparent 100%),
+    radial-gradient(2.1px 2.1px at 53.9% 90.9%, rgba(255, 255, 255, 0.85) 50%, transparent 100%),
+    radial-gradient(2.5px 2.5px at 39.6% 76.2%, rgba(255, 238, 205, 0.39) 50%, transparent 100%),
+    radial-gradient(1.8px 1.8px at 39.0% 43.8%, rgba(255, 255, 255, 0.79) 50%, transparent 100%),
+    radial-gradient(2.5px 2.5px at 37.9% 55.0%, rgba(255, 255, 255, 0.75) 50%, transparent 100%),
+    radial-gradient(1.8px 1.8px at 46.4% 62.9%, rgba(255, 238, 205, 0.71) 50%, transparent 100%),
+    radial-gradient(70vmax 40vmax at 30% 100%, rgba(122, 92, 200, 0.16), transparent 70%),
+    linear-gradient(180deg, #070b18 0%, #0d1430 55%, #1a1f45 100%);
+  /* A few brighter stars on their own layer that gently twinkle (dark theme, built-in sky only) */
+  --twinkle-stars:
+    radial-gradient(2.4px 2.4px at 91.6% 10.8%, rgba(255, 255, 255, 0.82) 50%, transparent 100%),
+    radial-gradient(3.0px 3.0px at 96.8% 43.4%, rgba(255, 238, 205, 0.8) 50%, transparent 100%),
+    radial-gradient(2.3px 2.3px at 84.9% 28.5%, rgba(205, 220, 255, 0.83) 50%, transparent 100%),
+    radial-gradient(3.1px 3.1px at 42.3% 22.7%, rgba(255, 255, 255, 0.77) 50%, transparent 100%),
+    radial-gradient(2.7px 2.7px at 43.0% 3.8%, rgba(255, 255, 255, 0.91) 50%, transparent 100%),
+    radial-gradient(3.1px 3.1px at 47.1% 80.0%, rgba(255, 238, 205, 0.86) 50%, transparent 100%),
+    radial-gradient(2.7px 2.7px at 68.6% 75.7%, rgba(255, 255, 255, 0.98) 50%, transparent 100%),
+    radial-gradient(2.8px 2.8px at 75.3% 35.7%, rgba(205, 220, 255, 0.95) 50%, transparent 100%),
+    radial-gradient(3.0px 3.0px at 63.6% 42.3%, rgba(255, 255, 255, 0.87) 50%, transparent 100%),
+    radial-gradient(3.1px 3.1px at 66.8% 76.4%, rgba(255, 255, 255, 0.88) 50%, transparent 100%),
+    radial-gradient(2.7px 2.7px at 84.4% 77.5%, rgba(255, 255, 255, 0.87) 50%, transparent 100%),
+    radial-gradient(2.2px 2.2px at 41.3% 10.0%, rgba(205, 220, 255, 0.81) 50%, transparent 100%),
+    radial-gradient(2.6px 2.6px at 96.0% 41.8%, rgba(205, 220, 255, 0.94) 50%, transparent 100%),
+    radial-gradient(2.4px 2.4px at 12.9% 8.4%, rgba(205, 220, 255, 0.98) 50%, transparent 100%),
+    radial-gradient(3.1px 3.1px at 41.5% 76.6%, rgba(205, 220, 255, 0.78) 50%, transparent 100%),
+    radial-gradient(3.1px 3.1px at 49.3% 27.8%, rgba(205, 220, 255, 0.98) 50%, transparent 100%),
+    radial-gradient(2.6px 2.6px at 52.4% 9.6%, rgba(255, 255, 255, 0.71) 50%, transparent 100%),
+    radial-gradient(2.2px 2.2px at 13.7% 62.6%, rgba(255, 255, 255, 0.76) 50%, transparent 100%),
+    radial-gradient(2.9px 2.9px at 2.2% 23.4%, rgba(205, 220, 255, 0.77) 50%, transparent 100%),
+    radial-gradient(2.3px 2.3px at 11.3% 58.7%, rgba(255, 255, 255, 0.85) 50%, transparent 100%),
+    radial-gradient(3.1px 3.1px at 71.3% 56.4%, rgba(255, 238, 205, 0.71) 50%, transparent 100%),
+    radial-gradient(2.4px 2.4px at 41.5% 42.8%, rgba(255, 238, 205, 0.76) 50%, transparent 100%);
   --veil: linear-gradient(180deg, rgba(243, 246, 245, var(--veil-day, 0.25)),
     rgba(243, 246, 245, calc(var(--veil-day, 0.25) + var(--veil-boost-day, 0.1))));
   --panel-fill: rgba(255, 255, 255, 0.82);
@@ -86,7 +182,7 @@
     --paper: #070b18; --surface: #0f1527; --surface-2: #171f38;
     --ink: #eef1fb; --ink-2: #bcc4dc; --ink-3: #95a0bd;
     --rule: #222c4a; --rule-strong: #313d63; --margin: #2b3a66;
-    /* Moonlight accent and a warm cloud glow, matched to the night-sky picture */
+    /* Moonlight accent and a warm glow, matched to the night sky */
     --accent: #9db4ff; --accent-hover: #b8c8ff; --accent-ink: #0b1330; --accent-soft: #1a2350;
     --today-tint: rgba(157, 180, 255, 0.05);
     --now: #f3c9a4; --now-ink: #2a1806;
@@ -102,9 +198,10 @@
     --shadow-2: 0 12px 32px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.35);
     /* Background and glass (see "Night sky" and "Liquid Glass" below) */
     --glow-1: rgba(157, 180, 255, 0.12); --glow-2: rgba(243, 201, 164, 0.08);
-    --sky: var(--sky-night, url(../images/night-sky.webp));
-    --veil: linear-gradient(180deg, rgba(6, 10, 22, var(--veil-night, 0.45)),
-      rgba(6, 10, 22, calc(var(--veil-night, 0.45) + var(--veil-boost-night, 0.12))));
+    --sky: var(--sky-night, var(--sky-night-builtin));
+    --twinkle: var(--twinkle-night, var(--twinkle-stars));
+    --veil: linear-gradient(180deg, rgba(6, 10, 22, var(--veil-night, 0.1)),
+      rgba(6, 10, 22, calc(var(--veil-night, 0.1) + var(--veil-boost-night, 0.12))));
     --panel-fill: rgba(15, 21, 39, 0.8);
     --panel-edge: rgba(255, 255, 255, 0.08);
     --glass-fill: rgba(20, 28, 52, 0.72); --glass-fill-hover: rgba(32, 42, 74, 0.8);
@@ -117,7 +214,7 @@
   --paper: #070b18; --surface: #0f1527; --surface-2: #171f38;
   --ink: #eef1fb; --ink-2: #bcc4dc; --ink-3: #95a0bd;
   --rule: #222c4a; --rule-strong: #313d63; --margin: #2b3a66;
-  /* Moonlight accent and a warm cloud glow, matched to the night-sky picture */
+  /* Moonlight accent and a warm glow, matched to the night sky */
   --accent: #9db4ff; --accent-hover: #b8c8ff; --accent-ink: #0b1330; --accent-soft: #1a2350;
   --today-tint: rgba(157, 180, 255, 0.05);
   --now: #f3c9a4; --now-ink: #2a1806;
@@ -133,9 +230,10 @@
   --shadow-2: 0 12px 32px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.35);
   /* Background and glass (see "Night sky" and "Liquid Glass" below) */
   --glow-1: rgba(157, 180, 255, 0.12); --glow-2: rgba(243, 201, 164, 0.08);
-  --sky: var(--sky-night, url(../images/night-sky.webp));
-  --veil: linear-gradient(180deg, rgba(6, 10, 22, var(--veil-night, 0.45)),
-    rgba(6, 10, 22, calc(var(--veil-night, 0.45) + var(--veil-boost-night, 0.12))));
+  --sky: var(--sky-night, var(--sky-night-builtin));
+  --twinkle: var(--twinkle-night, var(--twinkle-stars));
+  --veil: linear-gradient(180deg, rgba(6, 10, 22, var(--veil-night, 0.1)),
+    rgba(6, 10, 22, calc(var(--veil-night, 0.1) + var(--veil-boost-night, 0.12))));
   --panel-fill: rgba(15, 21, 39, 0.8);
   --panel-edge: rgba(255, 255, 255, 0.08);
   --glass-fill: rgba(20, 28, 52, 0.72); --glass-fill-hover: rgba(32, 42, 74, 0.8);
@@ -671,7 +769,6 @@ dialog::backdrop { background: var(--backdrop); }
 #authDialog .dlg-head { margin-bottom: 14px; }
 .auth-view { display: flex; flex-direction: column; gap: 14px; }
 .auth-view .fine { margin: 0; }
-.auth-mode { align-self: flex-start; }
 .pw-row { display: flex; gap: 8px; }
 .pw-row input { flex: 1; min-width: 0; }
 .ok { margin: 0; font-size: 13.5px; color: var(--accent); font-weight: 700; }
@@ -713,7 +810,7 @@ dialog::backdrop { background: var(--backdrop); }
 
 /* ---------- Sky background ----------
    One fixed layer behind everything (works on iOS, unlike background-attachment: fixed).
-   Day: the CSS sky; night: the night-sky picture. Each can be "none" or the person's own photo:
+   Day and night skies are drawn in CSS. Each can be "none" or the person's own photo:
    app.js sets --sky-day / --sky-night to the photo and --veil-day / --veil-night from its brightness,
    so text stays readable. */
 body::before {
@@ -723,6 +820,15 @@ body::before {
 }
 html[data-sky-day="none"] { --sky-day: none; --veil-day: 0; --veil-boost-day: 0; }
 html[data-sky-night="none"] { --sky-night: none; --veil-night: 0; --veil-boost-night: 0; }
+html[data-sky-night="none"], html[data-sky-night="custom"] { --twinkle-night: none; }
+/* Twinkling stars: a second fixed layer above the sky (dark mode, built-in sky). Opacity only, so it's cheap;
+   the global reduced-motion rule stops it. */
+body::after {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: var(--twinkle, none);
+  animation: twinkle 5s ease-in-out infinite alternate;
+}
+@keyframes twinkle { from { opacity: 0.25; } to { opacity: 0.85; } }
 html.sky-loading body::before { opacity: 0; } /* a photo fades in once it's loaded */
 
 /* See-through panels: the sky shows softly behind the timeline and the right column.
@@ -799,7 +905,7 @@ dialog {
     --glass-fill: var(--surface); --glass-fill-hover: var(--surface-2); --glass-panel: var(--surface);
     --glass-toast: var(--toast-bg); --glass-accent: var(--accent);
     --glass-edge: var(--rule-strong); --glass-shine: transparent;
-    --glass-blur: none; --glass-blur-strong: none;
+    --glass-blur: none; --glass-blur-strong: none; --twinkle: none;
     --panel-fill: var(--surface); --panel-blur: none;
   }
 }
@@ -848,7 +954,10 @@ dialog {
   position: fixed; inset: 0; z-index: 90;
   display: grid; place-items: center; overflow-y: auto;
   padding: max(20px, env(safe-area-inset-top, 0px)) 16px max(20px, env(safe-area-inset-bottom, 0px));
-  background: color-mix(in srgb, var(--paper) 40%, transparent);
+  /* Mostly covers the app (a hint of the sky shows) so the card is the only thing to look at */
+  background: color-mix(in srgb, var(--paper) 72%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
 body.welcome-open { overflow: hidden; }
 .welcome-card {
@@ -862,19 +971,40 @@ body.welcome-open { overflow: hidden; }
   -webkit-backdrop-filter: var(--glass-blur-strong);
   backdrop-filter: var(--glass-blur-strong);
 }
-.welcome-brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 800; font-size: 20px; }
-.welcome-brand .brand-mark { width: 34px; height: 34px; }
-.welcome h1 {
-  margin: 0; font-family: var(--font-display); font-weight: 800;
-  font-size: clamp(26px, 7vw, 32px); line-height: 1.08; letter-spacing: -0.02em;
+/* One clear card: logo, title, two fields, one button; switch mode and "continue without" underneath. */
+.welcome-card { gap: 10px; padding: 30px 26px 24px; }
+.welcome-brand {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  font-family: var(--font-display); font-weight: 800; font-size: 20px; margin-bottom: 6px;
 }
-.welcome-points { list-style: none; margin: 0 0 4px; padding: 0; display: grid; gap: 7px; font-size: 14.5px; color: var(--ink-2); }
-.welcome-points li { display: flex; align-items: baseline; gap: 10px; }
-.welcome-points li::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); transform: translateY(-1px); }
-.welcome .auth-mode { align-self: stretch; display: grid; grid-template-columns: 1fr 1fr; }
-.welcome #authSubmit { min-width: 120px; justify-content: center; }
-.welcome-skip { align-self: center; font-size: 15px; padding: 8px; }
-.welcome-note { margin: -8px 0 0; text-align: center; }
+.welcome-brand .brand-mark { width: 36px; height: 36px; }
+.welcome h1 {
+  margin: 0; text-align: center; font-family: var(--font-display); font-weight: 800;
+  font-size: clamp(26px, 7vw, 30px); line-height: 1.1; letter-spacing: -0.02em;
+}
+.welcome-sub { margin: 0 0 8px; text-align: center; font-size: 15px; color: var(--ink-2); }
+.auth-form { display: flex; flex-direction: column; gap: 14px; }
+.auth-form .field input { padding: 11px 12px; font-size: 16px; } /* 16px: no zoom-in on iPhones */
+.auth-form .field input[aria-invalid="true"] { border-color: var(--high); outline-color: var(--high); }
+.auth-form .label-row { margin: 0; }
+.btn-link.small { font-size: 13px; padding: 0; }
+.pw-field { position: relative; }
+.pw-field input { width: 100%; padding-right: 48px !important; }
+.pw-eye {
+  position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+  width: 40px; height: 40px; display: grid; place-items: center;
+  border: 0; border-radius: 8px; background: none; color: var(--ink-3); cursor: pointer;
+}
+.pw-eye:hover { color: var(--ink); background: var(--surface-2); }
+.pw-eye svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.pw-eye .i-eye-off, .pw-eye[aria-pressed="true"] .i-eye { display: none; }
+.pw-eye[aria-pressed="true"] .i-eye-off { display: block; }
+.auth-submit { width: 100%; justify-content: center; padding-block: 12px; font-size: 16px; border-radius: 12px; margin-top: 2px; }
+.auth-switch { margin: 4px 0 0; text-align: center; font-size: 14.5px; color: var(--ink-2); }
+.auth-switch .btn-link { font-size: 14.5px; padding: 0 2px; }
+.or-divider { display: flex; align-items: center; gap: 12px; margin: 6px 0 2px; font-size: 12.5px; color: var(--ink-3); }
+.or-divider::before, .or-divider::after { content: ""; flex: 1; height: 1px; background: var(--rule-strong); }
+.welcome-skip { width: 100%; justify-content: center; padding-block: 11px; border-radius: 12px; background: transparent; }
 
 /* ---------- Swipe gestures ----------
    The item slides over a coloured layer: green = done (right), blue = reschedule (left). */

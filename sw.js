@@ -6,7 +6,7 @@
    build_artifact.py, so each deploy replaces the old cache.
    ========================================================= */
 
-const VERSION = "ac95035bd0";
+const VERSION = "171db42dd1";
 const CACHE = `dayflow-${VERSION}`;
 const FILES = [
   "./", "index.html", "manifest.json",
@@ -14,7 +14,7 @@ const FILES = [
   "js/vendor/supabase.js", "js/config.js", "js/platform.js", "js/store.js", "js/sync.js", "js/swipe.js", "js/timeline.js", "js/app.js",
   "fonts/atkinson-400.woff2", "fonts/atkinson-400-italic.woff2", "fonts/atkinson-700.woff2",
   "fonts/bricolage-var.woff2", "fonts/plexmono-400.woff2", "fonts/plexmono-500.woff2",
-  "images/night-sky.webp", "sounds/dayflow-alarm.wav",
+  "sounds/dayflow-alarm.wav",
   "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png",
 ];
 

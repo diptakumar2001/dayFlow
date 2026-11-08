@@ -1699,21 +1699,31 @@
     });
   }
 
-  function authMessage(err = "", ok = "") {
+  // field: the input at fault (marked and focused), or none.
+  function authMessage(err = "", ok = "", field = null) {
     $("#authErr").textContent = err;
     $("#authErr").hidden = !err;
     $("#authOk").textContent = ok;
     $("#authOk").hidden = !ok;
+    ["#authEmail", "#authPassword"].forEach((s) => $(s).removeAttribute("aria-invalid"));
+    if (field) {
+      $(field).setAttribute("aria-invalid", "true");
+      $(field).focus();
+    }
   }
 
+  // One card, two modes: sign in, or create an account. The typed email stays when switching.
   function setAuthMode(mode) {
     authMode = mode;
-    $("#modeSignIn").setAttribute("aria-pressed", String(mode === "signin"));
-    $("#modeSignUp").setAttribute("aria-pressed", String(mode === "signup"));
-    $("#authSubmit").textContent = mode === "signup" ? "Create account" : "Sign in";
-    $("#authPassword").autocomplete = mode === "signup" ? "new-password" : "current-password";
-    $("#pwHint").hidden = mode !== "signup";
-    $("#authForgot").hidden = mode === "signup";
+    const signup = mode === "signup";
+    $("#welcomeTitle").textContent = signup ? "Create your account" : "Welcome back";
+    $("#welcomeSub").textContent = signup ? "It's free. Your tasks stay in sync on all your devices." : "Sign in to see your tasks.";
+    $("#authSubmit").textContent = signup ? "Create account" : "Sign in";
+    $("#authSwitchText").textContent = signup ? "Already have an account?" : "New here?";
+    $("#authSwitch").textContent = signup ? "Sign in" : "Create an account";
+    $("#authPassword").autocomplete = signup ? "new-password" : "current-password";
+    $("#pwHint").hidden = !signup;
+    $("#authForgot").hidden = signup;
     authMessage();
   }
 
@@ -1771,10 +1781,12 @@
     e.preventDefault();
     const email = $("#authEmail").value.trim();
     const pw = $("#authPassword").value;
-    if (!validEmail(email)) return authMessage("Enter your email address.");
-    if (pw.length < 8) return authMessage("Passwords are at least 8 characters.");
+    if (!validEmail(email)) return authMessage("Enter your email address.", "", "#authEmail");
+    if (pw.length < 8) return authMessage("Passwords are at least 8 characters.", "", "#authPassword");
     const btn = $("#authSubmit");
+    const label = btn.textContent;
     btn.disabled = true;
+    btn.textContent = authMode === "signup" ? "Creating account…" : "Signing in…";
     authMessage();
     try {
       if (authMode === "signup") {
@@ -1790,15 +1802,16 @@
       closeWelcome();
       toast(`Signed in as ${email}. Your tasks are saved online.`, { key: "auth" });
     } catch (err) {
-      authMessage(err.message);
+      authMessage(err.message, "", /password/i.test(err.message) ? "#authPassword" : null);
     } finally {
       btn.disabled = false;
+      if (btn.textContent.endsWith("…")) btn.textContent = label;
     }
   }
 
   async function onForgot() {
     const email = $("#authEmail").value.trim();
-    if (!validEmail(email)) return authMessage("Type your email above, then press “Forgot password?” again.");
+    if (!validEmail(email)) return authMessage("Type your email above, then press “Forgot?” again.", "", "#authEmail");
     try {
       await Sync.sendPasswordReset(email);
       authMessage("", `If there's an account for ${email}, a link to set a new password is on its way.`);
@@ -1969,15 +1982,17 @@
     authDlg.addEventListener("click", (e) => {
       if (e.target === authDlg) authDlg.close();
     });
-    $("#modeSignIn").addEventListener("click", () => setAuthMode("signin"));
-    $("#modeSignUp").addEventListener("click", () => setAuthMode("signup"));
+    $("#authSwitch").addEventListener("click", () => {
+      setAuthMode(authMode === "signup" ? "signin" : "signup");
+      $("#authEmail").focus();
+    });
     $("#authForm").addEventListener("submit", onAuthSubmit);
     $("#authForgot").addEventListener("click", onForgot);
     $("#authShowPw").addEventListener("click", (e) => {
       const show = $("#authPassword").type === "password";
       $("#authPassword").type = show ? "text" : "password";
-      e.currentTarget.textContent = show ? "Hide" : "Show";
       e.currentTarget.setAttribute("aria-pressed", String(show));
+      e.currentTarget.setAttribute("aria-label", show ? "Hide password" : "Show password");
     });
     $("#newPwForm").addEventListener("submit", onNewPassword);
     $("#syncNowBtn").addEventListener("click", refreshFromCloud);

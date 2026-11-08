@@ -29,7 +29,8 @@ features; don't re-read it to learn the structure, this file covers that.
 - Phones (≤ 760px): `.app[data-tab=today|week|todo]` + the bottom `.tabbar` choose which grid areas show; `setTab()`
   / `setView()` keep tab and view in step. Swipes are touch-only (day view + to-do/leftover rows); Space/Enter
   are the keyboard equivalents.
-- Welcome page (`#welcome`, not a <dialog>): sign in / create account / continue without (`dayflow.guest`). Shown
+- Welcome page (`#welcome`, not a <dialog>): one card, two modes (`setAuthMode`: sign in / create account,
+  switched by `#authSwitch`), plus continue without (`dayflow.guest`). Shown
   only when `Sync.enabled`; `.app` is `inert` while it's open. The account dialog is for signed-in users only.
 - UI rule: keep the main screen calm (timeline, Today, Quick add, To-do). New options go in the Settings dialog
   or the task form's "More options", not as new sidebar sections.
@@ -54,7 +55,7 @@ features; don't re-read it to learn the structure, this file covers that.
   must stay identical. Text pairs must keep ≥ 4.5:1 contrast. Liquid Glass (`--glass-*`) only on controls and
   floating surfaces (top-bar buttons, toasts, dialogs), never on task cards, the timeline or inputs.
 - Backgrounds: one fixed `body::before` layer = `var(--veil), var(--sky)`. Per theme: built-in (`--sky-day-builtin`
-  CSS sky / `images/night-sky.webp`), none, or the person's photo (`--sky-day`/`--sky-night` set by app.js,
+  CSS day sky / `--sky-night-builtin` CSS night sky + `--twinkle` layer), none, or the person's photo (`--sky-day`/`--sky-night` set by app.js,
   `--veil-*` from the photo's brightness). Photos stay on the device in IndexedDB via `Platform.images`. Panels
   use `--panel-fill` (see-through); task cards and inputs stay solid.
 - Tasks can't cross midnight. Overlap confirmation follows `settings.warnOverlaps`.

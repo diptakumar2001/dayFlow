@@ -414,40 +414,36 @@
       </svg>
       <span>DayFlow</span>
     </div>
-    <h1 id="welcomeTitle">Plan your day, one block at a time.</h1>
-    <ul class="welcome-points">
-      <li>Drag tasks on a timeline, like a paper planner</li>
-      <li>A reminder before each task, and an alarm when it starts</li>
-      <li>Your tasks on your phone and your computer</li>
-    </ul>
-    <form id="authForm" class="auth-view" novalidate>
-      <div class="seg auth-mode" role="group" aria-label="Sign in or create an account">
-        <button type="button" id="modeSignIn" aria-pressed="true">Sign in</button>
-        <button type="button" id="modeSignUp" aria-pressed="false">Create account</button>
-      </div>
-      <p class="fine" id="authIntro">Sign in to keep your tasks safe online and use them on your phone and computer.</p>
+    <h1 id="welcomeTitle">Welcome back</h1>
+    <p class="welcome-sub" id="welcomeSub">Sign in to see your tasks.</p>
+
+    <form id="authForm" class="auth-form" novalidate>
       <div class="field">
         <label for="authEmail">Email</label>
-        <input id="authEmail" type="email" autocomplete="email" inputmode="email" required>
+        <input id="authEmail" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" required aria-describedby="authErr">
       </div>
       <div class="field">
-        <label for="authPassword">Password</label>
-        <div class="pw-row">
-          <input id="authPassword" type="password" autocomplete="current-password" minlength="8" required>
-          <button type="button" class="btn sm" id="authShowPw" aria-pressed="false">Show</button>
+        <div class="label-row">
+          <label for="authPassword">Password</label>
+          <button type="button" class="btn-link small" id="authForgot">Forgot?</button>
+        </div>
+        <div class="pw-field">
+          <input id="authPassword" type="password" autocomplete="current-password" minlength="8" required aria-describedby="pwHint authErr">
+          <button type="button" class="pw-eye" id="authShowPw" aria-pressed="false" aria-label="Show password">
+            <svg class="i-eye" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="i-eye-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 5.6A9.7 9.7 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-3.2 3.9M6.4 6.9C3.9 8.6 2.5 12 2.5 12S6 18.5 12 18.5c1.6 0 3-.4 4.2-1M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
+          </button>
         </div>
         <p class="fine" id="pwHint" hidden>At least 8 characters.</p>
       </div>
       <p class="err" id="authErr" role="alert" hidden></p>
       <p class="ok" id="authOk" role="status" hidden></p>
-      <div class="dlg-foot">
-        <button type="button" class="btn-link" id="authForgot">Forgot password?</button>
-        <span class="spacer"></span>
-        <button type="submit" class="btn primary" id="authSubmit">Sign in</button>
-      </div>
+      <button type="submit" class="btn primary auth-submit" id="authSubmit">Sign in</button>
     </form>
-    <button type="button" class="btn-link welcome-skip" id="welcomeSkip">Continue without an account</button>
-    <p class="fine welcome-note">Without an account, your tasks stay on this device. You can sign in later from the top bar.</p>
+
+    <p class="auth-switch"><span id="authSwitchText">New here?</span> <button type="button" class="btn-link" id="authSwitch">Create an account</button></p>
+    <div class="or-divider" aria-hidden="true"><span>or</span></div>
+    <button type="button" class="btn welcome-skip" id="welcomeSkip">Continue without an account</button>
   </div>
 </section>
 
