@@ -6,6 +6,7 @@
 <title>DayFlow Planner</title>
 <meta name="description" content="DayFlow: a task-first daily planner with a time-blocked timeline.">
 <meta name="theme-color" content="#f3f6f5">
+<meta name="dayflow-build" content="4f3354d40e"><!-- stamped by build_artifact.py -->
 <script>
   // Apply the saved theme before the page draws, so it never flashes the wrong colors.
   // The one direct storage read in DayFlow: Platform isn't loaded yet at this point.
@@ -713,6 +714,9 @@ dialog::backdrop { background: var(--backdrop); }
 .set-sec:first-of-type { border-top: 0; }
 .set-sec .fine { margin: 0; }
 .set-sec .btn, .set-sec .seg { align-self: flex-start; }
+.set-about { margin: 0; padding-top: 14px; border-top: 1px solid var(--rule); color: var(--ink-3); }
+.set-about a, .welcome-legal a { color: var(--accent); font-weight: 700; }
+.welcome-legal { margin: 14px 0 0; text-align: center; }
 .sky-row { display: grid; gap: 6px; margin-top: 4px; }
 .sky-label { font-size: 13px; font-weight: 700; color: var(--ink-2); }
 .sky-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -1436,6 +1440,8 @@ dialog.sheet { width: min(420px, calc(100vw - 32px)); padding: 18px 18px 16px; }
     </dl>
     <p class="fine"><b>On a selected task:</b> Enter edits, Space marks done, ↑ ↓ move 15 min, Shift + ↑ ↓ change length, ← → move a day (week view), Delete removes.</p>
   </details>
+
+  <p class="set-about fine">DayFlow · build <span id="appBuild">dev</span> · <a class="privacy-link" href="privacy.html" target="_blank" rel="noopener">Privacy</a></p>
 </dialog>
 
 <!-- ===== Task form ===== -->
@@ -1599,6 +1605,7 @@ dialog.sheet { width: min(420px, calc(100vw - 32px)); padding: 18px 18px 16px; }
     <p class="auth-switch"><span id="authSwitchText">New here?</span> <button type="button" class="btn-link" id="authSwitch">Create an account</button></p>
     <div class="or-divider" aria-hidden="true"><span>or</span></div>
     <button type="button" class="btn welcome-skip" id="welcomeSkip">Continue without an account</button>
+    <p class="welcome-legal fine"><a class="privacy-link" href="privacy.html" target="_blank" rel="noopener">Privacy</a></p>
   </div>
 </section>
 
@@ -5445,6 +5452,13 @@ const Timeline = (() => {
     startOrbParallax();
     applyTheme();
     $("#settingsClose").addEventListener("click", () => settingsDlg.close());
+    // About line: the build stamp (same as the offline cache version), and the privacy page. In the
+    // phone app the page opens from the website in the browser, so the app itself never navigates away.
+    $("#appBuild").textContent = document.querySelector('meta[name="dayflow-build"]')?.content || "dev";
+    if (Platform.native && typeof CONFIG !== "undefined" && CONFIG.siteUrl) {
+      const url = new URL("privacy.html", CONFIG.siteUrl).href;
+      document.querySelectorAll(".privacy-link").forEach((a) => (a.href = url));
+    }
     [searchDlg, settingsDlg].forEach((d) =>
       d.addEventListener("click", (e) => {
         if (e.target === d) d.close(); // click on backdrop

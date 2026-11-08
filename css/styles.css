@@ -678,6 +678,9 @@ dialog::backdrop { background: var(--backdrop); }
 .set-sec:first-of-type { border-top: 0; }
 .set-sec .fine { margin: 0; }
 .set-sec .btn, .set-sec .seg { align-self: flex-start; }
+.set-about { margin: 0; padding-top: 14px; border-top: 1px solid var(--rule); color: var(--ink-3); }
+.set-about a, .welcome-legal a { color: var(--accent); font-weight: 700; }
+.welcome-legal { margin: 14px 0 0; text-align: center; }
 .sky-row { display: grid; gap: 6px; margin-top: 4px; }
 .sky-label { font-size: 13px; font-weight: 700; color: var(--ink-2); }
 .sky-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }

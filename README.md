@@ -5,6 +5,11 @@ Tasks live on a time-blocked timeline, like a page in a paper day planner.
 
 Team: Dipta Kumar Mondal (0302436m), Preeti Preeti (0304488p)
 
+**Get DayFlow (free):** web app at <https://dayflowdipto.netlify.app/> · Android: the APK on the
+[Releases](https://github.com/diptakumar2001/dayFlow/releases) page ([how](#install-on-android-free-apk)) ·
+iPhone: Add to Home Screen from Safari ([how](#install-on-iphone-free-add-to-home-screen)) ·
+[Privacy](privacy.html). Settings shows the build number at the bottom, so bug reports can say which version.
+
 ## Run it
 
 1. Open the `dayflow` folder in VS Code.

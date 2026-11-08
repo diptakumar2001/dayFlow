@@ -2180,6 +2180,13 @@
     startOrbParallax();
     applyTheme();
     $("#settingsClose").addEventListener("click", () => settingsDlg.close());
+    // About line: the build stamp (same as the offline cache version), and the privacy page. In the
+    // phone app the page opens from the website in the browser, so the app itself never navigates away.
+    $("#appBuild").textContent = document.querySelector('meta[name="dayflow-build"]')?.content || "dev";
+    if (Platform.native && typeof CONFIG !== "undefined" && CONFIG.siteUrl) {
+      const url = new URL("privacy.html", CONFIG.siteUrl).href;
+      document.querySelectorAll(".privacy-link").forEach((a) => (a.href = url));
+    }
     [searchDlg, settingsDlg].forEach((d) =>
       d.addEventListener("click", (e) => {
         if (e.target === d) d.close(); // click on backdrop

@@ -17,20 +17,29 @@ sw = root / "sw.js"
 sw_text = sw.read_text(encoding="utf-8")
 cached = re.search(r"const FILES = \[(.*?)\];", sw_text, re.S).group(1)
 digest = hashlib.sha256()
+BUILD_META = r'<meta name="dayflow-build" content="[^"]*">'
 for name in re.findall(r'"([^"]+)"', cached):
     f = root / ("index.html" if name == "./" else name)
     if f.is_file():
-        digest.update(f.read_bytes())
+        data = f.read_bytes()
+        if f.name == "index.html":  # leave out the stamp below, so building twice gives the same version
+            data = re.sub(BUILD_META.encode(), b"", data)
+        digest.update(data)
 version = digest.hexdigest()[:10]
 new_sw = re.sub(r'const VERSION = "[^"]*";', f'const VERSION = "{version}";', sw_text)
 if new_sw != sw_text:
     sw.write_text(new_sw, encoding="utf-8")
+# The same version shows in Settings, so a screenshot says which build someone has.
+new_html = re.sub(BUILD_META, f'<meta name="dayflow-build" content="{version}">', html)
+if new_html != html:
+    (root / "index.html").write_text(new_html, encoding="utf-8", newline="")
+    html = new_html
 
 # ---- www/ for the phone app (Capacitor's webDir) ----
 www = root / "www"
 shutil.rmtree(www, ignore_errors=True)
 www.mkdir()
-for name in ["index.html", "manifest.json"]:
+for name in ["index.html", "privacy.html", "manifest.json"]:
     shutil.copy2(root / name, www / name)
 for folder in ["css", "js", "fonts", "icons", "images"]:
     shutil.copytree(root / folder, www / folder)
