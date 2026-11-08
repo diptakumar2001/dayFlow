@@ -69,9 +69,12 @@
     radial-gradient(34% 20% at 80% 92%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 70%),
     linear-gradient(180deg, #a9cdf0 0%, #cfe3f6 50%, #eef4f9 100%);
   --sky: var(--sky-day, var(--sky-day-builtin));
-  /* The same sky at night: the day sky's layout (same glow spot, same six clouds) in moonlit colours,
-     so switching theme feels like the same view as day turns to night. Used by the dark theme below. */
-  --sky-night-builtin:
+  /* Dark mode's built-in background: a dark solar system (hand-drawn SVGs from tools/make-space.py).
+     A wide composition for computers, a tall one for phones (see the media query by the sky layer). */
+  --space-art: url(../images/space-wide.svg);
+  --sky-night-builtin: var(--space-art); /* one layer, so the layer's "cover" sizing applies to it */
+  /* "Clouds" choice for dark mode: the day sky's layout (same glow spot, same six clouds) in moonlit colours. */
+  --sky-night-clouds:
     radial-gradient(40% 30% at 85% 6%, rgba(214, 224, 255, 0.22), rgba(214, 224, 255, 0) 70%),
     radial-gradient(26% 9% at 12% 38%, rgba(150, 165, 215, 0.14), rgba(150, 165, 215, 0) 70%),
     radial-gradient(22% 10% at 92% 66%, rgba(150, 165, 215, 0.18), rgba(150, 165, 215, 0) 70%),
@@ -746,6 +749,9 @@ body::before {
 }
 html[data-sky-day="none"] { --sky-day: none; --veil-day: 0; --veil-boost-day: 0; }
 html[data-sky-night="none"] { --sky-night: none; --veil-night: 0; --veil-boost-night: 0; }
+html[data-sky-night="clouds"] { --sky-night: var(--sky-night-clouds); }
+/* Phones and other tall screens get the solar system composed for portrait */
+@media (max-aspect-ratio: 4/5) { :root { --space-art: url(../images/space-tall.svg); } }
 html.sky-loading body::before { opacity: 0; } /* a photo fades in once it's loaded */
 html.sky-fade body::before { opacity: 0; transition-duration: 0.2s; } /* switching theme: out fast, back in 0.4s */
 

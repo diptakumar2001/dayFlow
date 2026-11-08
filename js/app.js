@@ -1356,7 +1356,7 @@
   // ---------------------------------------------------------
   const SKY = {
     day: { key: "dayflow.sky.day", img: "sky-day", cssVar: "--sky-day", veilVar: "--veil-day", attr: "skyDay", name: "Light mode", builtin: "Sky" },
-    night: { key: "dayflow.sky.night", img: "sky-night", cssVar: "--sky-night", veilVar: "--veil-night", attr: "skyNight", name: "Dark mode", builtin: "Night sky" },
+    night: { key: "dayflow.sky.night", img: "sky-night", cssVar: "--sky-night", veilVar: "--veil-night", attr: "skyNight", name: "Dark mode", builtin: "Space" },
   };
   const skyUrls = {}; // object URLs of loaded photos
 
@@ -1441,7 +1441,8 @@
     return Math.round(Math.min(hi, Math.max(lo, v)) * 100) / 100;
   }
 
-  const skyLabel = (w, mode) => (mode === "builtin" ? SKY[w].builtin : mode === "none" ? "none" : "your photo");
+  const SKY_LABELS = { none: "none", custom: "your photo", clouds: "moonlit clouds" };
+  const skyLabel = (w, mode) => (mode === "builtin" ? SKY[w].builtin : SKY_LABELS[mode] || mode);
 
   async function setSkyMode(w, mode) {
     const prev = skyChoice(w);
