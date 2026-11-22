@@ -154,12 +154,45 @@
 
   function setTab(tab) {
     if (tab === "more") return openSettings();
+    showTabbar();
     state.tab = tab;
     Platform.storage.set(TAB_KEY, tab);
     if (tab === "today" && state.view !== "day") return setView("day");
     if (tab === "week" && state.view !== "week") return setView("week");
     render({ resetScroll: true });
     if (tab === "todo") window.scrollTo({ top: 0 });
+  }
+
+  // Phones: the tab bar slides away while scrolling down (page, timeline, lists) and comes back on the way
+  // up, at the top, on switching tabs, after a dialog, and whenever a tab button gets keyboard focus.
+  // Only scrolls the person makes count: the app's own jumps (e.g. to "now") come with no recent touch.
+  const showTabbar = () => document.documentElement.classList.remove("tabbar-hidden");
+  function startTabbarAutoHide() {
+    const root = document.documentElement;
+    const last = new WeakMap(); // scroll position per scroller
+    let touchedAt = 0;
+    let queued = null;
+    const touched = () => (touchedAt = Date.now());
+    ["touchstart", "touchmove", "wheel", "keydown"].forEach((t) => addEventListener(t, touched, { passive: true, capture: true }));
+    const check = () => {
+      const el = queued;
+      queued = null;
+      const top = el === document ? scrollY : el.scrollTop;
+      const prev = last.get(el) ?? top;
+      last.set(el, top);
+      if (!isPhone() || Timeline.isDragging() || Date.now() - touchedAt > 2000) return;
+      const typing = document.activeElement && document.activeElement.id === "todoAdd";
+      if ((el === document ? top : scrollY) < 40 && top < 40) showTabbar();
+      else if (top - prev > 8 && !typing) root.classList.add("tabbar-hidden");
+      else if (prev - top > 8) showTabbar();
+    };
+    document.addEventListener("scroll", (e) => {
+      if (queued) return;
+      queued = e.target;
+      requestAnimationFrame(check);
+    }, { passive: true, capture: true });
+    $(".tabbar").addEventListener("focusin", showTabbar);
+    document.addEventListener("close", showTabbar, true); // a dialog closed
   }
 
   function renderHeader() {
@@ -2179,6 +2212,7 @@
     darkQuery.addEventListener("change", applyTheme);
     settingsDlg.addEventListener("click", onSkyClick);
     applySkies();
+    startTabbarAutoHide();
     applyTheme();
     $("#settingsClose").addEventListener("click", () => settingsDlg.close());
     // About line: the build stamp (same as the offline cache version), and the privacy page. In the

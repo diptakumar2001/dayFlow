@@ -161,7 +161,9 @@ form folds the less-used fields (course, reminder, repeat, notes) under **More o
 - **Backup**: save to a file and restore (replace or add)
 - **On phones**: a tab bar at the bottom (**Today · Week · To-do · More**) shows one section at a time, with a
   count of open to-dos on the To-do tab. The **To-do tab is a plain to-do list**: an "Add a to-do…" box at the
-  top (add several in a row; `fri` sets a due date, `#hci` a course) and the whole list below; tick to finish. **Swipe a task right** to complete it and **left** to reschedule it
+  top (add several in a row; `fri` sets a due date, `#hci` a course) and the whole list below; tick to finish.
+  The tab bar slides away while you scroll down and comes back when you scroll up, and scrolling the timeline
+  carries on to the page, so the whole day up to midnight is always reachable. **Swipe a task right** to complete it and **left** to reschedule it
   (Later today / Tomorrow / Pick a time); hold a task to drag it. A one-time tip explains the gestures
 - **Welcome page**: when accounts are set up, DayFlow opens on a sign-in / create-account page, with
   **Continue without an account** for people who just want to use it on one device
