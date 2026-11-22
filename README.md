@@ -108,8 +108,9 @@ rings until stopped would need custom native code.
   background tab), as a message in the page and a notification if you allow them. A website can't ring when
   it's closed; that would need a push server.
 - Quick add understands `3am`, `15:00`, `3 o'clock in the morning`, `6 o'clock in the evening` and `9 tonight`.
-  A time that has already passed today (e.g. `study 3am` typed at 9 PM) goes to **tomorrow**, so it can still
-  ring. A heads-up for a task just after midnight rings the evening before.
+  `3:30 a.m.` / `7 P.M.` (with dots, as phone keyboards write them) work too. A task that would already be over
+  today (e.g. `study 3am` typed at 9 PM) goes to **tomorrow**, so it can still ring; type `today` to keep it today.
+  If a new task overlaps another, the button turns into **Add anyway**. A heads-up for a task just after midnight rings the evening before.
 
 ### Developing the phone app
 

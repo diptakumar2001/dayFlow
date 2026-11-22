@@ -6,7 +6,7 @@
 <title>DayFlow Planner</title>
 <meta name="description" content="DayFlow: a task-first daily planner with a time-blocked timeline.">
 <meta name="theme-color" content="#f3f6f5">
-<meta name="dayflow-build" content="9a0e1a2d38"><!-- stamped by build_artifact.py -->
+<meta name="dayflow-build" content="89b53d5c90"><!-- stamped by build_artifact.py -->
 <script>
   // Apply the saved theme before the page draws, so it never flashes the wrong colors.
   // The one direct storage read in DayFlow: Platform isn't loaded yet at this point.
@@ -120,7 +120,7 @@
       </div>
       <form id="quickForm" class="quick" autocomplete="off">
         <input id="quickAdd" type="text" placeholder="e.g. Study HCI at 3pm for 2h" aria-describedby="quickPreview" enterkeyhint="done">
-        <button type="submit" class="btn primary">Add</button>
+        <button type="submit" class="btn primary" id="quickBtn">Add</button>
       </form>
       <p id="quickPreview" class="quick-preview" aria-live="polite" hidden></p>
       <p class="quick-hint">Add a time (<b>3pm</b>, <b>9-11am</b>) for the timeline. No time → To-do.</p>

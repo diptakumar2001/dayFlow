@@ -989,7 +989,8 @@
   const to24 = (h, ap) => (h % 12) + (ap.toLowerCase() === "pm" ? 12 : 0);
 
   function parseQuick(text) {
-    let s = ` ${text} `;
+    // Phone keyboards often write "3:30 a.m." / "7 P.M.": make those plain am/pm first.
+    let s = ` ${text} `.replace(/(\d)\s?([ap])\.\s?m\.?(?=\s)/gi, (m, d, ap) => `${d} ${ap.toLowerCase()}m`);
     const out = {
       duration: 60, start: null, date: state.date, recurrence: "none", course: "",
       todo: false, dueWord: false, due: null, notes: [], dateSet: false, durationSet: false,
@@ -1097,11 +1098,13 @@
       out.recurrence = "none";
       return out;
     }
-    // A time that has already passed today with no day typed ("study 3am" at 9 PM) means the next one,
-    // tomorrow, so its reminder and alarm can still ring.
-    if (out.start !== null && !out.dateSet && out.recurrence === "none" && out.date === D.todayKey() && out.start < D.nowMinutes()) {
+    // A task that would already be over today, with no day typed ("study 3am" at 9 PM), means tomorrow,
+    // so its reminder and alarm can still ring. One that's still running or about to start stays today.
+    if (out.start !== null && !out.dateSet && out.recurrence === "none" && out.date === D.todayKey() &&
+        out.start + out.duration <= D.nowMinutes()) {
       out.date = D.addDays(D.todayKey(), 1);
-      out.notes.push(`${D.fmtTime(out.start)} has passed today, so this is for tomorrow.`);
+      out.rolled = true;
+      out.notes.push(`${D.fmtTime(out.start)} has already passed today, so this is for tomorrow. Type “today” to keep it today.`);
     }
     if (out.start !== null && out.start + out.duration > 1440) {
       out.notes.push(`Shortened to end at midnight (you asked for ${D.fmtDuration(out.duration)}).`);
@@ -1118,12 +1121,12 @@
     return out;
   }
 
-  let quickConfirmText = "";
   function updateQuickPreview() {
     const input = $("#quickAdd");
     const box = $("#quickPreview");
     const text = input.value.trim();
     box.classList.remove("warn");
+    $("#quickBtn").textContent = "Add";
     if (!text) {
       box.hidden = true; // the preview only shows while typing
       return null;
@@ -1148,7 +1151,8 @@
     if (conflicts.length) {
       if (settings.warnOverlaps) {
         box.classList.add("warn");
-        html += `<span class="qp-warn">⚠ Overlaps “${esc(conflicts[0].title)}”. Press Enter again to add it anyway.</span>`;
+        $("#quickBtn").textContent = "Add anyway"; // the warning is on screen, so one tap (or Enter) keeps it
+        html += `<span class="qp-warn">⚠ Overlaps “${esc(conflicts[0].title)}”. Change the time, or tap Add anyway.</span>`;
       } else html += `<span class="qp-note">Overlaps “${esc(conflicts[0].title)}”.</span>`;
     }
     box.innerHTML = html;
@@ -1163,15 +1167,7 @@
       input.focus();
       return;
     }
-    const { q, conflicts } = res;
-    if (conflicts.length && quickConfirmText !== input.value) {
-      quickConfirmText = input.value;
-      $("#quickPreview").classList.remove("nudge");
-      void $("#quickPreview").offsetWidth;
-      $("#quickPreview").classList.add("nudge");
-      return;
-    }
-    quickConfirmText = "";
+    const { q } = res;
     Store.add({
       title: q.title, date: q.todo ? D.todayKey() : q.date, start: q.start, duration: q.duration,
       recurrence: q.recurrence, notes: "", course: q.course, due: q.due,
@@ -1184,7 +1180,9 @@
     updateQuickPreview();
     const msg = q.todo
       ? `Added “${q.title}” to your to-do list${q.due ? `, due ${D.shortDate(q.due)}` : ""}.`
-      : `Added “${q.title}” for ${q.date === D.todayKey() ? "today" : D.shortDate(q.date)} at ${D.fmtTime(q.start)}.`;
+      : q.rolled
+        ? `Added “${q.title}” for tomorrow, ${D.shortDate(q.date)} at ${D.fmtTime(q.start)} (that time had already passed today).`
+        : `Added “${q.title}” for ${q.date === D.todayKey() ? "today" : D.shortDate(q.date)} at ${D.fmtTime(q.start)}.`;
     toast(msg, { actions: [undoAction], key: "save" });
     // Without permission the phone can't remind at all, so ask the first time a timed task is added.
     if (!q.todo && (settings.remindBefore !== null || settings.alarmAtStart || q.alarm)) askForNotifications();
@@ -2233,10 +2231,7 @@
     });
 
     $("#quickForm").addEventListener("submit", onQuickSubmit);
-    $("#quickAdd").addEventListener("input", () => {
-      quickConfirmText = "";
-      updateQuickPreview();
-    });
+    $("#quickAdd").addEventListener("input", updateQuickPreview);
 
     moveSheet.addEventListener("click", onMoveSheetClick);
     enableListSwipe($("#todos"), (li) => {
