@@ -296,11 +296,15 @@
     const all = Store.todos();
     const ol = $("#todos");
     const more = $("#todoMore");
-    const hidden = todosExpanded ? 0 : Math.max(0, all.length - TODO_SHOWN);
-    more.hidden = !hidden && !(todosExpanded && all.length > TODO_SHOWN);
+    // The phone To-do tab is the whole list; elsewhere it stays short.
+    const fullPage = isPhone() && state.tab === "todo";
+    const hidden = todosExpanded || fullPage ? 0 : Math.max(0, all.length - TODO_SHOWN);
+    more.hidden = fullPage || (!hidden && !(todosExpanded && all.length > TODO_SHOWN));
     more.textContent = hidden ? `Show ${hidden} more` : "Show less";
     if (!all.length) {
-      ol.innerHTML = `<li class="ag-empty">Nothing yet. Type a task with no time in Quick add.</li>`;
+      ol.innerHTML = fullPage
+        ? `<li class="ag-empty">Nothing to do. Add something above.</li>`
+        : `<li class="ag-empty">Nothing yet. Type a task with no time in Quick add.</li>`;
       return;
     }
     ol.innerHTML = all
@@ -496,6 +500,25 @@
       actions: [undoAction, { label: "Edit", fn: () => openForm({ id, date: slot.date }) }],
       key: "move",
     });
+  }
+
+  // The phone To-do tab's add box: always a to-do. "#hci" and a day ("Essay fri" = due Fri) still work.
+  function onTodoAdd(e) {
+    e.preventDefault();
+    const input = $("#todoAdd");
+    const text = input.value.trim();
+    if (!text) return input.focus();
+    const q = parseQuick(text);
+    const title = q.title || text;
+    const due = q.todo ? q.due : q.dateSet ? q.date : null;
+    Store.add({
+      title, date: D.todayKey(), start: null, duration: q.duration, recurrence: "none", notes: "",
+      course: q.course, due, reminder: null, alarm: false,
+    });
+    input.value = "";
+    input.focus(); // keep the keyboard up to add the next one
+    render();
+    toast(`Added “${title}” to your to-do list${due ? `, due ${D.shortDate(due)}` : ""}.`, { actions: [undoAction], key: "save" });
   }
 
   function toggleTodo(id) {
@@ -1303,8 +1326,9 @@
   const darkQuery = matchMedia("(prefers-color-scheme: dark)");
 
   function themeChoice() {
+    // Light unless the person picked Dark, or System (follow the device).
     const t = Platform.storage.get(THEME_KEY);
-    return t === "light" || t === "dark" ? t : "system";
+    return t === "dark" || t === "system" ? t : "light";
   }
   const isDark = () => themeChoice() === "dark" || (themeChoice() === "system" && darkQuery.matches);
 
@@ -1333,8 +1357,7 @@
       // A short cross-fade of the colours, only for this switch (not on every hover or render).
       root.classList.add("theme-fade");
       setTimeout(() => root.classList.remove("theme-fade"), 350);
-      if (choice === "system") Platform.storage.remove(THEME_KEY);
-      else Platform.storage.set(THEME_KEY, choice);
+      Platform.storage.set(THEME_KEY, choice);
       applyTheme();
     };
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return apply();
@@ -2129,6 +2152,7 @@
       if (loMove) reschedule(loMove);
       if (loDel) deleteTask(loDel);
     });
+    $("#todoAddForm").addEventListener("submit", onTodoAdd);
     $("#todos").addEventListener("click", (e) => {
       const el = e.target.closest("[data-td-done],[data-td-open],[data-td-schedule]");
       if (!el) return;

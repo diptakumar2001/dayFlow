@@ -2,14 +2,15 @@
 <title>DayFlow Planner</title>
 <meta name="description" content="DayFlow: a task-first daily planner with a time-blocked timeline.">
 <meta name="theme-color" content="#f3f6f5">
-<meta name="dayflow-build" content="6b5d870780"><!-- stamped by build_artifact.py -->
+<meta name="dayflow-build" content="a3e2672900"><!-- stamped by build_artifact.py -->
 <script>
   // Apply the saved theme before the page draws, so it never flashes the wrong colors.
   // The one direct storage read in DayFlow: Platform isn't loaded yet at this point.
   try {
     var root = document.documentElement;
     var t = localStorage.getItem("dayflow.theme");
-    if (t === "light" || t === "dark") root.dataset.theme = t;
+    // Light is the default; "system" (follow the device) is only used when someone picks it.
+    if (t !== "system") root.dataset.theme = t === "dark" ? "dark" : "light";
     // Background choice per theme: builtin | none | custom (a photo app.js loads from IndexedDB).
     ["day", "night"].forEach(function (w) {
       var c = JSON.parse(localStorage.getItem("dayflow.sky." + w) || "null");
@@ -576,6 +577,7 @@ body.is-resizing, body.is-resizing * { cursor: ns-resize !important; }
 .quick-preview:not([hidden]) + .quick-hint { display: none; }
 .qp-warn { color: var(--warn-ink); background: var(--warn-bg); border-radius: 6px; padding: 4px 8px; font-weight: 700; }
 
+.todo-add { display: none; } /* shown only on the phone To-do tab */
 .agenda { list-style: none; margin: 0; padding: 0; }
 .ag-item { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px dashed var(--rule-strong); }
 .ag-item:last-child { border-bottom: 0; }
@@ -1133,7 +1135,17 @@ dialog.sheet { width: min(420px, calc(100vw - 32px)); padding: 18px 18px 16px; }
   .app[data-tab="today"] .side { display: none; }
   .app[data-tab="week"] .summary, .app[data-tab="week"] .quick-sec, .app[data-tab="week"] .side { display: none; }
   .app[data-tab="week"] .tl-panel { height: calc(100dvh - 250px); min-height: 360px; }
-  .app[data-tab="todo"] .summary, .app[data-tab="todo"] .tl-panel { display: none; }
+  .app[data-tab="todo"] .summary, .app[data-tab="todo"] .tl-panel, .app[data-tab="todo"] .quick-sec { display: none; }
+  /* Only the shown area gets a grid row, so hidden sections don't leave empty gaps above it */
+  .app[data-tab="todo"] .layout { grid-template-areas: "side"; grid-template-rows: auto; }
+  .app[data-tab="week"] .layout { grid-template-areas: "timeline"; grid-template-rows: auto; }
+  .app[data-tab="todo"] .side > [hidden] + .side-sec { border-top: 0; }
+  /* The To-do tab is a to-do list page: add box on top, the whole list, bigger rows; leftovers below it */
+  .app[data-tab="todo"] .todo-add { display: flex; margin: 4px 0 10px; }
+  .app[data-tab="todo"] .side { display: flex; flex-direction: column; }
+  .app[data-tab="todo"] .side > .leftovers { order: 1; }
+  .app[data-tab="todo"] #todos .ag-item { min-height: 52px; }
+  .app[data-tab="todo"] #todos .ag-title { font-size: 16px; white-space: normal; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1243,6 +1255,11 @@ dialog.sheet { width: min(420px, calc(100vw - 32px)); padding: 18px 18px 16px; }
 
       <section class="side-sec">
         <h2 class="eyebrow">To-do</h2>
+        <!-- Phones, To-do tab only: add straight to the list (desktop has Quick add beside it) -->
+        <form id="todoAddForm" class="quick todo-add" autocomplete="off">
+          <input id="todoAdd" type="text" placeholder="Add a to-do…" aria-label="Add a to-do" enterkeyhint="done" maxlength="80">
+          <button type="submit" class="btn primary">Add</button>
+        </form>
         <ol id="todos" class="agenda"></ol>
         <button type="button" id="todoMore" class="btn-link" hidden></button>
       </section>
@@ -1295,8 +1312,8 @@ dialog.sheet { width: min(420px, calc(100vw - 32px)); padding: 18px 18px 16px; }
   <section class="set-sec">
     <h3 class="eyebrow" id="appearanceLabel">Appearance</h3>
     <div class="seg" role="radiogroup" aria-labelledby="appearanceLabel" id="themeSeg">
-      <button type="button" role="radio" data-theme-choice="system" aria-checked="true">System</button>
-      <button type="button" role="radio" data-theme-choice="light" aria-checked="false">Light</button>
+      <button type="button" role="radio" data-theme-choice="system" aria-checked="false">System</button>
+      <button type="button" role="radio" data-theme-choice="light" aria-checked="true">Light</button>
       <button type="button" role="radio" data-theme-choice="dark" aria-checked="false">Dark</button>
     </div>
     <div class="sky-row" data-sky="day">
@@ -3508,11 +3525,15 @@ const Timeline = (() => {
     const all = Store.todos();
     const ol = $("#todos");
     const more = $("#todoMore");
-    const hidden = todosExpanded ? 0 : Math.max(0, all.length - TODO_SHOWN);
-    more.hidden = !hidden && !(todosExpanded && all.length > TODO_SHOWN);
+    // The phone To-do tab is the whole list; elsewhere it stays short.
+    const fullPage = isPhone() && state.tab === "todo";
+    const hidden = todosExpanded || fullPage ? 0 : Math.max(0, all.length - TODO_SHOWN);
+    more.hidden = fullPage || (!hidden && !(todosExpanded && all.length > TODO_SHOWN));
     more.textContent = hidden ? `Show ${hidden} more` : "Show less";
     if (!all.length) {
-      ol.innerHTML = `<li class="ag-empty">Nothing yet. Type a task with no time in Quick add.</li>`;
+      ol.innerHTML = fullPage
+        ? `<li class="ag-empty">Nothing to do. Add something above.</li>`
+        : `<li class="ag-empty">Nothing yet. Type a task with no time in Quick add.</li>`;
       return;
     }
     ol.innerHTML = all
@@ -3708,6 +3729,25 @@ const Timeline = (() => {
       actions: [undoAction, { label: "Edit", fn: () => openForm({ id, date: slot.date }) }],
       key: "move",
     });
+  }
+
+  // The phone To-do tab's add box: always a to-do. "#hci" and a day ("Essay fri" = due Fri) still work.
+  function onTodoAdd(e) {
+    e.preventDefault();
+    const input = $("#todoAdd");
+    const text = input.value.trim();
+    if (!text) return input.focus();
+    const q = parseQuick(text);
+    const title = q.title || text;
+    const due = q.todo ? q.due : q.dateSet ? q.date : null;
+    Store.add({
+      title, date: D.todayKey(), start: null, duration: q.duration, recurrence: "none", notes: "",
+      course: q.course, due, reminder: null, alarm: false,
+    });
+    input.value = "";
+    input.focus(); // keep the keyboard up to add the next one
+    render();
+    toast(`Added “${title}” to your to-do list${due ? `, due ${D.shortDate(due)}` : ""}.`, { actions: [undoAction], key: "save" });
   }
 
   function toggleTodo(id) {
@@ -4515,8 +4555,9 @@ const Timeline = (() => {
   const darkQuery = matchMedia("(prefers-color-scheme: dark)");
 
   function themeChoice() {
+    // Light unless the person picked Dark, or System (follow the device).
     const t = Platform.storage.get(THEME_KEY);
-    return t === "light" || t === "dark" ? t : "system";
+    return t === "dark" || t === "system" ? t : "light";
   }
   const isDark = () => themeChoice() === "dark" || (themeChoice() === "system" && darkQuery.matches);
 
@@ -4545,8 +4586,7 @@ const Timeline = (() => {
       // A short cross-fade of the colours, only for this switch (not on every hover or render).
       root.classList.add("theme-fade");
       setTimeout(() => root.classList.remove("theme-fade"), 350);
-      if (choice === "system") Platform.storage.remove(THEME_KEY);
-      else Platform.storage.set(THEME_KEY, choice);
+      Platform.storage.set(THEME_KEY, choice);
       applyTheme();
     };
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return apply();
@@ -5341,6 +5381,7 @@ const Timeline = (() => {
       if (loMove) reschedule(loMove);
       if (loDel) deleteTask(loDel);
     });
+    $("#todoAddForm").addEventListener("submit", onTodoAdd);
     $("#todos").addEventListener("click", (e) => {
       const el = e.target.closest("[data-td-done],[data-td-open],[data-td-schedule]");
       if (!el) return;

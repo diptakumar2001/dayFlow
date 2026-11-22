@@ -160,7 +160,8 @@ form folds the less-used fields (course, reminder, repeat, notes) under **More o
 - **Settings**: when your day starts and ends (new tasks are only suggested inside it), overlap questions on/off
 - **Backup**: save to a file and restore (replace or add)
 - **On phones**: a tab bar at the bottom (**Today · Week · To-do · More**) shows one section at a time, with a
-  count of open to-dos on the To-do tab. **Swipe a task right** to complete it and **left** to reschedule it
+  count of open to-dos on the To-do tab. The **To-do tab is a plain to-do list**: an "Add a to-do…" box at the
+  top (add several in a row; `fri` sets a due date, `#hci` a course) and the whole list below; tick to finish. **Swipe a task right** to complete it and **left** to reschedule it
   (Later today / Tomorrow / Pick a time); hold a task to drag it. A one-time tip explains the gestures
 - **Welcome page**: when accounts are set up, DayFlow opens on a sign-in / create-account page, with
   **Continue without an account** for people who just want to use it on one device
@@ -178,7 +179,7 @@ form folds the less-used fields (course, reminder, repeat, notes) under **More o
   reminders you missed while the page was closed; in the phone app they arrive even when the app is closed
 - Works on phones: summary and quick add sit above the timeline; hold a task to drag it, swipe to scroll
 - Full keyboard support and screen-reader labels
-- **Light and dark themes**: a switch in the top bar, plus System / Light / Dark in Settings. Dark mode is a
+- **Light and dark themes**: light by default; a switch in the top bar, plus System / Light / Dark in Settings. Dark mode is a
   deep navy. Buttons, toasts and dialogs use a light "Liquid Glass" style (translucent, blurred); task cards and
   the timeline stay solid for easy reading. Glass turns solid when the device asks for reduced transparency or
   more contrast

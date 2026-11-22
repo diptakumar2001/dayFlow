@@ -27,7 +27,8 @@ features; don't re-read it to learn the structure, this file covers that.
 - `js/app.js` — everything else: header, sidebar lists (leftovers, to-do), search and settings dialogs, task
   form, quick add parser (`parseQuick`), backup UI, reminders, accounts, shortcuts. `init()` runs after `Platform.ready()`.
 - Phones (≤ 760px): `.app[data-tab=today|week|todo]` + the bottom `.tabbar` choose which grid areas show; `setTab()`
-  / `setView()` keep tab and view in step. Swipes are touch-only (day view + to-do/leftover rows); Space/Enter
+  / `setView()` keep tab and view in step. The To-do tab is a list page: `#todoAddForm` (always adds a to-do,
+  `onTodoAdd`) + the full list; Quick add only shows on Today. Swipes are touch-only (day view + to-do/leftover rows); Space/Enter
   are the keyboard equivalents.
 - Welcome page (`#welcome`, not a <dialog>): one card, two modes (`setAuthMode`: sign in / create account,
   switched by `#authSwitch`), plus continue without (`dayflow.guest`). Shown
@@ -53,6 +54,7 @@ features; don't re-read it to learn the structure, this file covers that.
 - Device features only through `Platform` — never call `localStorage`, `Notification` or downloads directly.
   One exception: the inline script in `index.html`'s `<head>` reads `dayflow.theme` to set the theme before
   the first paint (Platform isn't loaded yet).
+- Light mode is the default (`dayflow.theme` unset = light; "system" is stored when picked).
 - Theme: colors are tokens at the top of `styles.css`; the two dark blocks (media query + `[data-theme="dark"]`)
   must stay identical. Text pairs must keep ≥ 4.5:1 contrast. Liquid Glass (`--glass-*`) only on controls and
   floating surfaces (top-bar buttons, toasts, dialogs), never on task cards, the timeline or inputs.

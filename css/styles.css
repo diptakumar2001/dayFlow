@@ -544,6 +544,7 @@ body.is-resizing, body.is-resizing * { cursor: ns-resize !important; }
 .quick-preview:not([hidden]) + .quick-hint { display: none; }
 .qp-warn { color: var(--warn-ink); background: var(--warn-bg); border-radius: 6px; padding: 4px 8px; font-weight: 700; }
 
+.todo-add { display: none; } /* shown only on the phone To-do tab */
 .agenda { list-style: none; margin: 0; padding: 0; }
 .ag-item { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px dashed var(--rule-strong); }
 .ag-item:last-child { border-bottom: 0; }
@@ -1101,7 +1102,17 @@ dialog.sheet { width: min(420px, calc(100vw - 32px)); padding: 18px 18px 16px; }
   .app[data-tab="today"] .side { display: none; }
   .app[data-tab="week"] .summary, .app[data-tab="week"] .quick-sec, .app[data-tab="week"] .side { display: none; }
   .app[data-tab="week"] .tl-panel { height: calc(100dvh - 250px); min-height: 360px; }
-  .app[data-tab="todo"] .summary, .app[data-tab="todo"] .tl-panel { display: none; }
+  .app[data-tab="todo"] .summary, .app[data-tab="todo"] .tl-panel, .app[data-tab="todo"] .quick-sec { display: none; }
+  /* Only the shown area gets a grid row, so hidden sections don't leave empty gaps above it */
+  .app[data-tab="todo"] .layout { grid-template-areas: "side"; grid-template-rows: auto; }
+  .app[data-tab="week"] .layout { grid-template-areas: "timeline"; grid-template-rows: auto; }
+  .app[data-tab="todo"] .side > [hidden] + .side-sec { border-top: 0; }
+  /* The To-do tab is a to-do list page: add box on top, the whole list, bigger rows; leftovers below it */
+  .app[data-tab="todo"] .todo-add { display: flex; margin: 4px 0 10px; }
+  .app[data-tab="todo"] .side { display: flex; flex-direction: column; }
+  .app[data-tab="todo"] .side > .leftovers { order: 1; }
+  .app[data-tab="todo"] #todos .ag-item { min-height: 52px; }
+  .app[data-tab="todo"] #todos .ag-title { font-size: 16px; white-space: normal; }
 }
 
 @media (prefers-reduced-motion: reduce) {
