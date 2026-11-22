@@ -19,7 +19,7 @@
   --surface-2: #eaf0ee;
   --ink: #14201d;
   --ink-2: #44524e;
-  --ink-3: #5f6d69; /* 4.9:1 even on a see-through panel over the day sky */
+  --ink-3: #5f6d69; /* 4.9:1 even on a see-through panel over the background */
   --rule: #e4ebe8;
   --rule-strong: #c8d5d1;
   --margin: #9fd0c3;          /* the planner's margin line */
@@ -31,7 +31,7 @@
   --accent-soft: #dcefe9;
   --today-tint: rgba(14, 107, 88, 0.045);
 
-  /* Priority: Okabe–Ito color-blind-safe hues */
+  /* Okabe–Ito colour-blind-safe hues: course colours (tone-1…3), danger and error text */
   --high: #d55e00;   --high-soft: #fbe5d6;   --high-ink: #7a3300;
   --medium: #e69f00; --medium-soft: #fcf0d0; --medium-ink: #5c4000;
   --low: #0072b2;    --low-soft: #dbeaf5;    --low-ink: #00466d;
@@ -81,8 +81,8 @@
     radial-gradient(34% 20% at 80% 92%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 70%),
     linear-gradient(180deg, #a9cdf0 0%, #cfe3f6 50%, #eef4f9 100%);
   --sky: var(--sky-day, var(--sky-day-builtin));
-  /* Dark mode's built-in background: a dark solar system (hand-drawn SVGs from tools/make-space.py).
-     A wide composition for computers, a tall one for phones (see the media query by the sky layer). */
+  /* "Space" choice for dark mode: a dark solar system (hand-drawn SVGs from tools/make-space.py).
+     A wide composition for computers, a tall one for phones (see the media query by the background layer). */
   --space-art: url(../images/space-wide.svg);
   --sky-night-space: var(--space-art); /* one layer, so the layer's "cover" sizing applies to it */
   /* Dark mode's built-in background: deep navy planner paper (grain and dots from .paper-tex) */
@@ -115,7 +115,7 @@
     --paper: #070b18; --surface: #0f1527; --surface-2: #171f38;
     --ink: #f4f6ff; --ink-2: #ccd3ea; --ink-3: #a5afca;
     --rule: #222c4a; --rule-strong: #313d63; --margin: #2b3a66;
-    /* Moonlight accent and a warm glow, matched to the night sky */
+    /* Moonlight accent and a warm "now" line for dark mode */
     --accent: #9db4ff; --accent-hover: #b8c8ff; --accent-ink: #0b1330; --accent-soft: #1a2350;
     --today-tint: rgba(157, 180, 255, 0.05);
     --now: #f3c9a4; --now-ink: #2a1806;
@@ -129,7 +129,7 @@
     --backdrop: rgba(3, 5, 14, 0.6);
     --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.45);
     --shadow-2: 0 12px 32px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.35);
-    /* Background and glass (see "Night sky" and "Liquid Glass" below) */
+    /* Background and glass (see "Background layer", "Planner paper" and "Liquid Glass" below) */
     --glow-1: rgba(157, 180, 255, 0.12); --glow-2: rgba(243, 201, 164, 0.08);
     --sky: var(--sky-night, var(--sky-night-builtin));
     --tex: var(--tex-night, block);
@@ -154,7 +154,7 @@
   --paper: #070b18; --surface: #0f1527; --surface-2: #171f38;
   --ink: #f4f6ff; --ink-2: #ccd3ea; --ink-3: #a5afca;
   --rule: #222c4a; --rule-strong: #313d63; --margin: #2b3a66;
-  /* Moonlight accent and a warm glow, matched to the night sky */
+  /* Moonlight accent and a warm "now" line for dark mode */
   --accent: #9db4ff; --accent-hover: #b8c8ff; --accent-ink: #0b1330; --accent-soft: #1a2350;
   --today-tint: rgba(157, 180, 255, 0.05);
   --now: #f3c9a4; --now-ink: #2a1806;
@@ -168,7 +168,7 @@
   --backdrop: rgba(3, 5, 14, 0.6);
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.45);
   --shadow-2: 0 12px 32px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.35);
-  /* Background and glass (see "Night sky" and "Liquid Glass" below) */
+  /* Background and glass (see "Background layer", "Planner paper" and "Liquid Glass" below) */
   --glow-1: rgba(157, 180, 255, 0.12); --glow-2: rgba(243, 201, 164, 0.08);
   --sky: var(--sky-night, var(--sky-night-builtin));
   --tex: var(--tex-night, block);
@@ -760,9 +760,10 @@ dialog::backdrop { background: var(--backdrop); }
 .toast.reminder { background: var(--accent); color: var(--accent-ink); --toast-line: var(--accent-ink); }
 @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
-/* ---------- Sky background ----------
+/* ---------- Background layer ----------
    One fixed layer behind everything (works on iOS, unlike background-attachment: fixed).
-   Day and night skies are drawn in CSS. Each can be "none" or the person's own photo:
+   The built-in paper and the Sky / Space / Clouds choices are drawn in CSS or SVG. Each theme can also use
+   "none" or the person's own photo:
    app.js sets --sky-day / --sky-night to the photo and --veil-day / --veil-night from its brightness,
    so text stays readable. */
 body::before {
@@ -797,7 +798,7 @@ html[data-sky-night]:not([data-sky-night="builtin"]) { --tex-night: none; }
 html.sky-loading body::before { opacity: 0; } /* a photo fades in once it's loaded */
 html.sky-fade body::before { opacity: 0; transition-duration: 0.2s; } /* switching theme: out fast, back in 0.4s */
 
-/* See-through panels: the sky shows softly behind the timeline and the right column.
+/* See-through panels: the background shows softly behind the timeline and the right column.
    Task cards and form fields stay solid. */
 .layout { gap: 12px 18px; }
 .tl, .summary, .quick-sec, .side {
@@ -837,7 +838,6 @@ html.sky-fade body::before { opacity: 0; transition-duration: 0.2s; } /* switchi
 }
 .topbar .icon-btn { border-radius: 999px; }
 .topbar .btn:hover:not(:disabled), .topbar .icon-btn:hover { background: var(--glass-fill-hover); }
-.topbar .btn:active:not(:disabled), .topbar .icon-btn:active { transform: scale(0.95); } /* a small "squish" */
 .topbar .btn:disabled { box-shadow: none; }
 .topbar .btn.primary { background: var(--btn-primary-top); color: var(--btn-primary-ink); border-color: var(--glass-edge); }
 .topbar .btn.primary:hover { background: var(--btn-primary-hover); }
@@ -968,12 +968,12 @@ dialog {
 }
 
 /* ---------- Welcome page (sign in / create account) ----------
-   Full screen over the app, on the sky background; a glass card in the middle. */
+   Full screen over the app, on the page background; a glass card in the middle. */
 .welcome {
   position: fixed; inset: 0; z-index: 90;
   display: grid; place-items: center; overflow-y: auto;
   padding: max(20px, env(safe-area-inset-top, 0px)) 16px max(20px, env(safe-area-inset-bottom, 0px));
-  /* Mostly covers the app (a hint of the sky shows) so the card is the only thing to look at */
+  /* Mostly covers the app (a hint of the background shows) so the card is the only thing to look at */
   background: color-mix(in srgb, var(--paper) 72%, transparent);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);

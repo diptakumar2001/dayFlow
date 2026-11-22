@@ -1472,8 +1472,8 @@
   }
 
   // ---------------------------------------------------------
-  // Backgrounds: one choice per theme (built-in sky, none, or
-  // the person's own photo). Photos are shrunk and kept on this
+  // Backgrounds: one choice per theme (built-in paper, Sky /
+  // Space / Clouds, none, or the person's own photo). Photos are shrunk and kept on this
   // device (Platform.images); the veil is set from the photo's
   // brightness so text stays readable.
   // ---------------------------------------------------------
@@ -1500,7 +1500,7 @@
       const blob = await Platform.images.get(s.img);
       if (blob) skyUrls[w] = URL.createObjectURL(blob);
       else {
-        // The photo is gone (storage cleared): quietly back to the built-in sky.
+        // The photo is gone (storage cleared): quietly back to the built-in paper.
         Object.assign(c, { mode: c.mode === "custom" ? "builtin" : c.mode, photo: false });
         saveSkyChoice(w, c);
       }
