@@ -20,18 +20,17 @@ const Timeline = (() => {
   const esc = (s) =>
     String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-  const PRIORITY_LABEL = { high: "High", medium: "Medium", low: "Low" };
-  // Shapes pair with colour so priority never depends on colour alone.
-  const SHAPES = {
-    high: '<svg class="shape" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 .8 9.6 9.2H.4z"/></svg>',
-    medium: '<svg class="shape" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 .4 9.6 5 5 9.6.4 5z"/></svg>',
-    low: '<svg class="shape" viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="4.2"/></svg>',
-  };
   const CHECK_SVG =
     '<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.4"/><path d="M6 10.4l2.7 2.7L14.2 7.4"/></svg>';
 
-  function priorityTag(p) {
-    return `<span class="prio-tag">${SHAPES[p]}<span class="prio-text">${PRIORITY_LABEL[p]}</span></span>`;
+  // Cards and list rows are coloured by course, so one course always looks the same. The course name
+  // is printed too, so colour never carries meaning on its own. No course = the calm accent colour.
+  function tone(t) {
+    const c = (t.course || "").trim().toLowerCase();
+    if (!c) return "tone-0";
+    let h = 0;
+    for (const ch of c) h = (h * 31 + ch.codePointAt(0)) >>> 0;
+    return `tone-${1 + (h % 3)}`;
   }
 
   const courseTag = (c) => (c ? `<span class="course-tag">${esc(c)}</span>` : "");
@@ -77,11 +76,11 @@ const Timeline = (() => {
     const range = DateUtil.fmtRange(t.start, t.duration);
     const repeat = t.recurrence !== "none";
     const label = [
-      t.title, range, t.course, `${PRIORITY_LABEL[t.priority]} priority`,
+      t.title, range, t.course,
       repeat ? "repeats" : "", overlaps ? "overlaps another task" : "", t.done ? "done" : "not done",
     ].filter(Boolean).join(", ");
     const cls = [
-      "card", `p-${t.priority}`, t.done && "done", compact && "compact", tiny && "tiny", overlaps && "has-overlap",
+      "card", tone(t), t.done && "done", compact && "compact", tiny && "tiny", overlaps && "has-overlap",
       t.pending && "pending",
       state.flash && state.flash.id === t.id && state.flash.date === t.instanceDate && "just-done",
     ].filter(Boolean).join(" ");
@@ -93,7 +92,7 @@ const Timeline = (() => {
       <div class="card-body">
         <span class="card-title">${esc(t.title)}</span>
         <span class="card-meta">
-          <span class="card-time">${range}</span>${priorityTag(t.priority)}
+          <span class="card-time">${range}</span>
           ${courseTag(t.course)}
           ${repeat ? '<span class="rep" title="Repeats" aria-hidden="true">↻</span>' : ""}
           ${overlaps ? '<span class="ov" title="Overlaps another task" aria-hidden="true">⚠</span>' : ""}
@@ -441,5 +440,5 @@ const Timeline = (() => {
 
   const isDragging = () => !!drag;
 
-  return { init, render, focusCard, isDragging, priorityTag, courseTag, CHECK_SVG, esc, PRIORITY_LABEL };
+  return { init, render, focusCard, isDragging, tone, courseTag, CHECK_SVG, esc };
 })();

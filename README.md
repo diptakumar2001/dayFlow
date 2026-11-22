@@ -133,7 +133,7 @@ first, which is how undo works. The timeline is re-drawn from the array after ev
 
 ```js
 { id, title, date: "2026-10-24", start: 570 /* minutes after midnight */, duration: 80,
-  priority: "high" | "medium" | "low", recurrence: "none" | "daily" | "weekdays" | "weekly",
+  recurrence: "none" | "daily" | "weekdays" | "weekly",
   until: null | "2026-12-18", skipDates: [], reminder: null | 0 | 5 | 15 | 30 | 60,
   due: null | "2026-10-30", course: "HCI", notes, doneDates: ["2026-10-24"] }
 // start: null means a to-do with no set time. Changing one day of a repeat adds that day to
@@ -148,12 +148,14 @@ open from the top bar, and the task
 form folds the less-used fields (course, reminder, repeat, notes) under **More options**.
 
 - Create, edit and delete tasks (dialog form, or **click an empty time** on the timeline)
-- **Quick add** from one line of text, e.g. `Study 3pm 2h !high #hci`, `Gym tomorrow 7am 45m daily`,
-  `Lecture 9-11am weekly`, `Meet supervisor next monday 10am`, `Lab report due fri`. The preview says when
-  it guessed ("at 3" → 3 PM) or shortened something
+- **Quick add** from one line of text, e.g. `Study 3pm 2h #hci`, `Gym tomorrow 7am 45m daily`,
+  `Lecture 9-11am weekly`, `Meet supervisor next monday 10am`. **No time = a to-do**: `Buy milk` goes on the
+  To-do list, `Lab report fri` (or `due fri`) gets a deadline. A hint under the box shows how to add a time, and
+  the preview says where the task will go, when it guessed ("at 3" → 3 PM) or shortened something
 - **To-do list** for things with no set time, with due dates (overdue ones in red) and a **Schedule** button
 - **Left from earlier**: unfinished tasks from the last two weeks show up today, ready to reschedule
-- **Course tags** on tasks, and planned hours per course in week view
+- **Course tags** on tasks: cards are coloured by course (no course = the accent colour), and week view
+  shows planned hours per course
 - **Search** across all tasks, notes and courses
 - **Settings**: when your day starts and ends (new tasks are only suggested inside it), overlap questions on/off
 - **Backup**: save to a file and restore (replace or add)
@@ -180,11 +182,12 @@ form folds the less-used fields (course, reminder, repeat, notes) under **More o
   deep navy. Buttons, toasts and dialogs use a light "Liquid Glass" style (translucent, blurred); task cards and
   the timeline stay solid for easy reading. Glass turns solid when the device asks for reduced transparency or
   more contrast
-- **Sky backgrounds**: a soft day sky in light mode (drawn in CSS) and, in dark mode, **glossy violet orbs** that
-  drift with the mouse on computers and float gently on phones (pure CSS). Dark mode can also use **Space**, a dark solar system: a sun
-  glow off the top-left corner, faint orbits, and Earth, Mars, Jupiter and Saturn lit on their sun-facing side
-  (hand-drawn SVGs, `python tools/make-space.py`). or **Clouds** (the day sky at night). Big titles have a cyan-to-violet shine (moonlight-blue accent, warm "now" line). Panels are slightly see-through so the sky
-  shows. In Settings → Appearance each theme can use its sky, no picture, or **your own photo**. Photos are
+- **Planner-paper backgrounds**: warm off-white paper in light mode and deep navy paper in dark mode, each with a
+  fine grain and a faint bullet-journal dot grid (pure CSS, no image files). Other choices: a soft **Sky** in light
+  mode; **Space** (a dark solar system: sun glow, faint orbits, Earth, Mars, Jupiter and Saturn, hand-drawn SVGs from
+  `python tools/make-space.py`) or **Clouds** in dark mode. Titles are plain ink (moonlight-blue accent, warm "now"
+  line). Panels are slightly see-through so the paper shows. In Settings → Appearance each theme can use its
+  built-in paper, another choice, no picture, or **your own photo**. Photos are
   shrunk on the device, kept on the device (not in backups or your account), and DayFlow adjusts a veil from the
   photo's brightness so text stays readable
 
@@ -194,13 +197,14 @@ form folds the less-used fields (course, reminder, repeat, notes) under **More o
 |---|---|
 | Direct manipulation | Drag task cards to move them, drag the bottom edge to resize, click an empty slot to create. Changes appear immediately and can be undone. |
 | Interface metaphor | The timeline looks like a planner page: ruled hour lines, a margin line with hour labels, a big date number and ISO week number in the header. |
-| Visibility | The main screen shows only what's needed every day: the timeline, progress and "Up next", Quick add and the To-do list. Search, settings, backup and help (gestures, shortcuts, priority key) are one click away in the top bar. |
+| Visibility | The main screen shows only what's needed every day: the timeline, progress and "Up next", Quick add and the To-do list. Search, settings, backup and help (gestures, shortcuts) are one click away in the top bar. |
 | Feedback | Checkmark animation on completion; live time label and dashed "ghost" of the old position while dragging; a toast confirms every action. |
 | Constraints / error prevention | Overlaps are detected while dragging (striped card + label) and must be confirmed ("Keep it here" / "Move back"). The form shows the overlap and changes the button to "Save anyway". Tasks can't run past midnight. |
-| Consistency | Day and week views use the same card layout, the same priority colors, shapes and labels. |
+| Consistency | Day and week views use the same card layout; a course always has the same colour on cards and lists. |
 | Efficiency | Quick add, click-to-create at a time, keyboard shortcuts, next free slot suggested automatically. |
-| Memorability | Fixed color + shape per priority (▲ High, ◆ Medium, ● Low), same icons everywhere. |
-| Accessibility | Okabe–Ito color-blind-safe palette; priority never shown by color alone; Atkinson Hyperlegible font (designed for low-vision readers); keyboard alternatives to dragging; visible focus; respects reduced-motion; light and dark themes. |
+| Memorability | One fixed colour per course, same icons everywhere. |
+| Accessibility | Okabe–Ito color-blind-safe palette; colour is never the only cue (the course name is printed on each card); Atkinson Hyperlegible font (designed for low-vision readers); keyboard alternatives to dragging; visible focus; respects reduced-motion; light and dark themes. |
+| User testing → changes | Testers found **priority labels** unhelpful, so they were removed (cards are coloured by course instead). They didn't notice Quick add could take a time, so a hint now sits under the box, and text with no time goes to the **To-do list** instead of being slotted in. The **sync dot** looked "always on", so it now only shows while syncing, offline or on an error. The dark background looked **"AI-made"** (glowing violet orbs, glowing gradient titles), so both themes now use a planner-paper texture with a dot grid, and titles are plain ink. |
 
 ## Keyboard
 

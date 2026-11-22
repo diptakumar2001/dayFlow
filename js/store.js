@@ -208,7 +208,6 @@ const Store = (() => {
       date: isKey(t.date) ? t.date : DateUtil.todayKey(),
       start, // null = a to-do with no set time
       duration: Math.max(5, Number(t.duration) || 60),
-      priority: ["high", "medium", "low"].includes(t.priority) ? t.priority : "medium",
       recurrence: ["none", "daily", "weekdays", "weekly"].includes(t.recurrence) ? t.recurrence : "none",
       until: isKey(t.until) ? t.until : null, // last day a repeat happens
       skipDates: strList(t.skipDates), // repeat days removed or moved to their own task

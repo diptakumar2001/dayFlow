@@ -39,17 +39,17 @@
       id: Store.newId(), date: k, recurrence: "none", reminder: null, notes: "", doneDates: [], sample: true, ...o,
     });
     return [
-      mk({ title: "Morning run", start: 7 * 60, duration: 45, priority: "low", recurrence: "daily", doneDates: [k] }),
-      mk({ title: "HCI lecture", start: 9 * 60 + 30, duration: 80, priority: "high", recurrence: "weekly", until: D.addDays(k, 70), reminder: 15, course: "HCI", notes: "Bring usability test draft" }),
-      mk({ title: "Build drag-and-drop timeline", start: 11 * 60, duration: 90, priority: "high", course: "HCI" }),
-      mk({ title: "Lunch with Preeti", start: 12 * 60 + 30, duration: 60, priority: "medium" }),
-      mk({ title: "Reply to TA email", start: 13 * 60, duration: 15, priority: "low" }),
-      mk({ title: "Write usability test script", start: 15 * 60, duration: 60, priority: "medium", reminder: 5, course: "HCI" }),
-      mk({ title: "Groceries", start: 17 * 60 + 30, duration: 45, priority: "low" }),
-      mk({ title: "Read accessibility chapter", start: 20 * 60, duration: 60, priority: "medium", course: "HCI" }),
-      mk({ title: "Team check-in with Dipta", date: D.addDays(k, 1), start: 10 * 60, duration: 30, priority: "medium" }),
-      mk({ title: "Submit HCI report", start: null, due: D.addDays(k, 4), priority: "high", course: "HCI" }),
-      mk({ title: "Return library books", start: null, priority: "low" }),
+      mk({ title: "Morning run", start: 7 * 60, duration: 45, recurrence: "daily", doneDates: [k], course: "Health" }),
+      mk({ title: "HCI lecture", start: 9 * 60 + 30, duration: 80, recurrence: "weekly", until: D.addDays(k, 70), reminder: 15, course: "HCI", notes: "Bring usability test draft" }),
+      mk({ title: "Build drag-and-drop timeline", start: 11 * 60, duration: 90, course: "HCI" }),
+      mk({ title: "Lunch with Preeti", start: 12 * 60 + 30, duration: 60 }),
+      mk({ title: "Reply to TA email", start: 13 * 60, duration: 15, course: "Maths" }),
+      mk({ title: "Write usability test script", start: 15 * 60, duration: 60, reminder: 5, course: "HCI" }),
+      mk({ title: "Groceries", start: 17 * 60 + 30, duration: 45 }),
+      mk({ title: "Read accessibility chapter", start: 20 * 60, duration: 60, course: "HCI" }),
+      mk({ title: "Team check-in with Dipta", date: D.addDays(k, 1), start: 10 * 60, duration: 30, course: "HCI" }),
+      mk({ title: "Submit HCI report", start: null, due: D.addDays(k, 4), course: "HCI" }),
+      mk({ title: "Return library books", start: null }),
     ];
   }
 
@@ -267,7 +267,7 @@
     $("#leftoverCount").textContent = `${list.length} unfinished from earlier`;
     $("#leftovers").innerHTML = list
       .map(
-        (t) => `<li class="ag-item p-${t.priority}">
+        (t) => `<li class="ag-item ${Timeline.tone(t)}">
           <button type="button" class="check" data-lo-done="${t.id}" aria-label="Mark done: ${esc(t.title)}">${Timeline.CHECK_SVG}</button>
           <span class="ag-main static">
             <span class="ag-time">${D.fmt(t.date, { weekday: "short" })}</span>
@@ -300,17 +300,17 @@
     more.hidden = !hidden && !(todosExpanded && all.length > TODO_SHOWN);
     more.textContent = hidden ? `Show ${hidden} more` : "Show less";
     if (!all.length) {
-      ol.innerHTML = `<li class="ag-empty">Nothing yet. Type “due fri” in Quick add.</li>`;
+      ol.innerHTML = `<li class="ag-empty">Nothing yet. Type a task with no time in Quick add.</li>`;
       return;
     }
     ol.innerHTML = all
       .slice(0, all.length - hidden)
       .map(
-        (t) => `<li class="ag-item p-${t.priority}">
+        (t) => `<li class="ag-item ${Timeline.tone(t)}">
           <button type="button" class="check" data-td-done="${t.id}" aria-label="Mark done: ${esc(t.title)}">${Timeline.CHECK_SVG}</button>
           <button type="button" class="ag-main stack" data-td-open="${t.id}">
             <span class="ag-title">${esc(t.title)}</span>
-            <span class="ag-sub">${Timeline.priorityTag(t.priority)}${Timeline.courseTag(t.course)}${dueLabel(t.due)}</span>
+            <span class="ag-sub">${Timeline.courseTag(t.course)}${dueLabel(t.due)}</span>
           </button>
           <button type="button" class="btn xs" data-td-schedule="${t.id}">Schedule</button>
         </li>`
@@ -341,7 +341,7 @@
           t.start === null
             ? "To-do"
             : `${D.fmt(t.recurrence === "none" ? t.date : nextOccurrence(t), { month: "short", day: "numeric" })}`;
-        return `<li class="ag-item p-${t.priority}">
+        return `<li class="ag-item ${Timeline.tone(t)}">
           <button type="button" class="ag-main" data-sr-open="${t.id}">
             <span class="ag-time">${when}</span>
             <span class="ag-title">${esc(t.title)}</span>
@@ -728,8 +728,6 @@
     f.alarm.checked = t ? t.alarm : settings.alarmAtStart;
     f.course.value = t ? t.course : "";
     f.notes.value = t ? t.notes : "";
-    const prio = t ? t.priority : "medium";
-    f.form.querySelector(`input[name="priority"][value="${prio}"]`).checked = true;
     $("#courseList").innerHTML = Store.courses().map((c) => `<option value="${esc(c)}">`).join("");
 
     // Less-used fields stay folded unless this task already uses them.
@@ -757,7 +755,6 @@
       date: todo ? editing()?.date || D.todayKey() : f.date.value,
       start: todo ? null : D.fromInputTime(f.start.value),
       duration: Number(f.duration.value),
-      priority: f.form.querySelector('input[name="priority"]:checked').value,
       recurrence: todo ? "none" : f.repeat.value,
       until: todo || f.repeat.value === "none" ? null : f.until.value || null,
       reminder: todo || f.reminder.value === "" ? null : Number(f.reminder.value),
@@ -911,8 +908,8 @@
   function parseQuick(text) {
     let s = ` ${text} `;
     const out = {
-      priority: "medium", duration: 60, start: null, date: state.date, recurrence: "none", course: "",
-      todo: false, due: null, notes: [], dateSet: false, durationSet: false,
+      duration: 60, start: null, date: state.date, recurrence: "none", course: "",
+      todo: false, dueWord: false, due: null, notes: [], dateSet: false, durationSet: false,
     };
     const grab = (re, fn) => {
       const m = s.match(re);
@@ -928,15 +925,12 @@
       out.dateSet = true;
     };
 
-    grab(/\s!(high|hi|h|medium|med|m|low|lo|l)(?=\s)/i, (m) => {
-      const c = m[1][0].toLowerCase();
-      out.priority = c === "h" ? "high" : c === "l" ? "low" : "medium";
-    });
+    grab(/\s!(high|hi|h|medium|med|m|low|lo|l)(?=\s)/i, () => {}); // priorities were removed; drop an old habit quietly
     grab(/\s#([\p{L}\p{N}][\p{L}\p{N}_-]*)(?=\s)/iu, (m) => (out.course = courseName(m[1])));
     grab(/\s(every\s?day|daily)(?=\s)/i, () => (out.recurrence = "daily")) ||
       grab(/\s(weekdays|every\s?weekday)(?=\s)/i, () => (out.recurrence = "weekdays")) ||
       grab(/\s(weekly|every\s?week)(?=\s)/i, () => (out.recurrence = "weekly"));
-    grab(/\s(due|by)(?=\s)/i, () => (out.todo = true));
+    grab(/\s(due|by)(?=\s)/i, () => (out.todo = out.dueWord = true));
     grab(/\s(noalarm|no\salarm)(?=\s)/i, () => (out.alarm = false)) || grab(/\s(alarm)(?=\s)/i, () => (out.alarm = true));
 
     // Days
@@ -993,9 +987,11 @@
       .replace(/^(at|on|by|for|from|due)\s+/i, "")
       .replace(/\s+(at|on|by|for|from|due)$/i, "");
 
-    // "due fri" / "by 5pm" is a deadline: a to-do, not a block of time.
+    // No time typed: a to-do (a day typed with it becomes the due date). "due fri" / "by 5pm" is a
+    // deadline, so also a to-do. Repeats need a time, so those still go to the next free slot below.
+    if (out.start === null && out.recurrence === "none") out.todo = true;
     if (out.todo) {
-      out.due = out.date;
+      out.due = out.dateSet || out.dueWord ? out.date : null;
       out.start = null;
       out.recurrence = "none";
       return out;
@@ -1006,6 +1002,7 @@
     }
     out.autoTime = out.start === null;
     if (out.autoTime) {
+      out.notes.push("Repeats need a time, so this goes in the next free slot. Add one like 7am to choose.");
       const slot = nextFreeSlot(out.date, out.duration);
       if (slot.date !== out.date) out.notes.push(`${out.dateSet ? D.shortDate(out.date) : "Today"} has no free time left in your day, so this goes on ${D.shortDate(slot.date)}.`);
       out.date = slot.date;
@@ -1033,10 +1030,11 @@
     const course = q.course ? ` · ${Timeline.courseTag(q.course)}` : "";
     let html;
     if (q.todo) {
-      html = `<span class="qp-line">To-do${q.due ? ` · due ${D.shortDate(q.due)}` : ""} · ${Timeline.priorityTag(q.priority)}${course}</span>`;
+      html = `<span class="qp-line">To-do${q.due ? ` · due ${D.shortDate(q.due)}` : ""}${course}</span>`;
+      if (!q.dueWord) html += `<span class="qp-note">Add a time like 3pm to put it on your timeline.</span>`;
     } else {
       const rep = { none: "", daily: " · Every day", weekdays: " · Weekdays", weekly: " · Every week" }[q.recurrence];
-      html = `<span class="qp-line">${D.shortDate(q.date)} · ${D.fmtRange(q.start, q.duration)}${q.autoTime ? " (next free slot)" : ""} · ${Timeline.priorityTag(q.priority)}${course}${rep}</span>`;
+      html = `<span class="qp-line">${D.shortDate(q.date)} · ${D.fmtRange(q.start, q.duration)}${q.autoTime ? " (next free slot)" : ""}${course}${rep}</span>`;
     }
     q.notes.forEach((n) => (html += `<span class="qp-note">${esc(n)}</span>`));
     const conflicts = q.todo ? [] : Store.overlapsFor(q.date, q.start, q.duration);
@@ -1069,7 +1067,7 @@
     quickConfirmText = "";
     Store.add({
       title: q.title, date: q.todo ? D.todayKey() : q.date, start: q.start, duration: q.duration,
-      priority: q.priority, recurrence: q.recurrence, notes: "", course: q.course, due: q.due,
+      recurrence: q.recurrence, notes: "", course: q.course, due: q.due,
       reminder: q.todo ? null : settings.remindBefore,
       alarm: !q.todo && (q.alarm === undefined ? settings.alarmAtStart : q.alarm),
     });
@@ -1355,8 +1353,8 @@
   // brightness so text stays readable.
   // ---------------------------------------------------------
   const SKY = {
-    day: { key: "dayflow.sky.day", img: "sky-day", cssVar: "--sky-day", veilVar: "--veil-day", attr: "skyDay", name: "Light mode", builtin: "Sky" },
-    night: { key: "dayflow.sky.night", img: "sky-night", cssVar: "--sky-night", veilVar: "--veil-night", attr: "skyNight", name: "Dark mode", builtin: "Orbs" },
+    day: { key: "dayflow.sky.day", img: "sky-day", cssVar: "--sky-day", veilVar: "--veil-day", attr: "skyDay", name: "Light mode", builtin: "paper" },
+    night: { key: "dayflow.sky.night", img: "sky-night", cssVar: "--sky-night", veilVar: "--veil-night", attr: "skyNight", name: "Dark mode", builtin: "paper" },
   };
   const skyUrls = {}; // object URLs of loaded photos
 
@@ -1390,27 +1388,6 @@
       root.style.removeProperty(s.cssVar);
       root.style.removeProperty(s.veilVar);
     }
-  }
-
-  // Glossy orbs drift a little with the mouse (computers only; nothing with reduced motion).
-  // CSS does the movement from --px/--py (-1…1); this only updates them, at most once per frame.
-  function startOrbParallax() {
-    if (!matchMedia("(pointer: fine)").matches || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const orbs = $(".orbs");
-    let x = 0;
-    let y = 0;
-    let queued = false;
-    window.addEventListener("pointermove", (e) => {
-      x = (e.clientX / innerWidth) * 2 - 1;
-      y = (e.clientY / innerHeight) * 2 - 1;
-      if (queued) return;
-      queued = true;
-      requestAnimationFrame(() => {
-        queued = false;
-        orbs.style.setProperty("--px", x.toFixed(3));
-        orbs.style.setProperty("--py", y.toFixed(3));
-      });
-    }, { passive: true });
   }
 
   async function applySkies() {
@@ -1462,7 +1439,7 @@
     return Math.round(Math.min(hi, Math.max(lo, v)) * 100) / 100;
   }
 
-  const SKY_LABELS = { none: "none", custom: "your photo", clouds: "moonlit clouds", space: "space" };
+  const SKY_LABELS = { none: "none", custom: "your photo", sky: "sky", clouds: "moonlit clouds", space: "space" };
   const skyLabel = (w, mode) => (mode === "builtin" ? SKY[w].builtin : SKY_LABELS[mode] || mode);
 
   async function setSkyMode(w, mode) {
@@ -1797,7 +1774,8 @@
     $("#acctAvatar").hidden = !u;
     $("#acctLabel").textContent = u ? "" : "Sign in";
     $("#acctLabel").hidden = !!u;
-    $("#syncDot").hidden = !u;
+    // Only show the dot when there's news (syncing, offline, a problem); "all saved" stays in the tooltip.
+    $("#syncDot").hidden = !u || !["syncing", "offline", "error"].includes(st.state);
     $("#syncDot").className = `sync-dot ${st.state}`;
     btn.classList.toggle("signed-in", !!u);
     btn.setAttribute("aria-label", u ? `Account: ${u.email}. ${syncText(st)}` : "Sign in");
@@ -2177,7 +2155,6 @@
     darkQuery.addEventListener("change", applyTheme);
     settingsDlg.addEventListener("click", onSkyClick);
     applySkies();
-    startOrbParallax();
     applyTheme();
     $("#settingsClose").addEventListener("click", () => settingsDlg.close());
     // About line: the build stamp (same as the offline cache version), and the privacy page. In the

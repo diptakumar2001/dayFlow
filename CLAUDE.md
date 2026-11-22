@@ -40,7 +40,9 @@ features; don't re-read it to learn the structure, this file covers that.
 - One `tasks` array is the source of truth. Change it only through `Store` mutations (they snapshot for undo),
   then call `render()`. Toast every change with the `undoAction`.
 - New task fields: add a default in `normalize()` so old saved data still loads.
-- `start: null` means a to-do (no time); `tasksOn()` skips those. Repeats never get per-day edits: changing one
+- `start: null` means a to-do (no time); `tasksOn()` skips those. Quick add with no time makes a to-do (a typed
+  day = due date); only repeats without a time go to the next free slot. There is no priority (removed after user
+  testing); cards are coloured by course via `Timeline.tone()`. Repeats never get per-day edits: changing one
   day adds it to `skipDates` and makes a one-off copy (`Store.detach`).
 - Accounts: each account has its own store key (`dayflow.u.<userId>`, guest = `dayflow.v1`). Sync compares
   tasks with `Store` baseline (`changes()` / `markSynced()` / `applyRemote()`), so mutations never call Sync.
@@ -54,11 +56,13 @@ features; don't re-read it to learn the structure, this file covers that.
 - Theme: colors are tokens at the top of `styles.css`; the two dark blocks (media query + `[data-theme="dark"]`)
   must stay identical. Text pairs must keep ≥ 4.5:1 contrast. Liquid Glass (`--glass-*`) only on controls and
   floating surfaces (top-bar buttons, toasts, dialogs), never on task cards, the timeline or inputs.
+- No "AI look" (tester feedback): no glow blobs, gradient/glowing text or violet haze; titles are plain ink.
 - Buttons: colors come from `--btn-*` tokens (dark mode = green see-through glass + mint→aqua main buttons).
   Hover = lift + glow + one shine sweep (`::after`), only under `@media (hover: hover)`; see "Buttons: hover and glass".
-- Backgrounds: one fixed `body::before` layer = `var(--veil), var(--sky)`. Per theme: built-in (`--sky-day-builtin`
-  CSS day sky / `--sky-night-builtin` = deep violet + the `.orbs` layer (shown via `--orbs`, parallax from `startOrbParallax()`);
-  dark-mode choices "space" = `--sky-night-space` (SVGs from `tools/make-space.py`), "clouds" = `--sky-night-clouds`), none, or the person's photo (`--sky-day`/`--sky-night` set by app.js,
+- Backgrounds: one fixed `body::before` layer = `var(--veil), var(--sky)`. Per theme: built-in = planner paper
+  (`--sky-day-builtin` warm off-white / `--sky-night-builtin` deep navy, plus the `.paper-tex` layer: `--grain` SVG noise
+  + a `--dot` grid, shown via `--tex`); light choice "sky" = `--sky-day-sky`; dark choices "space" = `--sky-night-space`
+  (SVGs from `tools/make-space.py`), "clouds" = `--sky-night-clouds`; none, or the person's photo (`--sky-day`/`--sky-night` set by app.js,
   `--veil-*` from the photo's brightness). Photos stay on the device in IndexedDB via `Platform.images`. Panels
   use `--panel-fill` (see-through); task cards and inputs stay solid.
 - Tasks can't cross midnight. Overlap confirmation follows `settings.warnOverlaps`.

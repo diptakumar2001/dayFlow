@@ -6,7 +6,7 @@
 <title>DayFlow Planner</title>
 <meta name="description" content="DayFlow: a task-first daily planner with a time-blocked timeline.">
 <meta name="theme-color" content="#f3f6f5">
-<meta name="dayflow-build" content="4f3354d40e"><!-- stamped by build_artifact.py -->
+<meta name="dayflow-build" content="6b5d870780"><!-- stamped by build_artifact.py -->
 <script>
   // Apply the saved theme before the page draws, so it never flashes the wrong colors.
   // The one direct storage read in DayFlow: Platform isn't loaded yet at this point.
@@ -37,12 +37,8 @@
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-<!-- Dark mode's built-in background: three glossy orbs (pure CSS; drift with the mouse, float on phones) -->
-<div class="orbs" aria-hidden="true">
-  <span class="orb-wrap ow-big"><span class="orb"></span></span>
-  <span class="orb-wrap ow-small"><span class="orb"></span></span>
-  <span class="orb-wrap ow-mid"><span class="orb"></span></span>
-</div>
+<!-- Paper texture for the built-in background: grain + dot grid (pure CSS) -->
+<div class="paper-tex" aria-hidden="true"></div>
 <div class="app">
 
   <!-- ===== Top bar: brand, date, navigation, view switch ===== -->
@@ -118,14 +114,15 @@
         <label for="quickAdd" class="eyebrow">Quick add</label>
         <details class="quick-help">
           <summary aria-label="What can I type?" title="What can I type?">?</summary>
-          <p>Times <code>3pm</code> <code>15:30</code> <code>9-11am</code> · lengths <code>45m</code> <code>1h30m</code> · days <code>tomorrow</code> <code>fri</code> <code>next mon</code> <code>in 3 days</code> · <code>!high</code> <code>!med</code> <code>!low</code> · <code>#course</code> · <code>daily</code> <code>weekdays</code> <code>weekly</code> · <code>due fri</code> makes a to-do with a deadline.</p>
+          <p>Times <code>3pm</code> <code>15:30</code> <code>9-11am</code> · lengths <code>45m</code> <code>1h30m</code> · days <code>tomorrow</code> <code>fri</code> <code>next mon</code> <code>in 3 days</code> · <code>#course</code> · <code>daily</code> <code>weekdays</code> <code>weekly</code>. With no time it goes on your To-do list; <code>fri</code> or <code>due fri</code> gives it a deadline.</p>
         </details>
       </div>
       <form id="quickForm" class="quick" autocomplete="off">
-        <input id="quickAdd" type="text" placeholder="Study HCI 3pm 2h !high" aria-describedby="quickPreview" enterkeyhint="done">
+        <input id="quickAdd" type="text" placeholder="e.g. Study HCI at 3pm for 2h" aria-describedby="quickPreview" enterkeyhint="done">
         <button type="submit" class="btn primary">Add</button>
       </form>
       <p id="quickPreview" class="quick-preview" aria-live="polite" hidden></p>
+      <p class="quick-hint">Add a time (<b>3pm</b>, <b>9-11am</b>) for the timeline. No time → To-do.</p>
     </section>
 
     <!-- ===== Planner page (timeline) ===== -->
@@ -203,7 +200,8 @@
       <div class="sky-controls">
         <img class="sky-thumb" alt="" hidden>
         <div class="seg" role="radiogroup" aria-labelledby="skyDayLabel">
-          <button type="button" role="radio" data-sky-mode="builtin" aria-checked="true">Sky</button>
+          <button type="button" role="radio" data-sky-mode="builtin" aria-checked="true">Paper</button>
+          <button type="button" role="radio" data-sky-mode="sky" aria-checked="false">Sky</button>
           <button type="button" role="radio" data-sky-mode="none" aria-checked="false">None</button>
           <button type="button" role="radio" data-sky-mode="custom" aria-checked="false">My photo</button>
         </div>
@@ -218,7 +216,7 @@
       <div class="sky-controls">
         <img class="sky-thumb" alt="" hidden>
         <div class="seg" role="radiogroup" aria-labelledby="skyNightLabel">
-          <button type="button" role="radio" data-sky-mode="builtin" aria-checked="true">Orbs</button>
+          <button type="button" role="radio" data-sky-mode="builtin" aria-checked="true">Paper</button>
           <button type="button" role="radio" data-sky-mode="space" aria-checked="false">Space</button>
           <button type="button" role="radio" data-sky-mode="clouds" aria-checked="false">Clouds</button>
           <button type="button" role="radio" data-sky-mode="none" aria-checked="false">None</button>
@@ -278,7 +276,7 @@
     <ul class="tips">
       <li>Click an empty time to add a task there.</li>
       <li>Drag a task to move it, or drag its bottom edge to change its length. On a touch screen, hold it first.</li>
-      <li>Priority: <span class="p-high">▲</span> High · <span class="p-medium">◆</span> Medium · <span class="p-low">●</span> Low. ↻ repeats, ⚠ overlaps.</li>
+      <li>Cards are coloured by course. ↻ repeats, ⚠ overlaps.</li>
     </ul>
     <dl class="keys">
       <dt><kbd>N</kbd></dt><dd>New task</dd>
@@ -337,17 +335,6 @@
     <p class="endline timed" id="fEnd"></p>
     <p class="err" id="timeErr" hidden></p>
 
-    <fieldset class="field">
-      <legend>Priority</legend>
-      <div class="prio-pick">
-        <input type="radio" name="priority" id="pHigh" value="high">
-        <label for="pHigh" class="p-high"><svg class="shape" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 .8 9.6 9.2H.4z"/></svg>High</label>
-        <input type="radio" name="priority" id="pMed" value="medium" checked>
-        <label for="pMed" class="p-medium"><svg class="shape" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 .4 9.6 5 5 9.6.4 5z"/></svg>Medium</label>
-        <input type="radio" name="priority" id="pLow" value="low">
-        <label for="pLow" class="p-low"><svg class="shape" viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="4.2"/></svg>Low</label>
-      </div>
-    </fieldset>
 
     <details class="more-opts" id="fMore">
       <summary>More options <span class="opt" id="fMoreHint"></span></summary>

@@ -63,11 +63,16 @@
   --btn-primary: var(--accent); --btn-primary-hover: var(--accent-hover); --btn-primary-ink: var(--accent-ink);
   --btn-primary-top: var(--glass-accent);
   --now: var(--accent); --now-ink: var(--accent-ink);
-  /* Shiny big titles: a gradient (and in dark mode a soft glow) on large text only */
-  --title-grad: linear-gradient(100deg, #0e6b58 0%, #4f3fc9 100%); --title-glow: none;
   --swipe-done-bg: #d3efe2; --swipe-done-ink: #0a4d36; --swipe-move-bg: #dbe5fa; --swipe-move-ink: #1c3a80;
-  /* Day sky, drawn in CSS: soft blue with blurred clouds and a little sun glow (no image file) */
+  /* Light mode's built-in background: warm planner paper (the .paper-tex layer adds grain and a dot grid) */
   --sky-day-builtin:
+    radial-gradient(120% 90% at 50% 35%, rgba(255, 255, 255, 0) 55%, rgba(110, 90, 60, 0.09) 100%),
+    linear-gradient(180deg, #f8f5ee 0%, #f2eee4 100%);
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .2 0 0 0 0 .16 0 0 0 0 .1 0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --dot: rgba(20, 32, 29, 0.13);
+  --tex: var(--tex-day, block);
+  /* "Sky" choice for light mode, drawn in CSS: soft blue with blurred clouds and a little sun glow */
+  --sky-day-sky:
     radial-gradient(40% 30% at 85% 6%, rgba(255, 246, 222, 0.75), rgba(255, 246, 222, 0) 70%),
     radial-gradient(26% 9% at 12% 38%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 70%),
     radial-gradient(22% 10% at 92% 66%, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0) 70%),
@@ -80,11 +85,10 @@
      A wide composition for computers, a tall one for phones (see the media query by the sky layer). */
   --space-art: url(../images/space-wide.svg);
   --sky-night-space: var(--space-art); /* one layer, so the layer's "cover" sizing applies to it */
-  /* Dark mode's built-in background: deep violet-black behind the glossy orbs (the .orbs layer) */
+  /* Dark mode's built-in background: deep navy planner paper (grain and dots from .paper-tex) */
   --sky-night-builtin:
-    radial-gradient(60vmax 50vmax at 22% 55%, rgba(110, 80, 220, 0.16), rgba(110, 80, 220, 0) 70%),
-    radial-gradient(40vmax 35vmax at 85% 85%, rgba(80, 120, 230, 0.10), rgba(80, 120, 230, 0) 70%),
-    linear-gradient(160deg, #06070f 0%, #0d0b1e 100%);
+    radial-gradient(120% 90% at 50% 35%, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.3) 100%),
+    linear-gradient(180deg, #0e1528 0%, #0a1020 100%);
   /* "Clouds" choice for dark mode: the day sky's layout (same glow spot, same six clouds) in moonlit colours. */
   --sky-night-clouds:
     radial-gradient(40% 30% at 85% 6%, rgba(214, 224, 255, 0.22), rgba(214, 224, 255, 0) 70%),
@@ -115,7 +119,6 @@
     --accent: #9db4ff; --accent-hover: #b8c8ff; --accent-ink: #0b1330; --accent-soft: #1a2350;
     --today-tint: rgba(157, 180, 255, 0.05);
     --now: #f3c9a4; --now-ink: #2a1806;
-    --title-grad: linear-gradient(100deg, #7ee8ff 0%, #b69cff 100%); --title-glow: drop-shadow(0 0 14px rgba(150, 140, 255, 0.35));
     --swipe-done-bg: #123a2d; --swipe-done-ink: #a9eccf; --swipe-move-bg: #1b2752; --swipe-move-ink: #c9d5ff;
     --high: #f08a4b;   --high-soft: #3a2318;   --high-ink: #ffc9a6;
     --medium: #f2b83a; --medium-soft: #342a14; --medium-ink: #fbdc98;
@@ -129,7 +132,9 @@
     /* Background and glass (see "Night sky" and "Liquid Glass" below) */
     --glow-1: rgba(157, 180, 255, 0.12); --glow-2: rgba(243, 201, 164, 0.08);
     --sky: var(--sky-night, var(--sky-night-builtin));
-    --orbs: var(--orbs-night, block);
+    --tex: var(--tex-night, block);
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .85 0 0 0 0 .9 0 0 0 0 1 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --dot: rgba(190, 205, 255, 0.09);
     --veil: linear-gradient(180deg, rgba(6, 10, 22, var(--veil-night, 0.1)),
       rgba(6, 10, 22, calc(var(--veil-night, 0.1) + var(--veil-boost-night, 0.12))));
     --panel-fill: rgba(15, 21, 39, 0.8);
@@ -153,7 +158,6 @@
   --accent: #9db4ff; --accent-hover: #b8c8ff; --accent-ink: #0b1330; --accent-soft: #1a2350;
   --today-tint: rgba(157, 180, 255, 0.05);
   --now: #f3c9a4; --now-ink: #2a1806;
-  --title-grad: linear-gradient(100deg, #7ee8ff 0%, #b69cff 100%); --title-glow: drop-shadow(0 0 14px rgba(150, 140, 255, 0.35));
   --swipe-done-bg: #123a2d; --swipe-done-ink: #a9eccf; --swipe-move-bg: #1b2752; --swipe-move-ink: #c9d5ff;
   --high: #f08a4b;   --high-soft: #3a2318;   --high-ink: #ffc9a6;
   --medium: #f2b83a; --medium-soft: #342a14; --medium-ink: #fbdc98;
@@ -167,7 +171,9 @@
   /* Background and glass (see "Night sky" and "Liquid Glass" below) */
   --glow-1: rgba(157, 180, 255, 0.12); --glow-2: rgba(243, 201, 164, 0.08);
   --sky: var(--sky-night, var(--sky-night-builtin));
-  --orbs: var(--orbs-night, block);
+  --tex: var(--tex-night, block);
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .85 0 0 0 0 .9 0 0 0 0 1 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --dot: rgba(190, 205, 255, 0.09);
   --veil: linear-gradient(180deg, rgba(6, 10, 22, var(--veil-night, 0.1)),
     rgba(6, 10, 22, calc(var(--veil-night, 0.1) + var(--veil-boost-night, 0.12))));
   --panel-fill: rgba(15, 21, 39, 0.8);
@@ -388,9 +394,11 @@ code, kbd {
 .view-week .tl-now-label { display: none; }
 
 /* ---------- Task cards ---------- */
-.p-high   { --p: var(--high);   --p-soft: var(--high-soft);   --p-ink: var(--high-ink); }
-.p-medium { --p: var(--medium); --p-soft: var(--medium-soft); --p-ink: var(--medium-ink); }
-.p-low    { --p: var(--low);    --p-soft: var(--low-soft);    --p-ink: var(--low-ink); }
+/* Colour by course (Timeline.tone): no course = accent, each course one of three fixed colours. */
+.tone-0 { --p: var(--accent); --p-soft: var(--accent-soft); --p-ink: var(--ink-2); }
+.tone-1 { --p: var(--low);    --p-soft: var(--low-soft);    --p-ink: var(--low-ink); }
+.tone-2 { --p: var(--medium); --p-soft: var(--medium-soft); --p-ink: var(--medium-ink); }
+.tone-3 { --p: var(--high);   --p-soft: var(--high-soft);   --p-ink: var(--high-ink); }
 
 .card {
   position: absolute; z-index: 2;
@@ -432,7 +440,7 @@ code, kbd {
 .card.tiny .check, .card.tiny .check svg { width: 14px; height: 14px; }
 .card.tiny .card-title { font-size: 12px; }
 .card.tiny .card-meta { font-size: 11px; }
-.card.compact .rep, .card.compact .prio-text { display: none; }
+.card.compact .rep { display: none; }
 
 .view-week .card { padding: 4px 5px 4px 5px; gap: 5px; }
 .view-week .card-title { font-size: 12.5px; }
@@ -440,9 +448,6 @@ code, kbd {
 .view-week .card-time { font-size: 10.5px; }
 .view-week .check, .view-week .check svg { width: 18px; height: 18px; }
 
-/* Priority tag: shape + text, never color alone */
-.prio-tag { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; color: var(--p-ink); white-space: nowrap; }
-.shape { width: 10px; height: 10px; fill: var(--p); flex: none; }
 
 /* Done checkbox */
 .check {
@@ -533,8 +538,10 @@ body.is-resizing, body.is-resizing * { cursor: ns-resize !important; }
 }
 .quick-preview { margin: 8px 0 0; min-height: 1.4em; font-size: 13px; color: var(--ink-2); display: flex; flex-direction: column; gap: 4px; }
 .qp-line { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0 4px; }
-.qp-line .prio-tag { margin-left: 2px; }
-.quick-preview .p-high, .qp-line .prio-tag { color: inherit; }
+/* The hint under Quick add gives way to the live preview while typing */
+.quick-hint { margin: 8px 0 0; font-size: 13px; color: var(--ink-3); }
+.quick-hint b { font-family: var(--font-mono); font-weight: 500; color: var(--ink-2); }
+.quick-preview:not([hidden]) + .quick-hint { display: none; }
 .qp-warn { color: var(--warn-ink); background: var(--warn-bg); border-radius: 6px; padding: 4px 8px; font-weight: 700; }
 
 .agenda { list-style: none; margin: 0; padding: 0; }
@@ -549,7 +556,6 @@ body.is-resizing, body.is-resizing * { cursor: ns-resize !important; }
 .ag-main:hover { background: var(--surface-2); }
 .ag-time { flex: none; width: 66px; font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); }
 .ag-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
-.ag-item .prio-tag { font-size: 12px; }
 .ag-item.done .ag-title { color: var(--ink-3); }
 .ag-empty { font-size: 14px; color: var(--ink-3); padding: 4px 0; }
 .ag-main.static { cursor: default; }
@@ -614,18 +620,6 @@ dialog::backdrop { background: var(--backdrop); }
 .endline { margin: -6px 0 0; font-size: 13px; color: var(--ink-3); font-family: var(--font-mono); }
 .err { margin: 0; font-size: 13px; color: var(--high-ink); font-weight: 700; }
 
-.prio-pick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.prio-pick input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
-.prio-pick label {
-  display: flex; align-items: center; justify-content: center; gap: 7px;
-  padding: 9px 6px;
-  border: 1.5px solid var(--rule-strong); border-radius: 8px;
-  cursor: pointer; font-weight: 700; color: var(--ink); background: var(--surface);
-}
-.prio-pick label:hover { border-color: var(--p); }
-.prio-pick input:checked + label { background: var(--p-soft); border-color: var(--p); color: var(--p-ink); box-shadow: inset 0 0 0 1px var(--p); }
-.prio-pick input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
-
 .warn {
   background: var(--warn-bg); color: var(--warn-ink);
   border-left: 4px solid var(--warn-line); border-radius: 6px;
@@ -638,8 +632,6 @@ dialog::backdrop { background: var(--backdrop); }
 
 /* ---------- Clean main screen ---------- */
 .tools { display: inline-flex; gap: 6px; }
-/* Priority on cards and lists: the shape alone (the label is in each card's screen-reader text and the form). */
-.card .prio-text, .ag-sub .prio-text { display: none; }
 .card .rep, .card .ov { font-size: 12px; line-height: 1; }
 .card .ov { padding: 1px 3px; }
 
@@ -688,7 +680,6 @@ dialog::backdrop { background: var(--backdrop); }
 .sky-actions { display: flex; align-items: center; gap: 12px; }
 .help summary { cursor: pointer; font-weight: 700; font-size: 14px; color: var(--ink-2); }
 .tips { margin: 6px 0 0; padding-left: 18px; font-size: 13.5px; color: var(--ink-2); display: grid; gap: 4px; }
-.tips .p-high { color: var(--high); } .tips .p-medium { color: var(--medium); } .tips .p-low { color: var(--low); }
 
 /* Task form: less-used fields folded */
 .more-opts > summary { cursor: pointer; font-weight: 700; font-size: 14px; color: var(--ink-2); padding: 2px 0; }
@@ -721,7 +712,8 @@ dialog::backdrop { background: var(--backdrop); }
 /* Sync state is also in the button's label and tooltip, never shown by color alone. */
 .sync-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ink-3); flex: none; }
 .sync-dot.synced { background: var(--accent); }
-.sync-dot.syncing { background: var(--medium); }
+.sync-dot.syncing { background: var(--medium); animation: sync-pulse 1.2s ease-in-out infinite; }
+@keyframes sync-pulse { 50% { opacity: 0.35; } }
 .sync-dot.error { background: var(--high); }
 
 #authDialog { width: min(440px, calc(100vw - 32px)); padding: 20px 22px 18px; }
@@ -778,46 +770,27 @@ body::before {
   transition: opacity 0.4s ease;
 }
 html[data-sky-day="none"] { --sky-day: none; --veil-day: 0; --veil-boost-day: 0; }
+html[data-sky-day="sky"] { --sky-day: var(--sky-day-sky); }
+/* Paper needs no veil: it's already calm behind the panels */
+html[data-sky-day="builtin"] { --veil-day: 0; --veil-boost-day: 0; }
+html[data-sky-night="builtin"] { --veil-night: 0; --veil-boost-night: 0; }
 html[data-sky-night="none"] { --sky-night: none; --veil-night: 0; --veil-boost-night: 0; }
 html[data-sky-night="clouds"] { --sky-night: var(--sky-night-clouds); }
 html[data-sky-night="space"] { --sky-night: var(--sky-night-space); }
-/* The orbs belong to the built-in background only */
-html[data-sky-night="space"], html[data-sky-night="clouds"], html[data-sky-night="none"], html[data-sky-night="custom"] { --orbs-night: none; }
+/* The paper texture belongs to the built-in (paper) background only */
+html[data-sky-day]:not([data-sky-day="builtin"]) { --tex-day: none; }
+html[data-sky-night]:not([data-sky-night="builtin"]) { --tex-night: none; }
 
-/* ---------- Glossy orbs (dark mode, built-in background) ----------
-   Three glossy dark spheres lit from the top-left with a violet glow. On computers they drift with the mouse
-   (app.js sets --px/--py from -1 to 1; each depth moves a different amount); on phones they float gently.
-   Only transform changes, so it's cheap; reduced motion stops both. */
-.orbs { display: var(--orbs, none); position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
-.orb-wrap {
-  position: absolute; display: block;
-  transform: translate(calc(var(--px, 0) * var(--depth)), calc(var(--py, 0) * var(--depth)));
-  transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.3, 1);
+/* ---------- Planner paper ----------
+   Fine grain (SVG noise in --grain) and a faint bullet-journal dot grid every 24px, over the paper colour.
+   Hand-made feel on purpose: no glows, no gradients that shout. */
+.paper-tex {
+  display: var(--tex, none); position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    var(--grain) 0 0 / 180px 180px,
+    radial-gradient(circle, var(--dot) 0.9px, transparent 1.4px) 12px 12px / 24px 24px;
 }
-.orb {
-  display: block; width: 100%; height: 100%; border-radius: 50%;
-  background: radial-gradient(circle at 34% 30%, rgba(196, 168, 255, 0.9) 0%, rgba(122, 92, 224, 0.6) 16%,
-    rgba(46, 30, 96, 0.92) 42%, #0c0a1c 74%);
-  box-shadow: inset -2.5vmin -3.5vmin 7vmin rgba(0, 0, 0, 0.6), 0 4vmin 9vmin rgba(0, 0, 0, 0.55),
-    0 0 12vmin rgba(124, 92, 255, 0.16);
-  animation: orb-float 11s ease-in-out infinite alternate;
-}
-.ow-big   { --depth: 14px; width: 46vmin; height: 46vmin; left: -6vmin; top: 30vh; }
-.ow-small { --depth: 36px; width: 9vmin;  height: 9vmin;  right: 9vw;   top: 14vh; }
-.ow-mid   { --depth: 24px; width: 18vmin; height: 18vmin; right: 16vw;  bottom: 12vh; }
-.ow-small .orb { animation-duration: 9s; animation-delay: -3s; }
-.ow-mid .orb {
-  animation-duration: 14s; animation-delay: -7s;
-  background: radial-gradient(circle at 34% 30%, rgba(214, 222, 255, 0.85) 0%, rgba(110, 120, 210, 0.55) 16%,
-    rgba(36, 34, 80, 0.92) 42%, #0b0b18 74%);
-}
-@keyframes orb-float { from { translate: 0 -1.2vmin; } to { translate: 0 1.2vmin; } }
-/* Phones: the orbs sit where the background shows around the stacked panels */
-@media (max-aspect-ratio: 4/5) {
-  .ow-big   { width: 62vmin; height: 62vmin; left: -18vmin; top: 46vh; }
-  .ow-small { right: 6vw; top: 24vh; width: 11vmin; height: 11vmin; }
-  .ow-mid   { right: -4vmin; bottom: 20vh; width: 24vmin; height: 24vmin; }
-}
+
 /* Phones and other tall screens get the solar system composed for portrait */
 @media (max-aspect-ratio: 4/5) { :root { --space-art: url(../images/space-tall.svg); } }
 html.sky-loading body::before { opacity: 0; } /* a photo fades in once it's loaded */
@@ -837,20 +810,8 @@ html.sky-fade body::before { opacity: 0; transition-duration: 0.2s; } /* switchi
 .side { padding: 2px 16px; }
 .side > .side-sec:first-child { border-top: 0; }
 
-/* ---------- Shiny titles ----------
-   The big text (brand name, big date, progress number, dialog and page titles) gets a gradient and, in dark mode,
-   a soft glow. Only large bold text: every gradient colour keeps >= 5.9:1 on its background (checked). */
-.brand span, .dh-num, .progress-num, .dlg-head h2, .welcome h1, .welcome-brand span, .sheet h2 {
-  background: var(--title-grad);
-  -webkit-background-clip: text; background-clip: text;
-  color: transparent; -webkit-text-fill-color: transparent;
-  filter: var(--title-glow);
-}
-@media (forced-colors: active) {
-  .brand span, .dh-num, .progress-num, .dlg-head h2, .welcome h1, .welcome-brand span, .sheet h2 {
-    background: none; color: CanvasText; -webkit-text-fill-color: CanvasText; filter: none;
-  }
-}
+/* Big titles are plain ink; the brand name uses the accent, like a logo stamp */
+.brand span, .welcome-brand span { color: var(--accent); }
 .sky-controls .seg { flex-wrap: wrap; } /* five background choices may need two lines in the dialog */
 
 /* ---------- Liquid Glass (a light touch) ----------
