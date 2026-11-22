@@ -6,7 +6,7 @@
 <title>DayFlow Planner</title>
 <meta name="description" content="DayFlow: a task-first daily planner with a time-blocked timeline.">
 <meta name="theme-color" content="#f3f6f5">
-<meta name="dayflow-build" content="79645a1e45"><!-- stamped by build_artifact.py -->
+<meta name="dayflow-build" content="02ef46b5f7"><!-- stamped by build_artifact.py -->
 <script>
   // Apply the saved theme before the page draws, so it never flashes the wrong colors.
   // The one direct storage read in DayFlow: Platform isn't loaded yet at this point.
@@ -140,6 +140,11 @@
 
       <section class="side-sec">
         <h2 class="eyebrow">To-do</h2>
+        <!-- Phones, To-do tab only: today's to-do progress, the add box, and what's done today -->
+        <div class="todo-progress" id="todoProgress" hidden>
+          <p class="progress-row"><span id="todoProgressText"></span></p>
+          <div class="bar" id="todoBar" role="progressbar" aria-label="To-dos done today" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div>
+        </div>
         <!-- Phones, To-do tab only: add straight to the list (desktop has Quick add beside it) -->
         <form id="todoAddForm" class="quick todo-add" autocomplete="off">
           <input id="todoAdd" type="text" placeholder="Add a to-do…" aria-label="Add a to-do" enterkeyhint="done" maxlength="80">
@@ -147,6 +152,10 @@
         </form>
         <ol id="todos" class="agenda"></ol>
         <button type="button" id="todoMore" class="btn-link" hidden></button>
+        <details class="todo-done" id="todoDoneSec" hidden>
+          <summary id="todoDoneLabel"></summary>
+          <ol id="todosDone" class="agenda"></ol>
+        </details>
       </section>
     </aside>
   </main>

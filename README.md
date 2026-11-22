@@ -162,6 +162,8 @@ form folds the less-used fields (course, reminder, repeat, notes) under **More o
 - **On phones**: a tab bar at the bottom (**Today · Week · To-do · More**) shows one section at a time, with a
   count of open to-dos on the To-do tab. The **To-do tab is a plain to-do list**: an "Add a to-do…" box at the
   top (add several in a row; `fri` sets a due date, `#hci` a course) and the whole list below; tick to finish.
+  A small bar shows "2 done today · 5 left" (it starts fresh each day), and a folded **Done today** list lets
+  you see what you finished and tap one to put it back.
   The tab bar slides away while you scroll down and comes back when you scroll up, and scrolling the timeline
   carries on to the page, so the whole day up to midnight is always reachable. **Swipe a task right** to complete it and **left** to reschedule it
   (Later today / Tomorrow / Pick a time); hold a task to drag it. A one-time tip explains the gestures

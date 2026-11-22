@@ -318,6 +318,11 @@ const Store = (() => {
       .sort((a, b) => (a.due || "9999").localeCompare(b.due || "9999") || a.title.localeCompare(b.title));
   }
 
+  // To-dos finished on day k (they drop out of todos() once done)
+  function doneTodosOn(k) {
+    return tasks.filter((t) => t.start === null && t.doneDates.includes(k)).sort((a, b) => a.title.localeCompare(b.title));
+  }
+
   function search(q) {
     const s = q.trim().toLowerCase();
     if (!s) return [];
@@ -430,7 +435,7 @@ const Store = (() => {
   return {
     GUEST_KEY, load, open, forget, peek, key: () => key, seed, onSave, newId, get, all,
     changes, markSynced, applyRemote, occursOn, tasksOn, overlapsFor, layoutLanes,
-    leftovers, todos, search, courses,
+    leftovers, todos, doneTodosOn, search, courses,
     add, update, remove, skipDay, detach, toggleDone, clearExamples, undo, canUndo,
     exportJSON, readBackup, importTasks,
   };

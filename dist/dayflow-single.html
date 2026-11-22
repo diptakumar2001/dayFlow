@@ -6,7 +6,7 @@
 <title>DayFlow Planner</title>
 <meta name="description" content="DayFlow: a task-first daily planner with a time-blocked timeline.">
 <meta name="theme-color" content="#f3f6f5">
-<meta name="dayflow-build" content="79645a1e45"><!-- stamped by build_artifact.py -->
+<meta name="dayflow-build" content="02ef46b5f7"><!-- stamped by build_artifact.py -->
 <script>
   // Apply the saved theme before the page draws, so it never flashes the wrong colors.
   // The one direct storage read in DayFlow: Platform isn't loaded yet at this point.
@@ -581,7 +581,7 @@ body.is-resizing, body.is-resizing * { cursor: ns-resize !important; }
 .quick-preview:not([hidden]) + .quick-hint { display: none; }
 .qp-warn { color: var(--warn-ink); background: var(--warn-bg); border-radius: 6px; padding: 4px 8px; font-weight: 700; }
 
-.todo-add { display: none; } /* shown only on the phone To-do tab */
+.todo-add, .todo-progress, .todo-done { display: none; } /* shown only on the phone To-do tab */
 .agenda { list-style: none; margin: 0; padding: 0; }
 .ag-item { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px dashed var(--rule-strong); }
 .ag-item:last-child { border-bottom: 0; }
@@ -1155,6 +1155,10 @@ dialog.sheet { width: min(420px, calc(100vw - 32px)); padding: 18px 18px 16px; }
   .app[data-tab="todo"] .side > [hidden] + .side-sec { border-top: 0; }
   /* The To-do tab is a to-do list page: add box on top, the whole list, bigger rows; leftovers below it */
   .app[data-tab="todo"] .todo-add { display: flex; margin: 4px 0 10px; }
+  .app[data-tab="todo"] .todo-progress:not([hidden]) { display: block; margin: 2px 0 12px; }
+  .app[data-tab="todo"] .todo-done:not([hidden]) { display: block; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--rule); }
+  .todo-done summary { cursor: pointer; font-size: 14px; font-weight: 700; color: var(--ink-2); padding: 4px 0; }
+  .todo-progress .progress-num { font-size: 22px; }
   .app[data-tab="todo"] .side { display: flex; flex-direction: column; }
   .app[data-tab="todo"] .side > .leftovers { order: 1; }
   .app[data-tab="todo"] #todos .ag-item { min-height: 52px; }
@@ -1270,6 +1274,11 @@ dialog.sheet { width: min(420px, calc(100vw - 32px)); padding: 18px 18px 16px; }
 
       <section class="side-sec">
         <h2 class="eyebrow">To-do</h2>
+        <!-- Phones, To-do tab only: today's to-do progress, the add box, and what's done today -->
+        <div class="todo-progress" id="todoProgress" hidden>
+          <p class="progress-row"><span id="todoProgressText"></span></p>
+          <div class="bar" id="todoBar" role="progressbar" aria-label="To-dos done today" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div>
+        </div>
         <!-- Phones, To-do tab only: add straight to the list (desktop has Quick add beside it) -->
         <form id="todoAddForm" class="quick todo-add" autocomplete="off">
           <input id="todoAdd" type="text" placeholder="Add a to-do…" aria-label="Add a to-do" enterkeyhint="done" maxlength="80">
@@ -1277,6 +1286,10 @@ dialog.sheet { width: min(420px, calc(100vw - 32px)); padding: 18px 18px 16px; }
         </form>
         <ol id="todos" class="agenda"></ol>
         <button type="button" id="todoMore" class="btn-link" hidden></button>
+        <details class="todo-done" id="todoDoneSec" hidden>
+          <summary id="todoDoneLabel"></summary>
+          <ol id="todosDone" class="agenda"></ol>
+        </details>
       </section>
     </aside>
   </main>
@@ -2338,6 +2351,11 @@ const Store = (() => {
       .sort((a, b) => (a.due || "9999").localeCompare(b.due || "9999") || a.title.localeCompare(b.title));
   }
 
+  // To-dos finished on day k (they drop out of todos() once done)
+  function doneTodosOn(k) {
+    return tasks.filter((t) => t.start === null && t.doneDates.includes(k)).sort((a, b) => a.title.localeCompare(b.title));
+  }
+
   function search(q) {
     const s = q.trim().toLowerCase();
     if (!s) return [];
@@ -2450,7 +2468,7 @@ const Store = (() => {
   return {
     GUEST_KEY, load, open, forget, peek, key: () => key, seed, onSave, newId, get, all,
     changes, markSynced, applyRemote, occursOn, tasksOn, overlapsFor, layoutLanes,
-    leftovers, todos, search, courses,
+    leftovers, todos, doneTodosOn, search, courses,
     add, update, remove, skipDay, detach, toggleDone, clearExamples, undo, canUndo,
     exportJSON, readBackup, importTasks,
   };
@@ -3575,6 +3593,7 @@ const Timeline = (() => {
     const more = $("#todoMore");
     // The phone To-do tab is the whole list; elsewhere it stays short.
     const fullPage = isPhone() && state.tab === "todo";
+    renderTodoProgress(all.length);
     const hidden = todosExpanded || fullPage ? 0 : Math.max(0, all.length - TODO_SHOWN);
     more.hidden = fullPage || (!hidden && !(todosExpanded && all.length > TODO_SHOWN));
     more.textContent = hidden ? `Show ${hidden} more` : "Show less";
@@ -3779,6 +3798,32 @@ const Timeline = (() => {
     });
   }
 
+  // Phone To-do tab: "2 done today · 5 left" (resets each day, like Today's bar) and the folded list of
+  // what's done today, where a tap on the check puts it back. CSS shows both on that tab only.
+  function renderTodoProgress(left) {
+    const today = D.todayKey();
+    const done = Store.doneTodosOn(today);
+    const total = done.length + left;
+    const pct = total ? Math.round((done.length / total) * 100) : 0;
+    $("#todoProgress").hidden = !total;
+    $("#todoProgressText").innerHTML = !left
+      ? "All done for today 🎉"
+      : `<b class="progress-num">${done.length}</b> done today · ${left} left`;
+    const bar = $("#todoBar");
+    bar.setAttribute("aria-valuenow", String(pct));
+    bar.firstElementChild.style.width = `${pct}%`;
+    $("#todoDoneSec").hidden = !done.length;
+    $("#todoDoneLabel").textContent = `Done today (${done.length})`;
+    $("#todosDone").innerHTML = done
+      .map(
+        (t) => `<li class="ag-item done ${Timeline.tone(t)}">
+          <button type="button" class="check" data-td-undone="${t.id}" aria-pressed="true" aria-label="Mark not done: ${esc(t.title)}">${Timeline.CHECK_SVG}</button>
+          <span class="ag-main static"><span class="ag-title">${esc(t.title)}</span></span>
+        </li>`
+      )
+      .join("");
+  }
+
   // The phone To-do tab's add box: always a to-do. "#hci" and a day ("Essay fri" = due Fri) still work.
   function onTodoAdd(e) {
     e.preventDefault();
@@ -3801,9 +3846,9 @@ const Timeline = (() => {
   function toggleTodo(id) {
     const t = Store.get(id);
     if (!t) return;
-    Store.toggleDone(id, D.todayKey());
+    const done = Store.toggleDone(id, D.todayKey());
     render();
-    toast(`Done: “${t.title}”.`, { actions: [undoAction], key: "done" });
+    toast(done ? `Done: “${t.title}”.` : `Back on your list: “${t.title}”.`, { actions: [undoAction], key: "done" });
   }
 
   // ---------------------------------------------------------
@@ -5430,6 +5475,10 @@ const Timeline = (() => {
       if (loDel) deleteTask(loDel);
     });
     $("#todoAddForm").addEventListener("submit", onTodoAdd);
+    $("#todosDone").addEventListener("click", (e) => {
+      const b = e.target.closest("[data-td-undone]");
+      if (b) toggleTodo(b.dataset.tdUndone);
+    });
     $("#todos").addEventListener("click", (e) => {
       const el = e.target.closest("[data-td-done],[data-td-open],[data-td-schedule]");
       if (!el) return;

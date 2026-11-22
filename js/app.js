@@ -331,6 +331,7 @@
     const more = $("#todoMore");
     // The phone To-do tab is the whole list; elsewhere it stays short.
     const fullPage = isPhone() && state.tab === "todo";
+    renderTodoProgress(all.length);
     const hidden = todosExpanded || fullPage ? 0 : Math.max(0, all.length - TODO_SHOWN);
     more.hidden = fullPage || (!hidden && !(todosExpanded && all.length > TODO_SHOWN));
     more.textContent = hidden ? `Show ${hidden} more` : "Show less";
@@ -535,6 +536,32 @@
     });
   }
 
+  // Phone To-do tab: "2 done today · 5 left" (resets each day, like Today's bar) and the folded list of
+  // what's done today, where a tap on the check puts it back. CSS shows both on that tab only.
+  function renderTodoProgress(left) {
+    const today = D.todayKey();
+    const done = Store.doneTodosOn(today);
+    const total = done.length + left;
+    const pct = total ? Math.round((done.length / total) * 100) : 0;
+    $("#todoProgress").hidden = !total;
+    $("#todoProgressText").innerHTML = !left
+      ? "All done for today 🎉"
+      : `<b class="progress-num">${done.length}</b> done today · ${left} left`;
+    const bar = $("#todoBar");
+    bar.setAttribute("aria-valuenow", String(pct));
+    bar.firstElementChild.style.width = `${pct}%`;
+    $("#todoDoneSec").hidden = !done.length;
+    $("#todoDoneLabel").textContent = `Done today (${done.length})`;
+    $("#todosDone").innerHTML = done
+      .map(
+        (t) => `<li class="ag-item done ${Timeline.tone(t)}">
+          <button type="button" class="check" data-td-undone="${t.id}" aria-pressed="true" aria-label="Mark not done: ${esc(t.title)}">${Timeline.CHECK_SVG}</button>
+          <span class="ag-main static"><span class="ag-title">${esc(t.title)}</span></span>
+        </li>`
+      )
+      .join("");
+  }
+
   // The phone To-do tab's add box: always a to-do. "#hci" and a day ("Essay fri" = due Fri) still work.
   function onTodoAdd(e) {
     e.preventDefault();
@@ -557,9 +584,9 @@
   function toggleTodo(id) {
     const t = Store.get(id);
     if (!t) return;
-    Store.toggleDone(id, D.todayKey());
+    const done = Store.toggleDone(id, D.todayKey());
     render();
-    toast(`Done: “${t.title}”.`, { actions: [undoAction], key: "done" });
+    toast(done ? `Done: “${t.title}”.` : `Back on your list: “${t.title}”.`, { actions: [undoAction], key: "done" });
   }
 
   // ---------------------------------------------------------
@@ -2186,6 +2213,10 @@
       if (loDel) deleteTask(loDel);
     });
     $("#todoAddForm").addEventListener("submit", onTodoAdd);
+    $("#todosDone").addEventListener("click", (e) => {
+      const b = e.target.closest("[data-td-undone]");
+      if (b) toggleTodo(b.dataset.tdUndone);
+    });
     $("#todos").addEventListener("click", (e) => {
       const el = e.target.closest("[data-td-done],[data-td-open],[data-td-schedule]");
       if (!el) return;

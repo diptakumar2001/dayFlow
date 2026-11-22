@@ -28,7 +28,8 @@ features; don't re-read it to learn the structure, this file covers that.
   form, quick add parser (`parseQuick`), backup UI, reminders, accounts, shortcuts. `init()` runs after `Platform.ready()`.
 - Phones (≤ 760px): `.app[data-tab=today|week|todo]` + the bottom `.tabbar` choose which grid areas show; `setTab()`
   / `setView()` keep tab and view in step. The To-do tab is a list page: `#todoAddForm` (always adds a to-do,
-  `onTodoAdd`) + the full list; Quick add only shows on Today. The tab bar hides while scrolling down
+  `onTodoAdd`) + the full list + `renderTodoProgress` ("N done today · M left" bar, folded "Done today" list from
+  `Store.doneTodosOn(today)`); Quick add only shows on Today. The tab bar hides while scrolling down
   (`startTabbarAutoHide`, `html.tabbar-hidden`); on phones the timeline's scroll carries on to the page. Swipes are touch-only (day view + to-do/leftover rows); Space/Enter
   are the keyboard equivalents.
 - Welcome page (`#welcome`, not a <dialog>): one card, two modes (`setAuthMode`: sign in / create account,
