@@ -166,10 +166,15 @@ const Platform = (() => {
     },
 
     // Desktop notification while the page is open (web only).
-    show(title, body) {
+    // Phone browsers and the iPhone web app only allow notifications through the service worker.
+    async show(title, body) {
       if (reminders.native) return;
       try {
-        if ("Notification" in window && Notification.permission === "granted") new Notification(title, { body });
+        if (!("Notification" in window) || Notification.permission !== "granted") return;
+        const opts = { body, icon: "icons/icon-192.png", badge: "icons/icon-192.png", tag: title };
+        const reg = "serviceWorker" in navigator ? await navigator.serviceWorker.getRegistration() : null;
+        if (reg) await reg.showNotification(title, opts);
+        else new Notification(title, opts);
       } catch (e) {}
     },
 

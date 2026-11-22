@@ -100,6 +100,17 @@ Android the alarm uses its own loud channel and a chime, shows on the lock scree
 **Snooze 5 min** buttons. Notification-style alarms ring once (about 12 seconds); an alarm-clock screen that
 rings until stopped would need custom native code.
 
+- **Android app:** Android itself rings them at the exact minute, even when DayFlow is closed and the phone is
+  locked or restarted. DayFlow asks for notification permission the first time you add a timed task (from the
+  form or Quick add). Some phone makers' battery savers (Samsung, Xiaomi, OnePlus…) can still delay alarms: set
+  DayFlow's battery use to **Unrestricted** in the phone's app settings.
+- **Website / iPhone home-screen app:** reminders and the alarm appear while DayFlow is open (also in a
+  background tab), as a message in the page and a notification if you allow them. A website can't ring when
+  it's closed; that would need a push server.
+- Quick add understands `3am`, `15:00`, `3 o'clock in the morning`, `6 o'clock in the evening` and `9 tonight`.
+  A time that has already passed today (e.g. `study 3am` typed at 9 PM) goes to **tomorrow**, so it can still
+  ring. A heads-up for a task just after midnight rings the evening before.
+
 ### Developing the phone app
 
 `npm run android` rebuilds `www/`, copies it into `android/` and opens Android Studio (if installed).

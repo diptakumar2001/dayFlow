@@ -53,6 +53,8 @@ features; don't re-read it to learn the structure, this file covers that.
   key is public, the service_role key must never be in the client. Schema changes go in `schema.sql`.
 - Reminders: tasks have `reminder` (min before) and `alarm` (ring at start); defaults in `settings`.
   `upcomingReminders()` → `Platform.reminders.sync()` (channels "reminders"/"alarms"); snoozes in `dayflow.snoozes`.
+  Web: `checkReminders()` (every 15 s, today + tomorrow's after-midnight heads-ups); notifications go through the
+  service worker (`showNotification`). Form and Quick add both call `askForNotifications()` for timed tasks.
 - Device features only through `Platform` — never call `localStorage`, `Notification` or downloads directly.
   One exception: the inline script in `index.html`'s `<head>` reads `dayflow.theme` to set the theme before
   the first paint (Platform isn't loaded yet).

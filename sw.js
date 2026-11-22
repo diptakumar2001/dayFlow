@@ -6,7 +6,7 @@
    build_artifact.py, so each deploy replaces the old cache.
    ========================================================= */
 
-const VERSION = "02ef46b5f7";
+const VERSION = "9a0e1a2d38";
 const CACHE = `dayflow-${VERSION}`;
 const FILES = [
   "./", "index.html", "privacy.html", "manifest.json",
@@ -33,6 +33,17 @@ self.addEventListener("activate", (e) => {
       .keys()
       .then((keys) => Promise.all(keys.filter((k) => k.startsWith("dayflow-") && k !== CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
+  );
+});
+
+// A tapped reminder brings DayFlow to the front (or opens it).
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  e.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+      const open = list.find((c) => "focus" in c);
+      return open ? open.focus() : self.clients.openWindow("./");
+    })
   );
 });
 

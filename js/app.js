@@ -545,7 +545,7 @@
     const pct = total ? Math.round((done.length / total) * 100) : 0;
     $("#todoProgress").hidden = !total;
     $("#todoProgressText").innerHTML = !left
-      ? "All done for today 🎉"
+      ? "All done for today."
       : `<b class="progress-num">${done.length}</b> done today · ${left} left`;
     const bar = $("#todoBar");
     bar.setAttribute("aria-valuenow", String(pct));
@@ -1016,6 +1016,15 @@
     grab(/\s(due|by)(?=\s)/i, () => (out.todo = out.dueWord = true));
     grab(/\s(noalarm|no\salarm)(?=\s)/i, () => (out.alarm = false)) || grab(/\s(alarm)(?=\s)/i, () => (out.alarm = true));
 
+    // Part of the day ("in the morning", "tonight"): decides am/pm for "3 o'clock" or "at 3"
+    let partOfDay = null;
+    grab(/\s(?:in\sthe\smorning|this\smorning)(?=\s)/i, () => (partOfDay = "am")) ||
+      grab(/\s(?:in\sthe\s(?:afternoon|evening)|this\s(?:afternoon|evening)|at\snight|in\sthe\snight)(?=\s)/i, () => (partOfDay = "pm")) ||
+      grab(/\s(tonight)(?=\s)/i, () => {
+        partOfDay = "pm";
+        setDate(D.todayKey());
+      });
+
     // Days
     grab(/\s(tomorrow|tmrw|tmr)(?=\s)/i, () => setDate(D.addDays(D.todayKey(), 1))) ||
       grab(/\s(today|tonight)(?=\s)/i, () => setDate(D.todayKey())) ||
@@ -1050,6 +1059,15 @@
         out.duration = Number(m[1]);
         out.durationSet = true;
       });
+      grab(/\s(?:at\s)?(1[0-2]|0?[1-9])\s?o['’]?clock(?=\s)/i, (m) => {
+        // "3 o'clock": am/pm from the part of the day if given, otherwise the same guess as "at 3"
+        const h = Number(m[1]);
+        if (partOfDay) out.start = to24(h, partOfDay) * 60;
+        else {
+          out.start = (h === 12 ? 12 : h <= 7 ? h + 12 : h) * 60;
+          out.notes.push(`I guessed ${D.fmtTime(out.start)}. Add am or pm (or “in the morning”) if that's wrong.`);
+        }
+      }) ||
       grab(/\s(?:at\s|@\s?)?(1[0-2]|0?[1-9])(?::([0-5]\d))?\s?(am|pm)(?=\s)/i, (m) => {
         out.start = to24(Number(m[1]), m[3]) * 60 + (m[2] ? Number(m[2]) : 0);
       }) ||
@@ -1057,9 +1075,9 @@
         grab(/\s(?:at\s|@\s?)(1[3-9]|2[0-3]|1[0-2]|0?[1-9])(?=\s)/i, (m) => {
           // "at 3": 1–7 is probably afternoon, 8–11 morning, 12 noon. Shown as a guess.
           const h = Number(m[1]);
-          const h24 = h >= 13 ? h : h === 12 ? 12 : h <= 7 ? h + 12 : h;
+          const h24 = h >= 13 ? h : partOfDay ? to24(h, partOfDay) : h === 12 ? 12 : h <= 7 ? h + 12 : h;
           out.start = h24 * 60;
-          if (h <= 12) out.notes.push(`I guessed ${D.fmtTime(out.start)}. Add am or pm if that's wrong.`);
+          if (h <= 12 && !partOfDay) out.notes.push(`I guessed ${D.fmtTime(out.start)}. Add am or pm if that's wrong.`);
         });
     }
 
@@ -1078,6 +1096,12 @@
       out.start = null;
       out.recurrence = "none";
       return out;
+    }
+    // A time that has already passed today with no day typed ("study 3am" at 9 PM) means the next one,
+    // tomorrow, so its reminder and alarm can still ring.
+    if (out.start !== null && !out.dateSet && out.recurrence === "none" && out.date === D.todayKey() && out.start < D.nowMinutes()) {
+      out.date = D.addDays(D.todayKey(), 1);
+      out.notes.push(`${D.fmtTime(out.start)} has passed today, so this is for tomorrow.`);
     }
     if (out.start !== null && out.start + out.duration > 1440) {
       out.notes.push(`Shortened to end at midnight (you asked for ${D.fmtDuration(out.duration)}).`);
@@ -1162,6 +1186,8 @@
       ? `Added “${q.title}” to your to-do list${q.due ? `, due ${D.shortDate(q.due)}` : ""}.`
       : `Added “${q.title}” for ${q.date === D.todayKey() ? "today" : D.shortDate(q.date)} at ${D.fmtTime(q.start)}.`;
     toast(msg, { actions: [undoAction], key: "save" });
+    // Without permission the phone can't remind at all, so ask the first time a timed task is added.
+    if (!q.todo && (settings.remindBefore !== null || settings.alarmAtStart || q.alarm)) askForNotifications();
   }
 
   // ---------------------------------------------------------
@@ -1180,9 +1206,11 @@
   } catch (e) {}
   const reminderKey = (t, k) => `${t.id}|${k}|${t.start}|${t.reminder}`;
   const alarmKey = (t, k) => `${t.id}|${k}|${t.start}|alarm`;
-  function markFired(key, k) {
+  function markFired(key) {
     fired.add(key);
-    Platform.storage.set(FIRED_KEY, JSON.stringify([...fired].filter((x) => x.includes(`|${k}|`))));
+    // Only today's and tomorrow's keys matter (a heads-up can be due tonight for a task after midnight).
+    const keep = [D.todayKey(), D.addDays(D.todayKey(), 1)].map((d) => `|${d}|`);
+    Platform.storage.set(FIRED_KEY, JSON.stringify([...fired].filter((x) => keep.some((d) => x.includes(d)))));
   }
 
   // Snoozed alarms are kept, so re-scheduling doesn't drop them. [{ id, date, title, at (ms) }]
@@ -1292,7 +1320,7 @@
         const at = t.start - t.reminder;
         const key = reminderKey(t, k);
         if (!fired.has(key) && now >= at) {
-          markFired(key, k);
+          markFired(key);
           if (now > at + 10) {
             // Passed while DayFlow was closed: summarised once, only while the task hasn't ended.
             if (missed && now < t.start + t.duration) passed.push(t);
@@ -1314,10 +1342,26 @@
       if (t.alarm) {
         const key = alarmKey(t, k);
         if (!fired.has(key) && now >= t.start) {
-          markFired(key, k);
+          markFired(key);
           if (now <= t.start + 10) alarmToast(t, k);
         }
       }
+    });
+    // Tomorrow's tasks just after midnight: their heads-up is due late tonight (e.g. 11:50 PM for 12:05 AM).
+    const tomorrow = D.addDays(k, 1);
+    Store.tasksOn(tomorrow).forEach((t) => {
+      if (t.done || t.reminder === null || !(t.reminder > 0) || t.start - t.reminder >= 0) return;
+      const at = 1440 + t.start - t.reminder; // minutes after today's midnight
+      const key = reminderKey(t, tomorrow);
+      if (fired.has(key) || now < at) return;
+      markFired(key);
+      if (now > at + 10) return;
+      toast(`Reminder: “${t.title}” starts in ${t.reminder} min, at ${D.fmtTime(t.start)}.`, {
+        kind: "reminder",
+        timeout: 30000,
+        actions: [{ label: "Open", fn: () => openForm({ id: t.id, date: tomorrow }) }],
+      });
+      Platform.reminders.show(`DayFlow: ${t.title}`, `Starts at ${D.fmtTime(t.start)}`);
     });
     // Snoozed alarms that are due
     const due = snoozes().filter((s) => s.at <= Date.now());
